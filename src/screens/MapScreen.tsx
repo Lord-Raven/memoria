@@ -8,6 +8,7 @@ import { ArrowBack, DeleteSweep } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Button } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
+import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 
 interface MapScreenProps {
 	stage: () => Stage;
@@ -24,16 +25,21 @@ interface VoronoiPoint {
 	imageUrl: string;
 }
 
+interface RenderedVoronoiCell {
+	point: VoronoiPoint;
+	path: string;
+	edgePath: string;
+	polygon: number[][];
+	patternId: string;
+}
+
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
+const EDGE_SNAP_DECIMALS = 2;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
-const METABALL_BOUNDARY_SAMPLES = 84;
-const METABALL_BINARY_STEPS = 9;
-const METABALL_FIELD_POWER = 2.2;
-const METABALL_FIELD_OFFSET = 16;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -74,104 +80,6 @@ const normalizeCoordinate = (value: number, max: number) => {
 	return clamp(value, 0, max);
 };
 
-const computeMetaballScore = (point: VoronoiPoint, x: number, y: number) => {
-	const dx = x - point.x;
-	const dy = y - point.y;
-	const distance = Math.hypot(dx, dy);
-	const scale = Math.max(12, point.maxRadius * 0.24);
-	const strength = Math.max(0.04, point.weight) * Math.pow(point.maxRadius, 1.16);
-	return strength / Math.pow(distance + scale + METABALL_FIELD_OFFSET, METABALL_FIELD_POWER);
-};
-
-const getOwningPointIndex = (points: VoronoiPoint[], x: number, y: number) => {
-	let winnerIndex = 0;
-	let winnerScore = Number.NEGATIVE_INFINITY;
-
-	for (let i = 0; i < points.length; i += 1) {
-		const score = computeMetaballScore(points[i], x, y);
-		if (score > winnerScore) {
-			winnerScore = score;
-			winnerIndex = i;
-		}
-	}
-
-	return winnerIndex;
-};
-
-const getRayBoundsDistance = (cx: number, cy: number, dx: number, dy: number, maxDistance: number) => {
-	let t = maxDistance;
-
-	if (dx > 1e-8) {
-		t = Math.min(t, (MAP_WIDTH - cx) / dx);
-	} else if (dx < -1e-8) {
-		t = Math.min(t, -cx / dx);
-	}
-
-	if (dy > 1e-8) {
-		t = Math.min(t, (MAP_HEIGHT - cy) / dy);
-	} else if (dy < -1e-8) {
-		t = Math.min(t, -cy / dy);
-	}
-
-	return Math.max(0, t);
-};
-
-const createMetaballPolygon = (points: VoronoiPoint[], pointIndex: number) => {
-	const point = points[pointIndex];
-	if (!point) {
-		return [] as number[][];
-	}
-
-	if (points.length === 1) {
-		return clipPolygonWithConvex(createCirclePolygon(point.x, point.y, point.maxRadius), [
-			[0, 0],
-			[MAP_WIDTH, 0],
-			[MAP_WIDTH, MAP_HEIGHT],
-			[0, MAP_HEIGHT],
-		]);
-	}
-
-	const polygon: number[][] = [];
-	const sampleCount = Math.max(44, Math.round(METABALL_BOUNDARY_SAMPLES + point.maxRadius * 0.08));
-
-	for (let sample = 0; sample < sampleCount; sample += 1) {
-		const angle = (sample / sampleCount) * Math.PI * 2;
-		const dx = Math.cos(angle);
-		const dy = Math.sin(angle);
-
-		const capDistance = getRayBoundsDistance(point.x, point.y, dx, dy, point.maxRadius);
-		let low = 0;
-		let high = capDistance;
-
-		const ownsAt = (distance: number) => {
-			const x = point.x + dx * distance;
-			const y = point.y + dy * distance;
-			return getOwningPointIndex(points, x, y) === pointIndex;
-		};
-
-		if (!ownsAt(0)) {
-			polygon.push([point.x, point.y]);
-			continue;
-		}
-
-		if (!ownsAt(high)) {
-			for (let step = 0; step < METABALL_BINARY_STEPS; step += 1) {
-				const mid = (low + high) * 0.5;
-				if (ownsAt(mid)) {
-					low = mid;
-				} else {
-					high = mid;
-				}
-			}
-		}
-
-		const distance = clamp(low, 0, capDistance);
-		polygon.push([point.x + dx * distance, point.y + dy * distance]);
-	}
-
-	return polygon;
-};
-
 const toPolygonPath = (polygon: number[][]) => {
 	if (!polygon || polygon.length < 3) {
 		return "";
@@ -179,6 +87,27 @@ const toPolygonPath = (polygon: number[][]) => {
 	return polygon
 		.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`)
 		.join(" ") + " Z";
+};
+
+const toSegmentPath = (segments: Array<[number[], number[]]>) =>
+	segments
+		.map(([start, end]) => `M${start[0].toFixed(2)},${start[1].toFixed(2)} L${end[0].toFixed(2)},${end[1].toFixed(2)}`)
+		.join(" ");
+
+const snapCoordinate = (value: number, decimals = EDGE_SNAP_DECIMALS) =>
+	Number.isFinite(value) ? Number(value.toFixed(decimals)) : 0;
+
+const getSegmentKey = (start: number[], end: number[]) => {
+	const aX = snapCoordinate(start[0]);
+	const aY = snapCoordinate(start[1]);
+	const bX = snapCoordinate(end[0]);
+	const bY = snapCoordinate(end[1]);
+
+	if (aX < bX || (aX === bX && aY <= bY)) {
+		return `${aX},${aY}|${bX},${bY}`;
+	}
+
+	return `${bX},${bY}|${aX},${aY}`;
 };
 
 const getPolygonCentroid = (polygon: number[][]) => {
@@ -403,10 +332,26 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		});
 	}, [animatedPoints, pulseClock]);
 
-	const metaballCells = useMemo(() => {
+	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
+			return [] as RenderedVoronoiCell[];
 		}
+
+		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
+		if (!weightedVoronoiFactory) {
+			return [] as RenderedVoronoiCell[];
+		}
+
+		const weightedVoronoi = weightedVoronoiFactory()
+			.x((d: VoronoiPoint) => d.x)
+			.y((d: VoronoiPoint) => d.y)
+			.weight((d: VoronoiPoint) => d.weight)
+			.clip([
+				[0, 0],
+				[MAP_WIDTH, 0],
+				[MAP_WIDTH, MAP_HEIGHT],
+				[0, MAP_HEIGHT],
+			]);
 
 		const mapBoundsPolygon = [
 			[0, 0],
@@ -415,11 +360,21 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			[0, MAP_HEIGHT],
 		] as number[][];
 
-		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string }> = [];
-		for (let index = 0; index < pulsedPoints.length; index += 1) {
-			const point = pulsedPoints[index];
-			const polygon = createMetaballPolygon(pulsedPoints, index);
+		const polygons = weightedVoronoi(pulsedPoints) as Array<
+			number[][] & {
+				site?: { originalObject?: VoronoiPoint };
+			}
+		>;
+
+		const cells: RenderedVoronoiCell[] = [];
+		for (let index = 0; index < polygons.length; index += 1) {
+			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
+				continue;
+			}
+
+			const point = polygon.site?.originalObject || pulsedPoints[index];
+			if (!point) {
 				continue;
 			}
 
@@ -438,11 +393,68 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			cells.push({
 				point,
 				path,
+				edgePath: "",
+				polygon: clippedPolygon,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
 		}
 
-		return cells;
+		const sortedCells = [...cells].sort((a, b) => {
+			if (a.point.weight !== b.point.weight) {
+				return b.point.weight - a.point.weight;
+			}
+			return a.point.id.localeCompare(b.point.id);
+		});
+
+		const drawOrderById = new Map(sortedCells.map((cell, index) => [cell.point.id, index]));
+		const ownersBySegment = new Map<string, string[]>();
+
+		for (const cell of sortedCells) {
+			for (let i = 0; i < cell.polygon.length; i += 1) {
+				const start = cell.polygon[i];
+				const end = cell.polygon[(i + 1) % cell.polygon.length];
+				const segmentKey = getSegmentKey(start, end);
+				const existingOwners = ownersBySegment.get(segmentKey);
+				if (existingOwners) {
+					existingOwners.push(cell.point.id);
+				} else {
+					ownersBySegment.set(segmentKey, [cell.point.id]);
+				}
+			}
+		}
+
+		return sortedCells.map((cell) => {
+			const edgeSegments: Array<[number[], number[]]> = [];
+			const currentOrder = drawOrderById.get(cell.point.id) ?? 0;
+
+			for (let i = 0; i < cell.polygon.length; i += 1) {
+				const start = cell.polygon[i];
+				const end = cell.polygon[(i + 1) % cell.polygon.length];
+				const segmentKey = getSegmentKey(start, end);
+				const segmentOwners = ownersBySegment.get(segmentKey) || [];
+
+				if (segmentOwners.length < 2) {
+					continue;
+				}
+
+				const shouldRenderEdge = segmentOwners.some((ownerId) => {
+					if (ownerId === cell.point.id) {
+						return false;
+					}
+					const ownerOrder = drawOrderById.get(ownerId);
+					return ownerOrder !== undefined && currentOrder > ownerOrder;
+				});
+
+				if (shouldRenderEdge) {
+					edgeSegments.push([start, end]);
+				}
+			}
+
+			return {
+				...cell,
+				edgePath: toSegmentPath(edgeSegments),
+			};
+		});
 	}, [pulsedPoints]);
 
 	const hasAtlasLocations = targetPoints.length > 0;
@@ -460,7 +472,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 		const newLocation = new Location({
 			name: `Test Location ${locationCount + 1}`,
-			description: "Generated from MapScreen click for map-territory testing.",
+			description: "Generated from MapScreen click for Voronoi testing.",
 			weight: randomWeight,
 			maxRadius: randomMaxRadius,
 			imageUrl: randomImageUrl,
@@ -600,7 +612,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
 
 						<defs>
-							{metaballCells.map((cell) => (
+							{voronoiCells.map((cell) => (
 								<pattern
 									key={cell.patternId}
 									id={cell.patternId}
@@ -621,21 +633,39 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							))}
 						</defs>
 
-						{metaballCells.map((cell) => (
+						{voronoiCells.map((cell) => (
 							<g key={cell.point.id}>
 								<path
 									d={cell.path}
 									fill={`url(#${cell.patternId})`}
-									stroke="rgba(255,255,255,0.6)"
-									strokeWidth={1.25}
+									stroke="none"
 									style={{ transition: "opacity 180ms ease" }}
 								/>
 								<path
 									d={cell.path}
 									fill="rgba(10, 26, 39, 0.32)"
-									stroke="rgba(10, 18, 28, 0.7)"
-									strokeWidth={0.8}
+									stroke="none"
 								/>
+								{cell.edgePath && (
+									<path
+										d={cell.edgePath}
+										fill="none"
+										stroke="rgba(255,255,255,0.72)"
+										strokeWidth={1.3}
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									/>
+								)}
+								{cell.edgePath && (
+									<path
+										d={cell.edgePath}
+										fill="none"
+										stroke="rgba(10, 18, 28, 0.78)"
+										strokeWidth={0.85}
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									/>
+								)}
 								<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
 								<text
 									x={cell.point.x + 8}
@@ -660,7 +690,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							</text>
 						)}
 
-						{hasAtlasLocations && metaballCells.length === 0 && (
+						{hasAtlasLocations && voronoiCells.length === 0 && (
 							<text
 								x={MAP_WIDTH / 2}
 								y={MAP_HEIGHT / 2}
@@ -668,7 +698,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 								fill="rgba(255,255,255,0.75)"
 								style={{ fontSize: "20px", fontWeight: 500 }}
 							>
-								Locations exist, but no renderable metaball geometry was produced.
+								Locations exist, but no renderable cell geometry was produced.
 							</text>
 						)}
 					</svg>
