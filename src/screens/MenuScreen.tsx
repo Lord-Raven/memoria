@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
-import { FiberNew, PlayArrow, Settings } from "@mui/icons-material";
+import { FiberNew, Map, PlayArrow, Settings } from "@mui/icons-material";
 import { SettingsScreen } from "./SettingsScreen";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
 import { Button, GridOverlay, Title, ConfirmDialog } from "./UiComponents";
@@ -47,6 +47,10 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
 
     const handleContinue = () => {
         setScreenType(ScreenType.SKIT);
+    };
+
+    const handleMap = () => {
+        setScreenType(ScreenType.MAP);
     };
 
     const handleNewGame = () => {
@@ -114,6 +118,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             enabled: !disableAllButtons,
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
             icon: Settings
+        },
+        {
+            key: 'map',
+            label: 'Atlas Map',
+            onClick: handleMap,
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Inspect atlas locations as Voronoi cells',
+            icon: Map
         }
     ];
 

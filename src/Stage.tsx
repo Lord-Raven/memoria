@@ -4,6 +4,7 @@ import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Actor, ActorType } from "./content/Actor";
 import { Item } from "./content/Item";
 import { Skit } from "./content/Skit";
+import { Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 
 type MessageStateType = any;

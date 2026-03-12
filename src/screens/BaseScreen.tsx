@@ -6,6 +6,7 @@ import { TooltipProvider, useTooltip } from './TooltipContext';
 import { MenuScreen } from './MenuScreen';
 import { TooltipBar } from './TooltipBar';
 import { theme } from './Theme';
+import { MapScreen } from './MapScreen';
 
 /*
  * Base screen management; the Stage class will display this, and this will track the current screen being displayed.
@@ -15,6 +16,7 @@ export enum ScreenType {
     MENU = 'menu',
     LOADING = 'loading',
     SKIT = 'skit',
+    MAP = 'map',
 }
 
 interface BaseScreenProps {
@@ -63,6 +65,9 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
                     setScreenType={setScreenType} 
                     isVerticalLayout={isVerticalLayout}
                 />
+            )}
+            {screenType === ScreenType.MAP && (
+                <MapScreen stage={stage} setScreenType={setScreenType} />
             )}
             {/* Unified tooltip bar that renders over all screens */}
             <TooltipBar 
