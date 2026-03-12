@@ -353,12 +353,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
+			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
 		}
 
 		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
 		if (!weightedVoronoiFactory) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
+			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
 		}
 
 		const weightedVoronoi = weightedVoronoiFactory()
@@ -385,7 +385,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 		>;
 
-		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string }> = [];
+		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
@@ -413,6 +413,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				point,
 				path,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
 		}
 
@@ -593,6 +594,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 									/>
 								</pattern>
 							))}
+								{voronoiCells.map((cell) => (
+									<clipPath key={cell.clipPathId} id={cell.clipPathId} clipPathUnits="userSpaceOnUse">
+										<path d={cell.path} />
+									</clipPath>
+								))}
 						</defs>
 
 						{voronoiCells.map((cell) => {
@@ -608,6 +614,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										stroke={borderPalette.outerStroke}
 										strokeWidth={4.8}
 										strokeLinejoin="round"
+										clipPath={`url(#${cell.clipPathId})`}
 									/>
 									<path
 										d={cell.path}
@@ -615,6 +622,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										stroke={borderPalette.gapStroke}
 										strokeWidth={2.8}
 										strokeLinejoin="round"
+										clipPath={`url(#${cell.clipPathId})`}
 									/>
 									<path
 										d={cell.path}
@@ -622,6 +630,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										stroke={borderPalette.innerStroke}
 										strokeWidth={1.2}
 										strokeLinejoin="round"
+										clipPath={`url(#${cell.clipPathId})`}
 									/>
 									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
 									<text
