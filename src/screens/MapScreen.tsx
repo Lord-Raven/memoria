@@ -80,14 +80,17 @@ const toPolygonPath = (polygon: number[][]) => {
 		.join(" ") + " Z";
 };
 
-const getSignedArea = (polygon: number[][]) => {
-	let area = 0;
-	for (let i = 0; i < polygon.length; i += 1) {
-		const [x1, y1] = polygon[i];
-		const [x2, y2] = polygon[(i + 1) % polygon.length];
-		area += x1 * y2 - x2 * y1;
+const getPolygonCentroid = (polygon: number[][]) => {
+	if (polygon.length === 0) {
+		return [0, 0] as number[];
 	}
-	return area / 2;
+	let x = 0;
+	let y = 0;
+	for (const point of polygon) {
+		x += point[0];
+		y += point[1];
+	}
+	return [x / polygon.length, y / polygon.length] as number[];
 };
 
 const lineIntersection = (a: number[], b: number[], c: number[], d: number[]) => {
@@ -114,12 +117,15 @@ const clipPolygonWithConvex = (subjectPolygon: number[][], clipPolygon: number[]
 	}
 
 	let outputList = subjectPolygon;
-	const clipArea = getSignedArea(clipPolygon);
-	const isClockwise = clipArea < 0;
+	const clipCentroid = getPolygonCentroid(clipPolygon);
 
 	for (let i = 0; i < clipPolygon.length; i += 1) {
 		const clipStart = clipPolygon[i];
 		const clipEnd = clipPolygon[(i + 1) % clipPolygon.length];
+		const interiorCross =
+			(clipEnd[0] - clipStart[0]) * (clipCentroid[1] - clipStart[1]) -
+			(clipEnd[1] - clipStart[1]) * (clipCentroid[0] - clipStart[0]);
+		const interiorSign = interiorCross >= 0 ? 1 : -1;
 		const inputList = outputList;
 		outputList = [];
 
@@ -131,7 +137,7 @@ const clipPolygonWithConvex = (subjectPolygon: number[][], clipPolygon: number[]
 			const cross =
 				(clipEnd[0] - clipStart[0]) * (point[1] - clipStart[1]) -
 				(clipEnd[1] - clipStart[1]) * (point[0] - clipStart[0]);
-			return isClockwise ? cross <= 1e-8 : cross >= -1e-8;
+			return interiorSign > 0 ? cross >= -1e-8 : cross <= 1e-8;
 		};
 
 		let previousPoint = inputList[inputList.length - 1];
