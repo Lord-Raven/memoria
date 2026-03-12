@@ -25,19 +25,10 @@ interface VoronoiPoint {
 	imageUrl: string;
 }
 
-interface RenderedVoronoiCell {
-	point: VoronoiPoint;
-	path: string;
-	edgePath: string;
-	polygon: number[][];
-	patternId: string;
-}
-
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
-const EDGE_SNAP_DECIMALS = 2;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
 
@@ -87,27 +78,6 @@ const toPolygonPath = (polygon: number[][]) => {
 	return polygon
 		.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`)
 		.join(" ") + " Z";
-};
-
-const toSegmentPath = (segments: Array<[number[], number[]]>) =>
-	segments
-		.map(([start, end]) => `M${start[0].toFixed(2)},${start[1].toFixed(2)} L${end[0].toFixed(2)},${end[1].toFixed(2)}`)
-		.join(" ");
-
-const snapCoordinate = (value: number, decimals = EDGE_SNAP_DECIMALS) =>
-	Number.isFinite(value) ? Number(value.toFixed(decimals)) : 0;
-
-const getSegmentKey = (start: number[], end: number[]) => {
-	const aX = snapCoordinate(start[0]);
-	const aY = snapCoordinate(start[1]);
-	const bX = snapCoordinate(end[0]);
-	const bY = snapCoordinate(end[1]);
-
-	if (aX < bX || (aX === bX && aY <= bY)) {
-		return `${aX},${aY}|${bX},${bY}`;
-	}
-
-	return `${bX},${bY}|${aX},${aY}`;
 };
 
 const getPolygonCentroid = (polygon: number[][]) => {
@@ -334,12 +304,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as RenderedVoronoiCell[];
+			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
 		}
 
 		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
 		if (!weightedVoronoiFactory) {
-			return [] as RenderedVoronoiCell[];
+			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
 		}
 
 		const weightedVoronoi = weightedVoronoiFactory()
@@ -366,7 +336,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 		>;
 
-		const cells: RenderedVoronoiCell[] = [];
+		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string }> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
@@ -393,68 +363,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			cells.push({
 				point,
 				path,
-				edgePath: "",
-				polygon: clippedPolygon,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
 		}
 
-		const sortedCells = [...cells].sort((a, b) => {
-			if (a.point.weight !== b.point.weight) {
-				return b.point.weight - a.point.weight;
-			}
-			return a.point.id.localeCompare(b.point.id);
-		});
-
-		const drawOrderById = new Map(sortedCells.map((cell, index) => [cell.point.id, index]));
-		const ownersBySegment = new Map<string, string[]>();
-
-		for (const cell of sortedCells) {
-			for (let i = 0; i < cell.polygon.length; i += 1) {
-				const start = cell.polygon[i];
-				const end = cell.polygon[(i + 1) % cell.polygon.length];
-				const segmentKey = getSegmentKey(start, end);
-				const existingOwners = ownersBySegment.get(segmentKey);
-				if (existingOwners) {
-					existingOwners.push(cell.point.id);
-				} else {
-					ownersBySegment.set(segmentKey, [cell.point.id]);
-				}
-			}
-		}
-
-		return sortedCells.map((cell) => {
-			const edgeSegments: Array<[number[], number[]]> = [];
-			const currentOrder = drawOrderById.get(cell.point.id) ?? 0;
-
-			for (let i = 0; i < cell.polygon.length; i += 1) {
-				const start = cell.polygon[i];
-				const end = cell.polygon[(i + 1) % cell.polygon.length];
-				const segmentKey = getSegmentKey(start, end);
-				const segmentOwners = ownersBySegment.get(segmentKey) || [];
-
-				if (segmentOwners.length < 2) {
-					continue;
-				}
-
-				const shouldRenderEdge = segmentOwners.some((ownerId) => {
-					if (ownerId === cell.point.id) {
-						return false;
-					}
-					const ownerOrder = drawOrderById.get(ownerId);
-					return ownerOrder !== undefined && currentOrder > ownerOrder;
-				});
-
-				if (shouldRenderEdge) {
-					edgeSegments.push([start, end]);
-				}
-			}
-
-			return {
-				...cell,
-				edgePath: toSegmentPath(edgeSegments),
-			};
-		});
+		return cells;
 	}, [pulsedPoints]);
 
 	const hasAtlasLocations = targetPoints.length > 0;
@@ -638,34 +551,16 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 								<path
 									d={cell.path}
 									fill={`url(#${cell.patternId})`}
-									stroke="none"
+									stroke="rgba(255,255,255,0.6)"
+									strokeWidth={1.25}
 									style={{ transition: "opacity 180ms ease" }}
 								/>
 								<path
 									d={cell.path}
 									fill="rgba(10, 26, 39, 0.32)"
-									stroke="none"
+									stroke="rgba(10, 18, 28, 0.7)"
+									strokeWidth={0.8}
 								/>
-								{cell.edgePath && (
-									<path
-										d={cell.edgePath}
-										fill="none"
-										stroke="rgba(255,255,255,0.72)"
-										strokeWidth={1.3}
-										strokeLinecap="round"
-										strokeLinejoin="round"
-									/>
-								)}
-								{cell.edgePath && (
-									<path
-										d={cell.edgePath}
-										fill="none"
-										stroke="rgba(10, 18, 28, 0.78)"
-										strokeWidth={0.85}
-										strokeLinecap="round"
-										strokeLinejoin="round"
-									/>
-								)}
 								<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
 								<text
 									x={cell.point.x + 8}
