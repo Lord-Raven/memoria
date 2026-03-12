@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useEffect, useMemo, useState } from "react";
+import { FC, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
@@ -21,11 +21,16 @@ interface VoronoiPoint {
 	x: number;
 	y: number;
 	weight: number;
+	maxRadius: number;
 	imageUrl: string;
 }
 
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
+const MIN_CELL_RADIUS = 40;
+const MAX_CELL_RADIUS = 300;
+const POINT_TRANSITION_MS = 700;
+const PULSE_TICK_MS = 50;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -37,6 +42,24 @@ const testImagePool = [
 ];
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const lerp = (start: number, end: number, t: number) => start + (end - start) * t;
+
+const hashString = (value: string) => {
+	let hash = 2166136261;
+	for (let i = 0; i < value.length; i += 1) {
+		hash ^= value.charCodeAt(i);
+		hash = Math.imul(hash, 16777619);
+	}
+	return hash >>> 0;
+};
+
+const getPulseProfile = (id: string) => {
+	const hash = hashString(id);
+	const phase = ((hash & 0xffff) / 0xffff) * Math.PI * 2;
+	const frequency = 0.14 + (((hash >> 16) & 0xff) / 255) * 0.22;
+	const amplitude = 0.018 + (((hash >> 24) & 0xff) / 255) * 0.045;
+	return { phase, frequency, amplitude };
+};
 
 const normalizeCoordinate = (value: number, max: number) => {
 	if (value >= 0 && value <= 1) {
@@ -57,6 +80,90 @@ const toPolygonPath = (polygon: number[][]) => {
 		.join(" ") + " Z";
 };
 
+const getSignedArea = (polygon: number[][]) => {
+	let area = 0;
+	for (let i = 0; i < polygon.length; i += 1) {
+		const [x1, y1] = polygon[i];
+		const [x2, y2] = polygon[(i + 1) % polygon.length];
+		area += x1 * y2 - x2 * y1;
+	}
+	return area / 2;
+};
+
+const lineIntersection = (a: number[], b: number[], c: number[], d: number[]) => {
+	const [x1, y1] = a;
+	const [x2, y2] = b;
+	const [x3, y3] = c;
+	const [x4, y4] = d;
+
+	const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+	if (Math.abs(denominator) < 1e-8) {
+		return b;
+	}
+
+	const determinant1 = x1 * y2 - y1 * x2;
+	const determinant2 = x3 * y4 - y3 * x4;
+	const px = (determinant1 * (x3 - x4) - (x1 - x2) * determinant2) / denominator;
+	const py = (determinant1 * (y3 - y4) - (y1 - y2) * determinant2) / denominator;
+	return [px, py] as number[];
+};
+
+const clipPolygonWithConvex = (subjectPolygon: number[][], clipPolygon: number[][]) => {
+	if (subjectPolygon.length < 3 || clipPolygon.length < 3) {
+		return [] as number[][];
+	}
+
+	let outputList = subjectPolygon;
+	const clipArea = getSignedArea(clipPolygon);
+	const isClockwise = clipArea < 0;
+
+	for (let i = 0; i < clipPolygon.length; i += 1) {
+		const clipStart = clipPolygon[i];
+		const clipEnd = clipPolygon[(i + 1) % clipPolygon.length];
+		const inputList = outputList;
+		outputList = [];
+
+		if (inputList.length === 0) {
+			break;
+		}
+
+		const isInside = (point: number[]) => {
+			const cross =
+				(clipEnd[0] - clipStart[0]) * (point[1] - clipStart[1]) -
+				(clipEnd[1] - clipStart[1]) * (point[0] - clipStart[0]);
+			return isClockwise ? cross <= 1e-8 : cross >= -1e-8;
+		};
+
+		let previousPoint = inputList[inputList.length - 1];
+		for (const currentPoint of inputList) {
+			const currentInside = isInside(currentPoint);
+			const previousInside = isInside(previousPoint);
+
+			if (currentInside) {
+				if (!previousInside) {
+					outputList.push(lineIntersection(previousPoint, currentPoint, clipStart, clipEnd));
+				}
+				outputList.push(currentPoint);
+			} else if (previousInside) {
+				outputList.push(lineIntersection(previousPoint, currentPoint, clipStart, clipEnd));
+			}
+
+			previousPoint = currentPoint;
+		}
+	}
+
+	return outputList;
+};
+
+const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 32) => {
+	const points: number[][] = [];
+	for (let i = 0; i < segments; i += 1) {
+		const angle = (i / segments) * Math.PI * 2;
+		points.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
+	}
+	return points;
+};
+
 const getSaveForMutation = (stage: Stage) => {
 	const slot = stage.saveData.lastSaveSlot;
 	if (!stage.saveData.saves[slot]) {
@@ -67,7 +174,9 @@ const getSaveForMutation = (stage: Stage) => {
 
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const [revision, setRevision] = useState(0);
+	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const { setTooltip, clearTooltip } = useTooltip();
+	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -81,21 +190,114 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [setScreenType]);
 
-	const points = useMemo(() => {
+	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
 		const atlasEntries = Object.values(save.atlas as Record<string, Location>);
-		return atlasEntries.map((location) => ({
-			id: location.id,
-			name: location.name || "Unnamed Location",
-			x: normalizeCoordinate(location.center?.x ?? 0.5, MAP_WIDTH),
-			y: normalizeCoordinate(location.center?.y ?? 0.5, MAP_HEIGHT),
-			weight: Math.max(0.05, location.weight || 1),
-			imageUrl: location.imageUrl,
-		}));
+		return atlasEntries.map((location) => {
+			const requestedMaxRadius = Number(location.maxRadius);
+			const fallbackRadius = 72 + Math.max(0, location.weight || 1) * 20;
+			const maxRadius = Number.isFinite(requestedMaxRadius) && requestedMaxRadius > 0 ? requestedMaxRadius : fallbackRadius;
+
+			return {
+				id: location.id,
+				name: location.name || "Unnamed Location",
+				x: normalizeCoordinate(location.center?.x ?? 0.5, MAP_WIDTH),
+				y: normalizeCoordinate(location.center?.y ?? 0.5, MAP_HEIGHT),
+				weight: Math.max(0.05, location.weight || 1),
+				maxRadius: clamp(maxRadius, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
+				imageUrl: location.imageUrl,
+			};
+		});
 	}, [stage, revision]);
 
+	const [animatedPoints, setAnimatedPoints] = useState<VoronoiPoint[]>(targetPoints);
+
+	useEffect(() => {
+		animatedPointsRef.current = animatedPoints;
+	}, [animatedPoints]);
+
+	useEffect(() => {
+		if (targetPoints.length === 0) {
+			animatedPointsRef.current = [];
+			setAnimatedPoints([]);
+			return;
+		}
+
+		const previousById = new Map(animatedPointsRef.current.map((point) => [point.id, point]));
+		const startPoints = targetPoints.map((targetPoint) => {
+			const previousPoint = previousById.get(targetPoint.id);
+			if (previousPoint) {
+				return previousPoint;
+			}
+			return {
+				...targetPoint,
+				weight: Math.max(0.05, targetPoint.weight * 0.4),
+				maxRadius: clamp(targetPoint.maxRadius * 0.45, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
+			};
+		});
+
+		let frameId = 0;
+		const startTime = performance.now();
+
+		const animate = (now: number) => {
+			const rawProgress = clamp((now - startTime) / POINT_TRANSITION_MS, 0, 1);
+			const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+
+			const nextPoints = targetPoints.map((targetPoint, index) => {
+				const startPoint = startPoints[index];
+				return {
+					...targetPoint,
+					x: lerp(startPoint.x, targetPoint.x, easedProgress),
+					y: lerp(startPoint.y, targetPoint.y, easedProgress),
+					weight: Math.max(0.05, lerp(startPoint.weight, targetPoint.weight, easedProgress)),
+					maxRadius: clamp(
+						lerp(startPoint.maxRadius, targetPoint.maxRadius, easedProgress),
+						MIN_CELL_RADIUS,
+						MAX_CELL_RADIUS,
+					),
+				};
+			});
+
+			animatedPointsRef.current = nextPoints;
+			setAnimatedPoints(nextPoints);
+
+			if (rawProgress < 1) {
+				frameId = window.requestAnimationFrame(animate);
+			}
+		};
+
+		frameId = window.requestAnimationFrame(animate);
+		return () => window.cancelAnimationFrame(frameId);
+	}, [targetPoints]);
+
+	useEffect(() => {
+		const interval = window.setInterval(() => {
+			setPulseClock(performance.now());
+		}, PULSE_TICK_MS);
+		return () => window.clearInterval(interval);
+	}, []);
+
+	const pulsedPoints = useMemo(() => {
+		const timeSeconds = pulseClock / 1000;
+		return animatedPoints.map((point) => {
+			const pulse = getPulseProfile(point.id);
+			const wave = Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase);
+			const secondaryWave = Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase + 1.1);
+
+			return {
+				...point,
+				weight: Math.max(0.05, point.weight * (1 + wave * pulse.amplitude)),
+				maxRadius: clamp(
+					point.maxRadius * (1 + secondaryWave * pulse.amplitude * 0.6),
+					MIN_CELL_RADIUS,
+					MAX_CELL_RADIUS,
+				),
+			};
+		});
+	}, [animatedPoints, pulseClock]);
+
 	const voronoiCells = useMemo(() => {
-		if (points.length === 0) {
+		if (pulsedPoints.length === 0) {
 			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
 		}
 
@@ -115,15 +317,23 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				[0, MAP_HEIGHT],
 			]);
 
-		const polygons = weightedVoronoi(points) as number[][][];
+		const polygons = weightedVoronoi(pulsedPoints) as number[][][];
 		return polygons
-			.map((polygon, index) => ({
-				point: points[index],
-				path: toPolygonPath(polygon),
-				patternId: `location-pattern-${points[index].id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
-			}))
+			.map((polygon, index) => {
+				const point = pulsedPoints[index];
+				const clippedPolygon = clipPolygonWithConvex(
+					polygon,
+					createCirclePolygon(point.x, point.y, point.maxRadius),
+				);
+
+				return {
+					point,
+					path: toPolygonPath(clippedPolygon),
+					patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+				};
+			})
 			.filter((cell) => cell.path.length > 0);
-	}, [points]);
+	}, [pulsedPoints]);
 
 	const addRandomLocation = (event: MouseEvent<SVGSVGElement>) => {
 		const rect = event.currentTarget.getBoundingClientRect();
@@ -133,12 +343,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		const save = getSaveForMutation(stage());
 		const locationCount = Object.keys(save.atlas).length;
 		const randomWeight = Number((0.25 + Math.random() * 2.75).toFixed(2));
+		const randomMaxRadius = Math.round(64 + randomWeight * 22 + Math.random() * 36);
 		const randomImageUrl = testImagePool[Math.floor(Math.random() * testImagePool.length)];
 
 		const newLocation = new Location({
 			name: `Test Location ${locationCount + 1}`,
 			description: "Generated from MapScreen click for Voronoi testing.",
 			weight: randomWeight,
+			maxRadius: randomMaxRadius,
 			imageUrl: randomImageUrl,
 			center: {
 				x: Number((x / MAP_WIDTH).toFixed(3)),
@@ -149,7 +361,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		(save.atlas as Record<string, Location>)[newLocation.id] = newLocation;
 		stage().saveGame();
 		setRevision((value) => value + 1);
-		stage().showPriorityMessage(`Added ${newLocation.name} (weight ${randomWeight}).`, undefined, 2200);
+		stage().showPriorityMessage(
+			`Added ${newLocation.name} (weight ${randomWeight}, radius ${randomMaxRadius}).`,
+			undefined,
+			2200,
+		);
 	};
 
 	return (
