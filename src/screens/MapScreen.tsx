@@ -32,6 +32,8 @@ const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
+const CELL_EDGE_FADE_WIDTH = 22;
+const CELL_EDGE_FADE_BLUR = 7;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -329,12 +331,26 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as Array<{ point: VoronoiPoint; path: string; bleedPath: string; patternId: string; clipPathId: string }>;
+			return [] as Array<{
+				point: VoronoiPoint;
+				path: string;
+				bleedPath: string;
+				patternId: string;
+				clipPathId: string;
+				edgeMaskId: string;
+			}>;
 		}
 
 		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
 		if (!weightedVoronoiFactory) {
-			return [] as Array<{ point: VoronoiPoint; path: string; bleedPath: string; patternId: string; clipPathId: string }>;
+			return [] as Array<{
+				point: VoronoiPoint;
+				path: string;
+				bleedPath: string;
+				patternId: string;
+				clipPathId: string;
+				edgeMaskId: string;
+			}>;
 		}
 
 		const weightedVoronoi = weightedVoronoiFactory()
@@ -361,7 +377,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 		>;
 
-		const cells: Array<{ point: VoronoiPoint; path: string; bleedPath: string; patternId: string; clipPathId: string }> = [];
+		const cells: Array<{
+			point: VoronoiPoint;
+			path: string;
+			bleedPath: string;
+			patternId: string;
+			clipPathId: string;
+			edgeMaskId: string;
+		}> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
@@ -397,6 +420,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				bleedPath,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+				edgeMaskId: `location-edge-mask-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
 		}
 
@@ -558,6 +582,17 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
 
 						<defs>
+							<filter
+								id="map-cell-edge-fade"
+								x={-CELL_EDGE_FADE_WIDTH}
+								y={-CELL_EDGE_FADE_WIDTH}
+								width={MAP_WIDTH + CELL_EDGE_FADE_WIDTH * 2}
+								height={MAP_HEIGHT + CELL_EDGE_FADE_WIDTH * 2}
+								filterUnits="userSpaceOnUse"
+								colorInterpolationFilters="sRGB"
+							>
+								<feGaussianBlur in="SourceGraphic" stdDeviation={CELL_EDGE_FADE_BLUR} />
+							</filter>
 							{voronoiCells.map((cell) => (
 								<pattern
 									key={cell.patternId}
@@ -582,6 +617,25 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										<path d={cell.path} />
 									</clipPath>
 								))}
+								{voronoiCells.map((cell) => (
+									<mask
+										key={cell.edgeMaskId}
+										id={cell.edgeMaskId}
+										maskUnits="userSpaceOnUse"
+										maskContentUnits="userSpaceOnUse"
+									>
+										<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="black" />
+										<path d={cell.path} fill="white" />
+										<path
+											d={cell.path}
+											fill="none"
+											stroke="black"
+											strokeWidth={CELL_EDGE_FADE_WIDTH}
+											strokeLinejoin="round"
+											filter="url(#map-cell-edge-fade)"
+										/>
+									</mask>
+								))}
 						</defs>
 
 						{voronoiCells.map((cell) => {
@@ -591,6 +645,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										d={cell.bleedPath}
 										fill={`url(#${cell.patternId})`}
 										opacity={0.42}
+										mask={`url(#${cell.edgeMaskId})`}
 										style={{ transition: "opacity 180ms ease" }}
 										pointerEvents="none"
 									/>
@@ -598,10 +653,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										d={cell.path}
 										fill={`url(#${cell.patternId})`}
 										opacity={0.74}
+										mask={`url(#${cell.edgeMaskId})`}
 										style={{ mixBlendMode: "screen" }}
 										pointerEvents="none"
 									/>
-									<path d={cell.path} fill="rgba(8, 20, 31, 0.2)" pointerEvents="none" />
+									<path d={cell.path} fill="rgba(8, 20, 31, 0.2)" mask={`url(#${cell.edgeMaskId})`} pointerEvents="none" />
 									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" pointerEvents="none" />
 									<path
 										d={cell.path}
