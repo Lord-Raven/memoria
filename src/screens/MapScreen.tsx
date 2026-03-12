@@ -32,8 +32,6 @@ const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
-const CELL_OVERLAP_MARGIN = 22;
-const CELL_OVERLAP_BANDS = 8;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -74,6 +72,47 @@ const normalizeCoordinate = (value: number, max: number) => {
 	return clamp(value, 0, max);
 };
 
+const asHexColor = (value: string) => {
+	const normalized = (value ?? 'fff').trim();
+	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
+};
+
+const hexToRgb = (hexColor: string) => {
+	const hex = asHexColor(hexColor).replace("#", "");
+	if (!hex) {
+		return null;
+	}
+
+	const expandedHex = hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
+	const parsed = Number.parseInt(expandedHex, 16);
+	if (!Number.isFinite(parsed)) {
+		return null;
+	}
+
+	return {
+		r: (parsed >> 16) & 255,
+		g: (parsed >> 8) & 255,
+		b: parsed & 255,
+	};
+};
+
+const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
+	const rgb = hexToRgb(hexColor);
+	if (!rgb) {
+		return fallback;
+	}
+	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp(alpha, 0, 1)})`;
+};
+
+const getLocationBorderPalette = (themeColor: string) => {
+	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
+	return {
+		outerStroke: colorWithAlpha(normalizedThemeColor, 0.92, "rgba(215, 190, 122, 0.92)"),
+		innerStroke: colorWithAlpha(normalizedThemeColor, 0.72, "rgba(215, 190, 122, 0.72)"),
+		gapStroke: "rgba(3, 11, 19, 0.9)",
+	};
+};
+
 const toPolygonPath = (polygon: number[][]) => {
 	if (!polygon || polygon.length < 3) {
 		return "";
@@ -81,15 +120,6 @@ const toPolygonPath = (polygon: number[][]) => {
 	return polygon
 		.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`)
 		.join(" ") + " Z";
-};
-
-const toRingPath = (outerPolygon: number[][], innerPolygon: number[][]) => {
-	const outerPath = toPolygonPath(outerPolygon);
-	const innerPath = toPolygonPath(innerPolygon);
-	if (!outerPath || !innerPath) {
-		return "";
-	}
-	return `${outerPath} ${innerPath}`;
 };
 
 const getPolygonCentroid = (polygon: number[][]) => {
@@ -180,25 +210,6 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 		points.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
 	}
 	return points;
-};
-
-const expandPolygonByMargin = (polygon: number[][], centerX: number, centerY: number, margin: number) => {
-	if (!polygon || polygon.length < 3) {
-		return polygon;
-	}
-
-	return polygon.map(([x, y]) => {
-		const dx = x - centerX;
-		const dy = y - centerY;
-		const distance = Math.hypot(dx, dy);
-		if (distance < 1e-4) {
-			return [x, y];
-		}
-
-		const nextDistance = distance + margin;
-		const ratio = nextDistance / distance;
-		return [centerX + dx * ratio, centerY + dy * ratio];
-	});
 };
 
 const getPowerWeight = (point: VoronoiPoint) => {
@@ -348,24 +359,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as Array<{
-				point: VoronoiPoint;
-				path: string;
-				overlapBands: Array<{ path: string; opacity: number }>;
-				patternId: string;
-				clipPathId: string;
-			}>;
+			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
 		}
 
 		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
 		if (!weightedVoronoiFactory) {
-			return [] as Array<{
-				point: VoronoiPoint;
-				path: string;
-				overlapBands: Array<{ path: string; opacity: number }>;
-				patternId: string;
-				clipPathId: string;
-			}>;
+			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
 		}
 
 		const weightedVoronoi = weightedVoronoiFactory()
@@ -392,13 +391,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 		>;
 
-		const cells: Array<{
-			point: VoronoiPoint;
-			path: string;
-			overlapBands: Array<{ path: string; opacity: number }>;
-			patternId: string;
-			clipPathId: string;
-		}> = [];
+		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
@@ -422,33 +415,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				continue;
 			}
 
-			const overlapPolygons: number[][][] = [clippedPolygon];
-			for (let bandIndex = 1; bandIndex <= CELL_OVERLAP_BANDS; bandIndex += 1) {
-				const bandMargin = (CELL_OVERLAP_MARGIN * bandIndex) / CELL_OVERLAP_BANDS;
-				const expandedPolygon = clipPolygonWithConvex(
-					expandPolygonByMargin(clippedPolygon, point.x, point.y, bandMargin),
-					mapBoundsPolygon,
-				);
-				overlapPolygons.push(expandedPolygon.length >= 3 ? expandedPolygon : overlapPolygons[bandIndex - 1]);
-			}
-
-			const overlapBands: Array<{ path: string; opacity: number }> = [];
-			for (let bandIndex = 1; bandIndex <= CELL_OVERLAP_BANDS; bandIndex += 1) {
-				const outerPolygon = overlapPolygons[bandIndex];
-				const innerPolygon = overlapPolygons[bandIndex - 1];
-				const ringPath = toRingPath(outerPolygon, innerPolygon);
-				if (!ringPath) {
-					continue;
-				}
-
-				const opacity = clamp(1 - (bandIndex - 1) / CELL_OVERLAP_BANDS, 0, 1);
-				overlapBands.push({ path: ringPath, opacity });
-			}
-
 			cells.push({
 				point,
 				path,
-				overlapBands,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
@@ -627,7 +596,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										width={MAP_WIDTH}
 										height={MAP_HEIGHT}
 										preserveAspectRatio="xMidYMid slice"
-										opacity={0.9}
+										opacity={0.92}
 									/>
 								</pattern>
 							))}
@@ -639,40 +608,41 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						</defs>
 
 						{voronoiCells.map((cell) => {
+							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
+
 							return (
-								<g key={cell.point.id}>
+								<g
+									key={cell.point.id}
+									onMouseEnter={() => setTooltip(cell.point.name)}
+									onMouseLeave={clearTooltip}
+								>
+									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
+									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" />
 									<path
 										d={cell.path}
-										fill={`url(#${cell.patternId})`}
-										opacity={0.78}
-										style={{ mixBlendMode: "screen" }}
-										pointerEvents="none"
+										fill="none"
+										stroke={borderPalette.outerStroke}
+										strokeWidth={4.8}
+										strokeLinejoin="round"
+										clipPath={`url(#${cell.clipPathId})`}
 									/>
-									{cell.overlapBands.map((band, index) => (
-										<path
-											key={`${cell.point.id}-overlap-${index}`}
-											d={band.path}
-											fill={`url(#${cell.patternId})`}
-											fillRule="evenodd"
-											opacity={0.42 * band.opacity}
-											style={{ mixBlendMode: "screen", transition: "opacity 180ms ease" }}
-											pointerEvents="none"
-										/>
-									))}
 									<path
 										d={cell.path}
-										fill="rgba(8, 20, 31, 0.16)"
-										pointerEvents="none"
+										fill="none"
+										stroke={borderPalette.gapStroke}
+										strokeWidth={2.8}
+										strokeLinejoin="round"
+										clipPath={`url(#${cell.clipPathId})`}
 									/>
-									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" pointerEvents="none" />
 									<path
 										d={cell.path}
-										fill="rgba(0, 0, 0, 0.001)"
-										pointerEvents="all"
-										onMouseEnter={() => setTooltip(cell.point.name)}
-										onMouseLeave={clearTooltip}
-										style={{ cursor: "pointer" }}
+										fill="none"
+										stroke={borderPalette.innerStroke}
+										strokeWidth={1.2}
+										strokeLinejoin="round"
+										clipPath={`url(#${cell.clipPathId})`}
 									/>
+									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
 								</g>
 							);
 						})}
