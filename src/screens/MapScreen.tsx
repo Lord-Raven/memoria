@@ -332,6 +332,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		return () => window.clearInterval(interval);
 	}, []);
 
+	useEffect(() => {
+		return () => {
+			clearTooltip();
+		};
+	}, [clearTooltip]);
+
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;
 		return animatedPoints.map((point) => {
@@ -605,7 +611,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 
 							return (
-								<g key={cell.point.id}>
+								<g
+									key={cell.point.id}
+									onMouseEnter={() => setTooltip(cell.point.name)}
+									onMouseLeave={clearTooltip}
+								>
 									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
 									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" />
 									<path
@@ -633,14 +643,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										clipPath={`url(#${cell.clipPathId})`}
 									/>
 									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
-									<text
-										x={cell.point.x + 8}
-										y={cell.point.y - 8}
-										fill="rgba(255,255,255,0.95)"
-										style={{ fontSize: "15px", fontWeight: 600, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
-									>
-										{cell.point.name}
-									</text>
 								</g>
 							);
 						})}
