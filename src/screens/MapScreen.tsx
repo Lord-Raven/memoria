@@ -170,6 +170,12 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 	return points;
 };
 
+const getPowerWeight = (point: VoronoiPoint) => {
+	const radius = Math.max(1, point.maxRadius);
+	// Power-diagram weights are radius-squared; this moves borders toward smaller cells.
+	return radius * radius;
+};
+
 const getSaveForMutation = (stage: Stage) => {
 	const slot = stage.saveData.lastSaveSlot;
 	if (!stage.saveData.saves[slot]) {
@@ -315,7 +321,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		const weightedVoronoi = weightedVoronoiFactory()
 			.x((d: VoronoiPoint) => d.x)
 			.y((d: VoronoiPoint) => d.y)
-			.weight((d: VoronoiPoint) => d.weight)
+			.weight((d: VoronoiPoint) => getPowerWeight(d))
 			.clip([
 				[0, 0],
 				[MAP_WIDTH, 0],
