@@ -171,6 +171,17 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 	return points;
 };
 
+const expandPolygonFromCenter = (polygon: number[][], centerX: number, centerY: number, scale: number) => {
+	if (!polygon || polygon.length < 3) {
+		return polygon;
+	}
+
+	return polygon.map(([x, y]) => [
+		centerX + (x - centerX) * scale,
+		centerY + (y - centerY) * scale,
+	]);
+};
+
 const getPowerWeight = (point: VoronoiPoint) => {
 	const radius = Math.max(1, point.maxRadius);
 	// Power-diagram weights are radius-squared; this moves borders toward smaller cells.
@@ -318,12 +329,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
+			return [] as Array<{ point: VoronoiPoint; path: string; bleedPath: string; patternId: string; clipPathId: string }>;
 		}
 
 		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
 		if (!weightedVoronoiFactory) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
+			return [] as Array<{ point: VoronoiPoint; path: string; bleedPath: string; patternId: string; clipPathId: string }>;
 		}
 
 		const weightedVoronoi = weightedVoronoiFactory()
@@ -350,7 +361,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 		>;
 
-		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }> = [];
+		const cells: Array<{ point: VoronoiPoint; path: string; bleedPath: string; patternId: string; clipPathId: string }> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
@@ -374,9 +385,16 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				continue;
 			}
 
+			const expandedPolygon = clipPolygonWithConvex(
+				expandPolygonFromCenter(clippedPolygon, point.x, point.y, 1.06),
+				mapBoundsPolygon,
+			);
+			const bleedPath = toPolygonPath(expandedPolygon.length >= 3 ? expandedPolygon : clippedPolygon);
+
 			cells.push({
 				point,
 				path,
+				bleedPath,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
@@ -559,11 +577,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 									/>
 								</pattern>
 							))}
-								<filter id="map-cell-bleed" x="-8%" y="-8%" width="116%" height="116%" colorInterpolationFilters="sRGB">
-									<feMorphology in="SourceAlpha" operator="dilate" radius="8" result="expanded" />
-									<feGaussianBlur in="expanded" stdDeviation="9" result="softEdge" />
-									<feComposite in="SourceGraphic" in2="softEdge" operator="in" />
-								</filter>
 								{voronoiCells.map((cell) => (
 									<clipPath key={cell.clipPathId} id={cell.clipPathId} clipPathUnits="userSpaceOnUse">
 										<path d={cell.path} />
@@ -575,10 +588,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							return (
 								<g key={cell.point.id}>
 									<path
-										d={cell.path}
+										d={cell.bleedPath}
 										fill={`url(#${cell.patternId})`}
-										opacity={0.46}
-										filter="url(#map-cell-bleed)"
+										opacity={0.42}
 										style={{ transition: "opacity 180ms ease" }}
 										pointerEvents="none"
 									/>
