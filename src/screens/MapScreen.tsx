@@ -323,23 +323,54 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				[0, MAP_HEIGHT],
 			]);
 
-		const polygons = weightedVoronoi(pulsedPoints) as number[][][];
-		return polygons
-			.map((polygon, index) => {
-				const point = pulsedPoints[index];
-				const clippedPolygon = clipPolygonWithConvex(
-					polygon,
-					createCirclePolygon(point.x, point.y, point.maxRadius),
-				);
+		const mapBoundsPolygon = [
+			[0, 0],
+			[MAP_WIDTH, 0],
+			[MAP_WIDTH, MAP_HEIGHT],
+			[0, MAP_HEIGHT],
+		] as number[][];
 
-				return {
-					point,
-					path: toPolygonPath(clippedPolygon),
-					patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
-				};
-			})
-			.filter((cell) => cell.path.length > 0);
+		const polygons = weightedVoronoi(pulsedPoints) as Array<
+			number[][] & {
+				site?: { originalObject?: VoronoiPoint };
+			}
+		>;
+
+		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string }> = [];
+		for (let index = 0; index < polygons.length; index += 1) {
+			const polygon = polygons[index];
+			if (!polygon || polygon.length < 3) {
+				continue;
+			}
+
+			const point = polygon.site?.originalObject || pulsedPoints[index];
+			if (!point) {
+				continue;
+			}
+
+			const radiusPolygon = createCirclePolygon(point.x, point.y, point.maxRadius);
+			let clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
+
+			if (clippedPolygon.length < 3) {
+				clippedPolygon = clipPolygonWithConvex(radiusPolygon, mapBoundsPolygon);
+			}
+
+			const path = toPolygonPath(clippedPolygon);
+			if (!path) {
+				continue;
+			}
+
+			cells.push({
+				point,
+				path,
+				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+			});
+		}
+
+		return cells;
 	}, [pulsedPoints]);
+
+	const hasAtlasLocations = targetPoints.length > 0;
 
 	const addRandomLocation = (event: MouseEvent<SVGSVGElement>) => {
 		const rect = event.currentTarget.getBoundingClientRect();
@@ -542,7 +573,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							</g>
 						))}
 
-						{voronoiCells.length === 0 && (
+						{!hasAtlasLocations && (
 							<text
 								x={MAP_WIDTH / 2}
 								y={MAP_HEIGHT / 2}
@@ -551,6 +582,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 								style={{ fontSize: "26px", fontWeight: 500 }}
 							>
 								Atlas is empty. Click to add the first location.
+							</text>
+						)}
+
+						{hasAtlasLocations && voronoiCells.length === 0 && (
+							<text
+								x={MAP_WIDTH / 2}
+								y={MAP_HEIGHT / 2}
+								textAnchor="middle"
+								fill="rgba(255,255,255,0.75)"
+								style={{ fontSize: "20px", fontWeight: 500 }}
+							>
+								Locations exist, but no renderable cell geometry was produced.
 							</text>
 						)}
 					</svg>
