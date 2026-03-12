@@ -33,7 +33,7 @@ const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
 const CELL_OVERLAP_MARGIN = 22;
-const CELL_OVERLAP_BLUR = 8;
+const CELL_OVERLAP_BANDS = 8;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -81,6 +81,15 @@ const toPolygonPath = (polygon: number[][]) => {
 	return polygon
 		.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`)
 		.join(" ") + " Z";
+};
+
+const toRingPath = (outerPolygon: number[][], innerPolygon: number[][]) => {
+	const outerPath = toPolygonPath(outerPolygon);
+	const innerPath = toPolygonPath(innerPolygon);
+	if (!outerPath || !innerPath) {
+		return "";
+	}
+	return `${outerPath} ${innerPath}`;
 };
 
 const getPolygonCentroid = (polygon: number[][]) => {
@@ -342,10 +351,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return [] as Array<{
 				point: VoronoiPoint;
 				path: string;
-				bleedPath: string;
+				overlapBands: Array<{ path: string; opacity: number }>;
 				patternId: string;
 				clipPathId: string;
-				ringMaskId: string;
 			}>;
 		}
 
@@ -354,10 +362,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return [] as Array<{
 				point: VoronoiPoint;
 				path: string;
-				bleedPath: string;
+				overlapBands: Array<{ path: string; opacity: number }>;
 				patternId: string;
 				clipPathId: string;
-				ringMaskId: string;
 			}>;
 		}
 
@@ -388,10 +395,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		const cells: Array<{
 			point: VoronoiPoint;
 			path: string;
-			bleedPath: string;
+			overlapBands: Array<{ path: string; opacity: number }>;
 			patternId: string;
 			clipPathId: string;
-			ringMaskId: string;
 		}> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
@@ -416,19 +422,35 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				continue;
 			}
 
-			const expandedPolygon = clipPolygonWithConvex(
-				expandPolygonByMargin(clippedPolygon, point.x, point.y, CELL_OVERLAP_MARGIN),
-				mapBoundsPolygon,
-			);
-			const bleedPath = toPolygonPath(expandedPolygon.length >= 3 ? expandedPolygon : clippedPolygon);
+			const overlapPolygons: number[][][] = [clippedPolygon];
+			for (let bandIndex = 1; bandIndex <= CELL_OVERLAP_BANDS; bandIndex += 1) {
+				const bandMargin = (CELL_OVERLAP_MARGIN * bandIndex) / CELL_OVERLAP_BANDS;
+				const expandedPolygon = clipPolygonWithConvex(
+					expandPolygonByMargin(clippedPolygon, point.x, point.y, bandMargin),
+					mapBoundsPolygon,
+				);
+				overlapPolygons.push(expandedPolygon.length >= 3 ? expandedPolygon : overlapPolygons[bandIndex - 1]);
+			}
+
+			const overlapBands: Array<{ path: string; opacity: number }> = [];
+			for (let bandIndex = 1; bandIndex <= CELL_OVERLAP_BANDS; bandIndex += 1) {
+				const outerPolygon = overlapPolygons[bandIndex];
+				const innerPolygon = overlapPolygons[bandIndex - 1];
+				const ringPath = toRingPath(outerPolygon, innerPolygon);
+				if (!ringPath) {
+					continue;
+				}
+
+				const opacity = clamp(1 - (bandIndex - 1) / CELL_OVERLAP_BANDS, 0, 1);
+				overlapBands.push({ path: ringPath, opacity });
+			}
 
 			cells.push({
 				point,
 				path,
-				bleedPath,
+				overlapBands,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
-				ringMaskId: `location-ring-mask-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
 		}
 
@@ -590,17 +612,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
 
 						<defs>
-							<filter
-								id="map-cell-overlap-fade"
-								x={-CELL_OVERLAP_MARGIN * 2}
-								y={-CELL_OVERLAP_MARGIN * 2}
-								width={MAP_WIDTH + CELL_OVERLAP_MARGIN * 4}
-								height={MAP_HEIGHT + CELL_OVERLAP_MARGIN * 4}
-								filterUnits="userSpaceOnUse"
-								colorInterpolationFilters="sRGB"
-							>
-								<feGaussianBlur in="SourceGraphic" stdDeviation={CELL_OVERLAP_BLUR} />
-							</filter>
 							{voronoiCells.map((cell) => (
 								<pattern
 									key={cell.patternId}
@@ -625,20 +636,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										<path d={cell.path} />
 									</clipPath>
 								))}
-								{voronoiCells.map((cell) => (
-									<mask
-										key={cell.ringMaskId}
-										id={cell.ringMaskId}
-										maskUnits="userSpaceOnUse"
-										maskContentUnits="userSpaceOnUse"
-									>
-										<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="black" />
-										<g filter="url(#map-cell-overlap-fade)">
-											<path d={cell.bleedPath} fill="white" />
-										</g>
-										<path d={cell.path} fill="black" />
-									</mask>
-								))}
 						</defs>
 
 						{voronoiCells.map((cell) => {
@@ -651,21 +648,17 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										style={{ mixBlendMode: "screen" }}
 										pointerEvents="none"
 									/>
-									<path
-										d={cell.bleedPath}
-										fill={`url(#${cell.patternId})`}
-										opacity={0.52}
-										mask={`url(#${cell.ringMaskId})`}
-										style={{ mixBlendMode: "screen", transition: "opacity 180ms ease" }}
-										pointerEvents="none"
-									/>
-									<path
-										d={cell.bleedPath}
-										fill="rgba(9, 20, 30, 0.1)"
-										mask={`url(#${cell.ringMaskId})`}
-										style={{ transition: "opacity 180ms ease" }}
-										pointerEvents="none"
-									/>
+									{cell.overlapBands.map((band, index) => (
+										<path
+											key={`${cell.point.id}-overlap-${index}`}
+											d={band.path}
+											fill={`url(#${cell.patternId})`}
+											fillRule="evenodd"
+											opacity={0.42 * band.opacity}
+											style={{ mixBlendMode: "screen", transition: "opacity 180ms ease" }}
+											pointerEvents="none"
+										/>
+									))}
 									<path
 										d={cell.path}
 										fill="rgba(8, 20, 31, 0.16)"
