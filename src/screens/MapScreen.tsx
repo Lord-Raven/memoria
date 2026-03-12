@@ -32,8 +32,8 @@ const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
-const CELL_EDGE_FADE_WIDTH = 22;
-const CELL_EDGE_FADE_BLUR = 7;
+const CELL_OVERLAP_MARGIN = 22;
+const CELL_OVERLAP_BLUR = 8;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -173,15 +173,23 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 	return points;
 };
 
-const expandPolygonFromCenter = (polygon: number[][], centerX: number, centerY: number, scale: number) => {
+const expandPolygonByMargin = (polygon: number[][], centerX: number, centerY: number, margin: number) => {
 	if (!polygon || polygon.length < 3) {
 		return polygon;
 	}
 
-	return polygon.map(([x, y]) => [
-		centerX + (x - centerX) * scale,
-		centerY + (y - centerY) * scale,
-	]);
+	return polygon.map(([x, y]) => {
+		const dx = x - centerX;
+		const dy = y - centerY;
+		const distance = Math.hypot(dx, dy);
+		if (distance < 1e-4) {
+			return [x, y];
+		}
+
+		const nextDistance = distance + margin;
+		const ratio = nextDistance / distance;
+		return [centerX + dx * ratio, centerY + dy * ratio];
+	});
 };
 
 const getPowerWeight = (point: VoronoiPoint) => {
@@ -337,7 +345,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				bleedPath: string;
 				patternId: string;
 				clipPathId: string;
-				edgeMaskId: string;
+				ringMaskId: string;
 			}>;
 		}
 
@@ -349,7 +357,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				bleedPath: string;
 				patternId: string;
 				clipPathId: string;
-				edgeMaskId: string;
+				ringMaskId: string;
 			}>;
 		}
 
@@ -383,7 +391,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			bleedPath: string;
 			patternId: string;
 			clipPathId: string;
-			edgeMaskId: string;
+			ringMaskId: string;
 		}> = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
@@ -409,7 +417,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 
 			const expandedPolygon = clipPolygonWithConvex(
-				expandPolygonFromCenter(clippedPolygon, point.x, point.y, 1.06),
+				expandPolygonByMargin(clippedPolygon, point.x, point.y, CELL_OVERLAP_MARGIN),
 				mapBoundsPolygon,
 			);
 			const bleedPath = toPolygonPath(expandedPolygon.length >= 3 ? expandedPolygon : clippedPolygon);
@@ -420,7 +428,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				bleedPath,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
-				edgeMaskId: `location-edge-mask-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+				ringMaskId: `location-ring-mask-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
 		}
 
@@ -583,15 +591,15 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 						<defs>
 							<filter
-								id="map-cell-edge-fade"
-								x={-CELL_EDGE_FADE_WIDTH}
-								y={-CELL_EDGE_FADE_WIDTH}
-								width={MAP_WIDTH + CELL_EDGE_FADE_WIDTH * 2}
-								height={MAP_HEIGHT + CELL_EDGE_FADE_WIDTH * 2}
+								id="map-cell-overlap-fade"
+								x={-CELL_OVERLAP_MARGIN * 2}
+								y={-CELL_OVERLAP_MARGIN * 2}
+								width={MAP_WIDTH + CELL_OVERLAP_MARGIN * 4}
+								height={MAP_HEIGHT + CELL_OVERLAP_MARGIN * 4}
 								filterUnits="userSpaceOnUse"
 								colorInterpolationFilters="sRGB"
 							>
-								<feGaussianBlur in="SourceGraphic" stdDeviation={CELL_EDGE_FADE_BLUR} />
+								<feGaussianBlur in="SourceGraphic" stdDeviation={CELL_OVERLAP_BLUR} />
 							</filter>
 							{voronoiCells.map((cell) => (
 								<pattern
@@ -619,21 +627,16 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 								))}
 								{voronoiCells.map((cell) => (
 									<mask
-										key={cell.edgeMaskId}
-										id={cell.edgeMaskId}
+										key={cell.ringMaskId}
+										id={cell.ringMaskId}
 										maskUnits="userSpaceOnUse"
 										maskContentUnits="userSpaceOnUse"
 									>
 										<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="black" />
-										<path d={cell.path} fill="white" />
-										<path
-											d={cell.path}
-											fill="none"
-											stroke="black"
-											strokeWidth={CELL_EDGE_FADE_WIDTH}
-											strokeLinejoin="round"
-											filter="url(#map-cell-edge-fade)"
-										/>
+										<g filter="url(#map-cell-overlap-fade)">
+											<path d={cell.bleedPath} fill="white" />
+										</g>
+										<path d={cell.path} fill="black" />
 									</mask>
 								))}
 						</defs>
@@ -642,22 +645,32 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							return (
 								<g key={cell.point.id}>
 									<path
+										d={cell.path}
+										fill={`url(#${cell.patternId})`}
+										opacity={0.78}
+										style={{ mixBlendMode: "screen" }}
+										pointerEvents="none"
+									/>
+									<path
 										d={cell.bleedPath}
 										fill={`url(#${cell.patternId})`}
-										opacity={0.42}
-										mask={`url(#${cell.edgeMaskId})`}
+										opacity={0.52}
+										mask={`url(#${cell.ringMaskId})`}
+										style={{ mixBlendMode: "screen", transition: "opacity 180ms ease" }}
+										pointerEvents="none"
+									/>
+									<path
+										d={cell.bleedPath}
+										fill="rgba(9, 20, 30, 0.1)"
+										mask={`url(#${cell.ringMaskId})`}
 										style={{ transition: "opacity 180ms ease" }}
 										pointerEvents="none"
 									/>
 									<path
 										d={cell.path}
-										fill={`url(#${cell.patternId})`}
-										opacity={0.74}
-										mask={`url(#${cell.edgeMaskId})`}
-										style={{ mixBlendMode: "screen" }}
+										fill="rgba(8, 20, 31, 0.16)"
 										pointerEvents="none"
 									/>
-									<path d={cell.path} fill="rgba(8, 20, 31, 0.2)" mask={`url(#${cell.edgeMaskId})`} pointerEvents="none" />
 									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" pointerEvents="none" />
 									<path
 										d={cell.path}
