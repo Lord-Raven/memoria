@@ -23,6 +23,7 @@ interface VoronoiPoint {
 	weight: number;
 	maxRadius: number;
 	imageUrl: string;
+	themeColor: string;
 }
 
 const MAP_WIDTH = 1000;
@@ -69,6 +70,47 @@ const normalizeCoordinate = (value: number, max: number) => {
 		return (value / 100) * max;
 	}
 	return clamp(value, 0, max);
+};
+
+const asHexColor = (value: string) => {
+	const normalized = value.trim();
+	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
+};
+
+const hexToRgb = (hexColor: string) => {
+	const hex = asHexColor(hexColor).replace("#", "");
+	if (!hex) {
+		return null;
+	}
+
+	const expandedHex = hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
+	const parsed = Number.parseInt(expandedHex, 16);
+	if (!Number.isFinite(parsed)) {
+		return null;
+	}
+
+	return {
+		r: (parsed >> 16) & 255,
+		g: (parsed >> 8) & 255,
+		b: parsed & 255,
+	};
+};
+
+const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
+	const rgb = hexToRgb(hexColor);
+	if (!rgb) {
+		return fallback;
+	}
+	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp(alpha, 0, 1)})`;
+};
+
+const getLocationBorderPalette = (themeColor: string) => {
+	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
+	return {
+		outerStroke: colorWithAlpha(normalizedThemeColor, 0.92, "rgba(215, 190, 122, 0.92)"),
+		innerStroke: colorWithAlpha(normalizedThemeColor, 0.72, "rgba(215, 190, 122, 0.72)"),
+		gapStroke: "rgba(3, 11, 19, 0.9)",
+	};
 };
 
 const toPolygonPath = (polygon: number[][]) => {
@@ -218,6 +260,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				weight: Math.max(0.05, location.weight || 1),
 				maxRadius: clamp(maxRadius, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
 				imageUrl: location.imageUrl,
+				themeColor: location.themeColor,
 			};
 		});
 	}, [stage, revision]);
@@ -531,9 +574,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
 
 						<defs>
-							<filter id="cell-edge-fade" x="-8%" y="-8%" width="116%" height="116%">
-								<feGaussianBlur stdDeviation="2.8" />
-							</filter>
 							{voronoiCells.map((cell) => (
 								<pattern
 									key={cell.patternId}
@@ -555,41 +595,46 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							))}
 						</defs>
 
-						{voronoiCells.map((cell) => (
-							<g key={cell.point.id}>
-								<path
-									d={cell.path}
-									fill={`url(#${cell.patternId})`}
-									stroke="rgba(255,255,255,0.18)"
-									strokeWidth={0.7}
-									style={{ transition: "opacity 180ms ease" }}
-								/>
-								<path
-									d={cell.path}
-									fill="none"
-									stroke="rgba(255, 255, 255, 0.2)"
-									strokeWidth={7.5}
-									filter="url(#cell-edge-fade)"
-									style={{ pointerEvents: "none" }}
-								/>
-								<path
-									d={cell.path}
-									fill="rgba(10, 26, 39, 0.18)"
-									stroke="rgba(10, 18, 28, 0.28)"
-									strokeWidth={0.35}
-									style={{ pointerEvents: "none" }}
-								/>
-								<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
-								<text
-									x={cell.point.x + 8}
-									y={cell.point.y - 8}
-									fill="rgba(255,255,255,0.95)"
-									style={{ fontSize: "15px", fontWeight: 600, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
-								>
-									{cell.point.name}
-								</text>
-							</g>
-						))}
+						{voronoiCells.map((cell) => {
+							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
+
+							return (
+								<g key={cell.point.id}>
+									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
+									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" />
+									<path
+										d={cell.path}
+										fill="none"
+										stroke={borderPalette.outerStroke}
+										strokeWidth={4.8}
+										strokeLinejoin="round"
+									/>
+									<path
+										d={cell.path}
+										fill="none"
+										stroke={borderPalette.gapStroke}
+										strokeWidth={2.8}
+										strokeLinejoin="round"
+									/>
+									<path
+										d={cell.path}
+										fill="none"
+										stroke={borderPalette.innerStroke}
+										strokeWidth={1.2}
+										strokeLinejoin="round"
+									/>
+									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
+									<text
+										x={cell.point.x + 8}
+										y={cell.point.y - 8}
+										fill="rgba(255,255,255,0.95)"
+										style={{ fontSize: "15px", fontWeight: 600, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
+									>
+										{cell.point.name}
+									</text>
+								</g>
+							);
+						})}
 
 						{!hasAtlasLocations && (
 							<text
