@@ -8,7 +8,6 @@ import { ArrowBack, DeleteSweep } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Button } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
-import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 
 interface MapScreenProps {
 	stage: () => Stage;
@@ -31,6 +30,8 @@ const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
+const SDF_TILE_SIZE = 10;
+const SDF_SMOOTHING_PASSES = 2;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -80,94 +81,206 @@ const toPolygonPath = (polygon: number[][]) => {
 		.join(" ") + " Z";
 };
 
-const getPolygonCentroid = (polygon: number[][]) => {
-	if (polygon.length === 0) {
-		return [0, 0] as number[];
+const polygonArea = (polygon: number[][]) => {
+	let area = 0;
+	for (let i = 0; i < polygon.length; i += 1) {
+		const [x1, y1] = polygon[i];
+		const [x2, y2] = polygon[(i + 1) % polygon.length];
+		area += x1 * y2 - x2 * y1;
 	}
-	let x = 0;
-	let y = 0;
-	for (const point of polygon) {
-		x += point[0];
-		y += point[1];
-	}
-	return [x / polygon.length, y / polygon.length] as number[];
+	return area * 0.5;
 };
 
-const lineIntersection = (a: number[], b: number[], c: number[], d: number[]) => {
-	const [x1, y1] = a;
-	const [x2, y2] = b;
-	const [x3, y3] = c;
-	const [x4, y4] = d;
-
-	const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-	if (Math.abs(denominator) < 1e-8) {
-		return b;
+const dedupeSequentialPoints = (polygon: number[][], epsilon = 0.01) => {
+	if (polygon.length < 2) {
+		return polygon;
 	}
 
-	const determinant1 = x1 * y2 - y1 * x2;
-	const determinant2 = x3 * y4 - y3 * x4;
-	const px = (determinant1 * (x3 - x4) - (x1 - x2) * determinant2) / denominator;
-	const py = (determinant1 * (y3 - y4) - (y1 - y2) * determinant2) / denominator;
-	return [px, py] as number[];
+	const deduped: number[][] = [polygon[0]];
+	for (let i = 1; i < polygon.length; i += 1) {
+		const previous = deduped[deduped.length - 1];
+		const current = polygon[i];
+		if (Math.hypot(current[0] - previous[0], current[1] - previous[1]) >= epsilon) {
+			deduped.push(current);
+		}
+	}
+
+	if (deduped.length > 2) {
+		const first = deduped[0];
+		const last = deduped[deduped.length - 1];
+		if (Math.hypot(first[0] - last[0], first[1] - last[1]) < epsilon) {
+			deduped.pop();
+		}
+	}
+
+	return deduped;
 };
 
-const clipPolygonWithConvex = (subjectPolygon: number[][], clipPolygon: number[][]) => {
-	if (subjectPolygon.length < 3 || clipPolygon.length < 3) {
-		return [] as number[][];
-	}
-
-	let outputList = subjectPolygon;
-	const clipCentroid = getPolygonCentroid(clipPolygon);
-
-	for (let i = 0; i < clipPolygon.length; i += 1) {
-		const clipStart = clipPolygon[i];
-		const clipEnd = clipPolygon[(i + 1) % clipPolygon.length];
-		const interiorCross =
-			(clipEnd[0] - clipStart[0]) * (clipCentroid[1] - clipStart[1]) -
-			(clipEnd[1] - clipStart[1]) * (clipCentroid[0] - clipStart[0]);
-		const interiorSign = interiorCross >= 0 ? 1 : -1;
-		const inputList = outputList;
-		outputList = [];
-
-		if (inputList.length === 0) {
+const smoothClosedPolygon = (polygon: number[][], iterations: number) => {
+	let current = polygon;
+	for (let pass = 0; pass < iterations; pass += 1) {
+		if (current.length < 3) {
 			break;
 		}
 
-		const isInside = (point: number[]) => {
-			const cross =
-				(clipEnd[0] - clipStart[0]) * (point[1] - clipStart[1]) -
-				(clipEnd[1] - clipStart[1]) * (point[0] - clipStart[0]);
-			return interiorSign > 0 ? cross >= -1e-8 : cross <= 1e-8;
-		};
+		const smoothed: number[][] = [];
+		for (let i = 0; i < current.length; i += 1) {
+			const p0 = current[i];
+			const p1 = current[(i + 1) % current.length];
+			smoothed.push([0.75 * p0[0] + 0.25 * p1[0], 0.75 * p0[1] + 0.25 * p1[1]]);
+			smoothed.push([0.25 * p0[0] + 0.75 * p1[0], 0.25 * p0[1] + 0.75 * p1[1]]);
+		}
+		current = dedupeSequentialPoints(smoothed);
+	}
 
-		let previousPoint = inputList[inputList.length - 1];
-		for (const currentPoint of inputList) {
-			const currentInside = isInside(currentPoint);
-			const previousInside = isInside(previousPoint);
+	return current;
+};
 
-			if (currentInside) {
-				if (!previousInside) {
-					outputList.push(lineIntersection(previousPoint, currentPoint, clipStart, clipEnd));
+const buildSdfOwners = (points: VoronoiPoint[]) => {
+	const columns = Math.max(1, Math.ceil(MAP_WIDTH / SDF_TILE_SIZE));
+	const rows = Math.max(1, Math.ceil(MAP_HEIGHT / SDF_TILE_SIZE));
+	const owners = new Int16Array(columns * rows);
+
+	for (let row = 0; row < rows; row += 1) {
+		const y = Math.min(MAP_HEIGHT, (row + 0.5) * SDF_TILE_SIZE);
+		for (let column = 0; column < columns; column += 1) {
+			const x = Math.min(MAP_WIDTH, (column + 0.5) * SDF_TILE_SIZE);
+			let bestIndex = 0;
+			let bestBoundaryDistance = Number.POSITIVE_INFINITY;
+			let bestCenterDistanceSq = Number.POSITIVE_INFINITY;
+
+			for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+				const point = points[pointIndex];
+				const dx = x - point.x;
+				const dy = y - point.y;
+				const centerDistanceSq = dx * dx + dy * dy;
+				const boundaryDistance = Math.sqrt(centerDistanceSq) - point.maxRadius;
+
+				if (
+					boundaryDistance < bestBoundaryDistance - 1e-6 ||
+					(Math.abs(boundaryDistance - bestBoundaryDistance) <= 1e-6 && centerDistanceSq < bestCenterDistanceSq)
+				) {
+					bestBoundaryDistance = boundaryDistance;
+					bestCenterDistanceSq = centerDistanceSq;
+					bestIndex = pointIndex;
 				}
-				outputList.push(currentPoint);
-			} else if (previousInside) {
-				outputList.push(lineIntersection(previousPoint, currentPoint, clipStart, clipEnd));
 			}
 
-			previousPoint = currentPoint;
+			owners[row * columns + column] = bestIndex;
 		}
 	}
 
-	return outputList;
+	return { owners, columns, rows };
 };
 
-const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 32) => {
-	const points: number[][] = [];
-	for (let i = 0; i < segments; i += 1) {
-		const angle = (i / segments) * Math.PI * 2;
-		points.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
+type Edge = {
+	start: number[];
+	end: number[];
+};
+
+const keyForPoint = (point: number[]) => `${point[0].toFixed(3)},${point[1].toFixed(3)}`;
+
+const traceLargestCellContour = (owners: Int16Array, columns: number, rows: number, cellIndex: number) => {
+	const edges: Edge[] = [];
+
+	const ownerAt = (column: number, row: number) => {
+		if (column < 0 || row < 0 || column >= columns || row >= rows) {
+			return -1;
+		}
+		return owners[row * columns + column];
+	};
+
+	for (let row = 0; row < rows; row += 1) {
+		for (let column = 0; column < columns; column += 1) {
+			if (ownerAt(column, row) !== cellIndex) {
+				continue;
+			}
+
+			const x0 = column * SDF_TILE_SIZE;
+			const y0 = row * SDF_TILE_SIZE;
+			const x1 = Math.min(MAP_WIDTH, (column + 1) * SDF_TILE_SIZE);
+			const y1 = Math.min(MAP_HEIGHT, (row + 1) * SDF_TILE_SIZE);
+
+			if (ownerAt(column, row - 1) !== cellIndex) {
+				edges.push({ start: [x1, y0], end: [x0, y0] });
+			}
+			if (ownerAt(column + 1, row) !== cellIndex) {
+				edges.push({ start: [x1, y1], end: [x1, y0] });
+			}
+			if (ownerAt(column, row + 1) !== cellIndex) {
+				edges.push({ start: [x0, y1], end: [x1, y1] });
+			}
+			if (ownerAt(column - 1, row) !== cellIndex) {
+				edges.push({ start: [x0, y0], end: [x0, y1] });
+			}
+		}
 	}
-	return points;
+
+	if (edges.length === 0) {
+		return [] as number[][];
+	}
+
+	const nextEdges = new Map<string, Array<{ key: string; edgeIndex: number }>>();
+	for (let edgeIndex = 0; edgeIndex < edges.length; edgeIndex += 1) {
+		const edge = edges[edgeIndex];
+		const startKey = keyForPoint(edge.start);
+		const endKey = keyForPoint(edge.end);
+		const existing = nextEdges.get(startKey) || [];
+		existing.push({ key: endKey, edgeIndex });
+		nextEdges.set(startKey, existing);
+	}
+
+	const usedEdges = new Set<number>();
+	const loops: number[][][] = [];
+
+	for (let seed = 0; seed < edges.length; seed += 1) {
+		if (usedEdges.has(seed)) {
+			continue;
+		}
+
+		const seedEdge = edges[seed];
+		const startKey = keyForPoint(seedEdge.start);
+		let currentKey = startKey;
+		const loop: number[][] = [seedEdge.start];
+
+		while (true) {
+			const candidates = nextEdges.get(currentKey) || [];
+			const candidate = candidates.find((item) => !usedEdges.has(item.edgeIndex));
+			if (!candidate) {
+				break;
+			}
+
+			usedEdges.add(candidate.edgeIndex);
+			const edge = edges[candidate.edgeIndex];
+			loop.push(edge.end);
+			currentKey = keyForPoint(edge.end);
+
+			if (currentKey === startKey) {
+				break;
+			}
+		}
+
+		const dedupedLoop = dedupeSequentialPoints(loop);
+		if (dedupedLoop.length >= 3) {
+			loops.push(dedupedLoop);
+		}
+	}
+
+	if (loops.length === 0) {
+		return [] as number[][];
+	}
+
+	let largestLoop = loops[0];
+	let largestArea = Math.abs(polygonArea(largestLoop));
+	for (let i = 1; i < loops.length; i += 1) {
+		const loopArea = Math.abs(polygonArea(loops[i]));
+		if (loopArea > largestArea) {
+			largestArea = loopArea;
+			largestLoop = loops[i];
+		}
+	}
+
+	return smoothClosedPolygon(largestLoop, SDF_SMOOTHING_PASSES);
 };
 
 const getSaveForMutation = (stage: Stage) => {
@@ -307,55 +420,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
 		}
 
-		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
-		if (!weightedVoronoiFactory) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string }>;
-		}
-
-		const weightedVoronoi = weightedVoronoiFactory()
-			.x((d: VoronoiPoint) => d.x)
-			.y((d: VoronoiPoint) => d.y)
-			.weight((d: VoronoiPoint) => d.weight)
-			.clip([
-				[0, 0],
-				[MAP_WIDTH, 0],
-				[MAP_WIDTH, MAP_HEIGHT],
-				[0, MAP_HEIGHT],
-			]);
-
-		const mapBoundsPolygon = [
-			[0, 0],
-			[MAP_WIDTH, 0],
-			[MAP_WIDTH, MAP_HEIGHT],
-			[0, MAP_HEIGHT],
-		] as number[][];
-
-		const polygons = weightedVoronoi(pulsedPoints) as Array<
-			number[][] & {
-				site?: { originalObject?: VoronoiPoint };
-			}
-		>;
+		const { owners, columns, rows } = buildSdfOwners(pulsedPoints);
 
 		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string }> = [];
-		for (let index = 0; index < polygons.length; index += 1) {
-			const polygon = polygons[index];
-			if (!polygon || polygon.length < 3) {
-				continue;
-			}
-
-			const point = polygon.site?.originalObject || pulsedPoints[index];
-			if (!point) {
-				continue;
-			}
-
-			const radiusPolygon = createCirclePolygon(point.x, point.y, point.maxRadius);
-			let clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
-
-			if (clippedPolygon.length < 3) {
-				clippedPolygon = clipPolygonWithConvex(radiusPolygon, mapBoundsPolygon);
-			}
-
-			const path = toPolygonPath(clippedPolygon);
+		for (let index = 0; index < pulsedPoints.length; index += 1) {
+			const point = pulsedPoints[index];
+			const contour = traceLargestCellContour(owners, columns, rows, index);
+			const path = toPolygonPath(contour);
 			if (!path) {
 				continue;
 			}
