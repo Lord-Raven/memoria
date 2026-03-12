@@ -72,47 +72,6 @@ const normalizeCoordinate = (value: number, max: number) => {
 	return clamp(value, 0, max);
 };
 
-const asHexColor = (value: string) => {
-	const normalized = (value ?? 'fff').trim();
-	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
-};
-
-const hexToRgb = (hexColor: string) => {
-	const hex = asHexColor(hexColor).replace("#", "");
-	if (!hex) {
-		return null;
-	}
-
-	const expandedHex = hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
-	const parsed = Number.parseInt(expandedHex, 16);
-	if (!Number.isFinite(parsed)) {
-		return null;
-	}
-
-	return {
-		r: (parsed >> 16) & 255,
-		g: (parsed >> 8) & 255,
-		b: parsed & 255,
-	};
-};
-
-const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
-	const rgb = hexToRgb(hexColor);
-	if (!rgb) {
-		return fallback;
-	}
-	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp(alpha, 0, 1)})`;
-};
-
-const getLocationBorderPalette = (themeColor: string) => {
-	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
-	return {
-		outerStroke: colorWithAlpha(normalizedThemeColor, 0.92, "rgba(215, 190, 122, 0.92)"),
-		innerStroke: colorWithAlpha(normalizedThemeColor, 0.72, "rgba(215, 190, 122, 0.72)"),
-		gapStroke: "rgba(3, 11, 19, 0.9)",
-	};
-};
-
 const toPolygonPath = (polygon: number[][]) => {
 	if (!polygon || polygon.length < 3) {
 		return "";
@@ -596,10 +555,15 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										width={MAP_WIDTH}
 										height={MAP_HEIGHT}
 										preserveAspectRatio="xMidYMid slice"
-										opacity={0.92}
+										opacity={0.9}
 									/>
 								</pattern>
 							))}
+								<filter id="map-cell-bleed" x="-8%" y="-8%" width="116%" height="116%" colorInterpolationFilters="sRGB">
+									<feMorphology in="SourceAlpha" operator="dilate" radius="8" result="expanded" />
+									<feGaussianBlur in="expanded" stdDeviation="9" result="softEdge" />
+									<feComposite in="SourceGraphic" in2="softEdge" operator="in" />
+								</filter>
 								{voronoiCells.map((cell) => (
 									<clipPath key={cell.clipPathId} id={cell.clipPathId} clipPathUnits="userSpaceOnUse">
 										<path d={cell.path} />
@@ -608,41 +572,33 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						</defs>
 
 						{voronoiCells.map((cell) => {
-							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
-
 							return (
-								<g
-									key={cell.point.id}
-									onMouseEnter={() => setTooltip(cell.point.name)}
-									onMouseLeave={clearTooltip}
-								>
-									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
-									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" />
+								<g key={cell.point.id}>
 									<path
 										d={cell.path}
-										fill="none"
-										stroke={borderPalette.outerStroke}
-										strokeWidth={4.8}
-										strokeLinejoin="round"
-										clipPath={`url(#${cell.clipPathId})`}
+										fill={`url(#${cell.patternId})`}
+										opacity={0.46}
+										filter="url(#map-cell-bleed)"
+										style={{ transition: "opacity 180ms ease" }}
+										pointerEvents="none"
 									/>
 									<path
 										d={cell.path}
-										fill="none"
-										stroke={borderPalette.gapStroke}
-										strokeWidth={2.8}
-										strokeLinejoin="round"
-										clipPath={`url(#${cell.clipPathId})`}
+										fill={`url(#${cell.patternId})`}
+										opacity={0.74}
+										style={{ mixBlendMode: "screen" }}
+										pointerEvents="none"
 									/>
+									<path d={cell.path} fill="rgba(8, 20, 31, 0.2)" pointerEvents="none" />
+									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" pointerEvents="none" />
 									<path
 										d={cell.path}
-										fill="none"
-										stroke={borderPalette.innerStroke}
-										strokeWidth={1.2}
-										strokeLinejoin="round"
-										clipPath={`url(#${cell.clipPathId})`}
+										fill="rgba(0, 0, 0, 0.001)"
+										pointerEvents="all"
+										onMouseEnter={() => setTooltip(cell.point.name)}
+										onMouseLeave={clearTooltip}
+										style={{ cursor: "pointer" }}
 									/>
-									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
 								</g>
 							);
 						})}
