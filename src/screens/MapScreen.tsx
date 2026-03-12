@@ -378,11 +378,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return;
 		}
 
-		const confirmed = window.confirm(`Clear all ${locationCount} locations from the atlas?`);
-		if (!confirmed) {
-			return;
-		}
-
 		for (const id of Object.keys(atlas)) {
 			delete atlas[id];
 		}
