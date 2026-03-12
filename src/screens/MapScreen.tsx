@@ -73,7 +73,7 @@ const normalizeCoordinate = (value: number, max: number) => {
 };
 
 const asHexColor = (value: string) => {
-	const normalized = value.trim();
+	const normalized = (value ?? 'fff').trim();
 	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
 };
 
