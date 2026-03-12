@@ -1,0 +1,252 @@
+import { FC, useEffect, useState } from "react";
+import { Stage } from "../Stage";
+import { ScreenType } from "./BaseScreen";
+import { FiberNew, PlayArrow, Settings } from "@mui/icons-material";
+import { SettingsScreen } from "./SettingsScreen";
+import { BlurredBackground } from "@lord-raven/novel-visualizer";
+import { Button, GridOverlay, Title, ConfirmDialog } from "./UiComponents";
+import { motion } from "framer-motion";
+import { Box } from "@mui/material";
+import { useTooltip } from "./TooltipContext";
+
+interface MenuScreenProps {
+    stage: () => Stage;
+    setScreenType: (type: ScreenType) => void;
+}
+
+export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
+    const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+    const [showSettings, setShowSettings] = useState(false);
+    const [isNewGameSettings, setIsNewGameSettings] = useState(false);
+    const [showConfirmNewGame, setShowConfirmNewGame] = useState(false);
+    const { setTooltip, clearTooltip } = useTooltip();
+    const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
+    
+    // Check if a save exists (if there are any actors or the layout has been modified)
+    const saveExists = () => {
+        return stage().getSave() && Object.keys(stage().getSave().actors).length > 2;
+    };
+
+    // Handle escape key to continue game if available
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && !disableAllButtons) {
+                if (showSettings) {
+                    console.log('close settings');
+                    handleSettingsCancel();
+                } else if (saveExists() && !showSettings) {
+                    console.log('continue');
+                    handleContinue();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showSettings]);
+
+    const handleContinue = () => {
+        setScreenType(ScreenType.SKIT);
+    };
+
+    const handleNewGame = () => {
+        // Check if a save exists
+        if (saveExists()) {
+            // Show confirmation dialog
+            setShowConfirmNewGame(true);
+        } else {
+            // No save exists, proceed directly to settings
+            setIsNewGameSettings(true);
+            setShowSettings(true);
+        }
+    };
+
+    const handleConfirmNewGame = () => {
+        setShowConfirmNewGame(false);
+        setIsNewGameSettings(true);
+        setShowSettings(true);
+    };
+
+    const handleCancelNewGame = () => {
+        setShowConfirmNewGame(false);
+    };
+
+    const handleSettings = () => {
+        // Show settings screen
+        setIsNewGameSettings(false);
+        setShowSettings(true);
+    };
+
+    const handleSettingsCancel = () => {
+        setShowSettings(false);
+        setIsNewGameSettings(false);
+    };
+
+    const handleSettingsConfirm = () => {
+        setShowSettings(false);
+        if (isNewGameSettings) {
+            setIsNewGameSettings(false);
+            setScreenType(ScreenType.LOADING);
+        }
+    };
+
+    const menuButtons = [
+        ...(saveExists() ? [{ 
+            key: 'continue', 
+            label: 'Continue', 
+            onClick: handleContinue,
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Resume your current game',
+            icon: PlayArrow
+        }] : []),
+        { 
+            key: 'new', 
+            label: 'New Game', 
+            onClick: handleNewGame,
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Start a fresh playthrough',
+            icon: FiberNew
+        },
+        { 
+            key: 'settings', 
+            label: 'Settings', 
+            onClick: handleSettings,
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
+            icon: Settings
+        }
+    ];
+
+    return (
+        <BlurredBackground
+            imageUrl="https://media.charhub.io/d41042d5-5860-4f76-85ac-885e65e92c2b/95fdc548-1c75-4101-a62e-65fc90a97437.png"
+            overlay="linear-gradient(135deg, rgba(26, 10, 46, 0.7) 0%, rgba(36, 7, 65, 0.8) 100%)"
+        >
+            <Box 
+                sx={{
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100vh', 
+                    width: '100vw',
+                    position: 'relative',
+                }}
+            >
+                {/* Background grid effect */}
+                <GridOverlay />
+
+                {/* Main menu container */}
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="glass-panel-bright"
+                    style={{
+                        padding: 'clamp(20px, 5vh, 40px) clamp(20px, 5vw, 40px)',
+                        minWidth: '300px',
+                        maxWidth: '90vw',
+                        maxHeight: '90vh',
+                        overflow: 'auto',
+                        boxSizing: 'border-box',
+                        position: 'relative',
+                        zIndex: 10,
+                    }}
+                >
+                    {/* Title */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                    >
+                        <Title 
+                            variant="glow" 
+                            style={{ 
+                                textAlign: 'center', 
+                                marginBottom: 'clamp(20px, 5vh, 40px)', 
+                                fontSize: 'clamp(18px, 5vw, 32px)' 
+                            }}
+                        >
+                            SoulMatcher
+                        </Title>
+                    </motion.div>
+
+                    {/* Menu buttons */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                        {menuButtons.map((button, index) => (
+                            <motion.div
+                                key={button.key}
+                                initial={{ opacity: 0, x: -30 }}
+                                animate={{ 
+                                    opacity: 1, 
+                                    x: hoveredButton === button.key && button.enabled ? 10 : 0
+                                }}
+                                transition={{ 
+                                    opacity: { delay: 0.4 + (index * 0.1), duration: 0.4, ease: 'easeOut' },
+                                    x: { duration: 0.2, ease: 'easeOut' }
+                                }}
+                                onMouseEnter={() => {
+                                    setHoveredButton(button.enabled ? button.key : null);
+                                    setTooltip(button.tooltip, button.icon);
+                                }}
+                                onMouseLeave={() => {
+                                    setHoveredButton(null);
+                                    clearTooltip();
+                                }}
+                            >
+                                <Button
+                                    variant="menu"
+                                    onClick={button.enabled ? button.onClick : undefined}
+                                    disabled={!button.enabled}
+                                    style={{
+                                        width: '100%',
+                                        fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                        padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                    }}
+                                >
+                                    {button.label}
+                                </Button>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Subtitle/version info */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 0.5 }}
+                        style={{
+                            textAlign: 'center',
+                            marginTop: 'clamp(20px, 4vh, 30px)',
+                            color: 'rgba(255, 215, 0, 0.6)',
+                            fontSize: 'clamp(10px, 1.5vw, 12px)',
+                        }}
+                    >
+                        {'v2026.02.27 - Improved emotion detection, cast randomization.'}
+                    </motion.div>
+                </motion.div>
+            </Box>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <SettingsScreen
+                    stage={stage}
+                    onCancel={handleSettingsCancel}
+                    onConfirm={handleSettingsConfirm}
+                    isNewGame={isNewGameSettings}
+                />
+            )}
+
+            {/* Confirm New Game Dialog */}
+            <ConfirmDialog
+                isOpen={showConfirmNewGame}
+                title="Overwrite Save?"
+                message="Starting a new game will overwrite your existing save. Are you sure you want to continue? (You can start a new chat to avoid this.)"
+                confirmText="Start New Game"
+                cancelText="Cancel"
+                onConfirm={handleConfirmNewGame}
+                onCancel={handleCancelNewGame}
+            />
+        </BlurredBackground>
+    );
+};

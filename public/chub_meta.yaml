@@ -40,9 +40,12 @@ creator_notes: "
 config_schema:
   type: object
   properties:
-    health:
-      type: integer
-      default: 100
+    beta_mode:
+      title: Beta Mode
+      description: Enable experimental beta features.
+      type: string
+      default: "False"
+      enum: ["True", "False"]
 
 # The schema of the state that you store.
 # This isn't needed even if you do store state,
