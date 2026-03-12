@@ -4,7 +4,7 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
 import { Box, Typography } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { ArrowBack, DeleteSweep } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Button } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
@@ -368,6 +368,34 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		);
 	};
 
+	const clearLocations = () => {
+		const save = getSaveForMutation(stage());
+		const atlas = save.atlas as Record<string, Location>;
+		const locationCount = Object.keys(atlas).length;
+
+		if (locationCount === 0) {
+			stage().showPriorityMessage("Atlas is already empty.", undefined, 1800);
+			return;
+		}
+
+		const confirmed = window.confirm(`Clear all ${locationCount} locations from the atlas?`);
+		if (!confirmed) {
+			return;
+		}
+
+		for (const id of Object.keys(atlas)) {
+			delete atlas[id];
+		}
+
+		stage().saveGame();
+		setRevision((value) => value + 1);
+		stage().showPriorityMessage(
+			locationCount === 1 ? "Cleared 1 location from the atlas." : `Cleared ${locationCount} locations from the atlas.`,
+			undefined,
+			2200,
+		);
+	};
+
 	return (
 		<BlurredBackground
 			imageUrl="https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1400&q=80"
@@ -393,18 +421,41 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						flexWrap: "wrap",
 					}}
 				>
-					<Button
-						variant="menu"
-						onClick={() => setScreenType(ScreenType.MENU)}
-						onMouseEnter={() => setTooltip("Return to menu", ArrowBack)}
-						onMouseLeave={clearTooltip}
-						style={{
-							minWidth: "150px",
-							fontSize: "14px",
+					<Box
+						sx={{
+							display: "flex",
+							gap: 1,
+							flexWrap: "wrap",
 						}}
 					>
-						Back to Menu
-					</Button>
+						<Button
+							variant="menu"
+							onClick={() => setScreenType(ScreenType.MENU)}
+							onMouseEnter={() => setTooltip("Return to menu", ArrowBack)}
+							onMouseLeave={clearTooltip}
+							style={{
+								minWidth: "150px",
+								fontSize: "14px",
+							}}
+						>
+							Back to Menu
+						</Button>
+
+						<Button
+							variant="menu"
+							onClick={clearLocations}
+							onMouseEnter={() => setTooltip("Delete all atlas locations", DeleteSweep)}
+							onMouseLeave={clearTooltip}
+							style={{
+								minWidth: "160px",
+								fontSize: "14px",
+								background: "linear-gradient(180deg, rgba(122, 33, 33, 0.92), rgba(88, 19, 19, 0.95))",
+								borderColor: "rgba(255, 120, 120, 0.35)",
+							}}
+						>
+							Clear Locations
+						</Button>
+					</Box>
 
 					<Typography
 						sx={{
