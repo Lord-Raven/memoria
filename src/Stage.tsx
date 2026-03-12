@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor } from "./content/Actor";
+import { Actor, ActorType } from "./content/Actor";
 import { Item } from "./content/Item";
 import { Skit } from "./content/Skit";
 import { BaseScreen } from "./screens/BaseScreen";
@@ -119,14 +119,28 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     getSave(): SaveType {
         return this.saveData.saves[this.saveData.lastSaveSlot] || {
-            playerId: this.primaryCharacter.id,
+            playerId: this.primaryCharacter.anonymizedId,
             actors: {
-                [this.primaryCharacter.id]: this.primaryCharacter,
+                [this.primaryCharacter.anonymizedId]: {
+                    id: this.primaryCharacter.anonymizedId,
+                    name: this.primaryCharacter.name,
+                    type: ActorType.PLAYER,
+                    description: '',
+                    avatarImageUrl: '',
+                    emotionPack: {},
+                    fullPath: '',
+                    motive: '',
+                    profile: '',
+                    themeColor: '',
+                    themeFontFamily: '',
+                    voiceId: ''
+                },
             },
             inventory: [],
             timeline: [],
             turn: 0,
             timestamp: Date.now(),
+
         };
     }
 
