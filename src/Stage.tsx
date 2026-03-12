@@ -20,6 +20,7 @@ type ChatStateType = {
 type SaveType = {
     playerId: string;
     actors: {[key: string]: Actor};
+    atlas: {[key: string]: Location};
     inventory: Item[];
     timeline: TimelineEntry[];
     turn: number;
@@ -136,6 +137,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     voiceId: ''
                 },
             },
+            atlas: {},
             inventory: [],
             timeline: [],
             turn: 0,
