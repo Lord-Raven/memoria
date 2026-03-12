@@ -531,6 +531,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
 
 						<defs>
+							<filter id="cell-edge-fade" x="-8%" y="-8%" width="116%" height="116%">
+								<feGaussianBlur stdDeviation="2.8" />
+							</filter>
 							{voronoiCells.map((cell) => (
 								<pattern
 									key={cell.patternId}
@@ -557,15 +560,24 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 								<path
 									d={cell.path}
 									fill={`url(#${cell.patternId})`}
-									stroke="rgba(255,255,255,0.6)"
-									strokeWidth={1.25}
+									stroke="rgba(255,255,255,0.18)"
+									strokeWidth={0.7}
 									style={{ transition: "opacity 180ms ease" }}
 								/>
 								<path
 									d={cell.path}
-									fill="rgba(10, 26, 39, 0.32)"
-									stroke="rgba(10, 18, 28, 0.7)"
-									strokeWidth={0.8}
+									fill="none"
+									stroke="rgba(255, 255, 255, 0.2)"
+									strokeWidth={7.5}
+									filter="url(#cell-edge-fade)"
+									style={{ pointerEvents: "none" }}
+								/>
+								<path
+									d={cell.path}
+									fill="rgba(10, 26, 39, 0.18)"
+									stroke="rgba(10, 18, 28, 0.28)"
+									strokeWidth={0.35}
+									style={{ pointerEvents: "none" }}
 								/>
 								<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
 								<text
