@@ -26,6 +26,14 @@ interface VoronoiPoint {
 	themeColor: string;
 }
 
+interface VoronoiCell {
+	point: VoronoiPoint;
+	path: string;
+	polygon: number[][];
+	patternId: string;
+	clipPathId: string;
+}
+
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
@@ -211,6 +219,27 @@ const getPolygonCentroid = (polygon: number[][]) => {
 		y += point[1];
 	}
 	return [x / polygon.length, y / polygon.length] as number[];
+};
+
+const isPointInsidePolygon = (x: number, y: number, polygon: number[][]) => {
+	if (polygon.length < 3) {
+		return false;
+	}
+
+	let isInside = false;
+	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+		const xi = polygon[i][0];
+		const yi = polygon[i][1];
+		const xj = polygon[j][0];
+		const yj = polygon[j][1];
+
+		const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + 1e-12) + xi;
+		if (intersects) {
+			isInside = !isInside;
+		}
+	}
+
+	return isInside;
 };
 
 const lineIntersection = (a: number[], b: number[], c: number[], d: number[]) => {
@@ -453,12 +482,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
+			return [] as VoronoiCell[];
 		}
 
 		const weightedVoronoiFactory = (d3WeightedVoronoiModule as any).weightedVoronoi;
 		if (!weightedVoronoiFactory) {
-			return [] as Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }>;
+			return [] as VoronoiCell[];
 		}
 
 		const weightedVoronoi = weightedVoronoiFactory()
@@ -485,7 +514,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 		>;
 
-		const cells: Array<{ point: VoronoiPoint; path: string; patternId: string; clipPathId: string }> = [];
+		const cells: VoronoiCell[] = [];
 		for (let index = 0; index < polygons.length; index += 1) {
 			const polygon = polygons[index];
 			if (!polygon || polygon.length < 3) {
@@ -512,6 +541,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			cells.push({
 				point,
 				path,
+				polygon: clippedPolygon,
 				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			});
@@ -569,21 +599,37 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		}
 
 		const { x, y } = getMapPointerCoordinates(event);
-		let bestMatch: { id: string; distanceSq: number } | null = null;
+		let hoveredCell: VoronoiCell | null = null;
 
 		for (const cell of voronoiCells) {
-			const dx = x - cell.point.x;
-			const dy = y - cell.point.y;
-			const distanceSq = dx * dx + dy * dy;
-			const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
-			if (distanceSq <= targetRadius * targetRadius) {
-				if (!bestMatch || distanceSq < bestMatch.distanceSq) {
-					bestMatch = { id: cell.point.id, distanceSq };
-				}
+			if (isPointInsidePolygon(x, y, cell.polygon)) {
+				hoveredCell = cell;
+				break;
 			}
 		}
 
-		const nextHoveredCellId = bestMatch?.id ?? null;
+		if (!hoveredCell) {
+			let bestMatch: { id: string; distanceSq: number } | null = null;
+			for (const cell of voronoiCells) {
+				const dx = x - cell.point.x;
+				const dy = y - cell.point.y;
+				const distanceSq = dx * dx + dy * dy;
+				const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
+				if (distanceSq <= targetRadius * targetRadius) {
+					if (!bestMatch || distanceSq < bestMatch.distanceSq) {
+						bestMatch = { id: cell.point.id, distanceSq };
+					}
+				}
+			}
+
+			const nextHoveredCellId = bestMatch?.id ?? null;
+			if (nextHoveredCellId !== hoveredCellId) {
+				setHoveredCellId(nextHoveredCellId);
+			}
+			return;
+		}
+
+		const nextHoveredCellId = hoveredCell.point.id;
 		if (nextHoveredCellId !== hoveredCellId) {
 			setHoveredCellId(nextHoveredCellId);
 		}
@@ -591,6 +637,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const handleMapPointerLeave = () => {
 		if (hoveredCellId) {
+			setHoveredCellId(null);
+		}
+	};
+
+	const handleCellPointerEnter = (cellId: string) => {
+		if (hoveredCellId !== cellId) {
+			setHoveredCellId(cellId);
+		}
+	};
+
+	const handleCellPointerLeave = (cellId: string) => {
+		if (hoveredCellId === cellId) {
 			setHoveredCellId(null);
 		}
 	};
@@ -782,6 +840,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										clipPath={`url(#${cell.clipPathId})`}
 									/>
 									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
+									<path
+										d={cell.path}
+										fill="rgba(255,255,255,0)"
+										style={{ pointerEvents: "all" }}
+										onPointerEnter={() => handleCellPointerEnter(cell.point.id)}
+										onPointerLeave={() => handleCellPointerLeave(cell.point.id)}
+									/>
 								</g>
 							);
 						})}
