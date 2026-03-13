@@ -39,6 +39,7 @@ const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
+const HOVER_TRANSITION_MS = 240;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_RADIUS_INFLUENCE_BOOST = 30;
@@ -346,6 +347,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	}>({ x: 0, y: 0, candidateCellId: null, source: "none" });
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
+	const hoverIntensityRef = useRef<Record<string, number>>({});
+	const [hoverIntensityById, setHoverIntensityById] = useState<Record<string, number>>({});
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -383,6 +386,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	useEffect(() => {
 		animatedPointsRef.current = animatedPoints;
 	}, [animatedPoints]);
+
+	useEffect(() => {
+		const currentIntensities = hoverIntensityRef.current;
+		const pointIds = new Set(targetPoints.map((point) => point.id));
+		const nextIntensities: Record<string, number> = {};
+
+		for (const pointId of pointIds) {
+			nextIntensities[pointId] = currentIntensities[pointId] ?? 0;
+		}
+
+		hoverIntensityRef.current = nextIntensities;
+		setHoverIntensityById(nextIntensities);
+	}, [targetPoints]);
 
 	useEffect(() => {
 		if (targetPoints.length === 0) {
@@ -446,6 +462,50 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	}, []);
 
 	useEffect(() => {
+		const pointIds = targetPoints.map((point) => point.id);
+		if (pointIds.length === 0) {
+			hoverIntensityRef.current = {};
+			setHoverIntensityById({});
+			return;
+		}
+
+		const startValues = hoverIntensityRef.current;
+		const targetValues: Record<string, number> = {};
+		for (const pointId of pointIds) {
+			targetValues[pointId] = pointId === hoveredCellId ? 1 : 0;
+		}
+
+		const allSettled = pointIds.every((pointId) => Math.abs((startValues[pointId] ?? 0) - targetValues[pointId]) < 0.001);
+		if (allSettled) {
+			return;
+		}
+
+		let frameId = 0;
+		const animationStart = performance.now();
+
+		const animateHoverTransition = (now: number) => {
+			const progress = clamp((now - animationStart) / HOVER_TRANSITION_MS, 0, 1);
+			const easedProgress = 1 - Math.pow(1 - progress, 3);
+			const nextValues: Record<string, number> = {};
+
+			for (const pointId of pointIds) {
+				const startValue = startValues[pointId] ?? 0;
+				nextValues[pointId] = lerp(startValue, targetValues[pointId], easedProgress);
+			}
+
+			hoverIntensityRef.current = nextValues;
+			setHoverIntensityById(nextValues);
+
+			if (progress < 1) {
+				frameId = window.requestAnimationFrame(animateHoverTransition);
+			}
+		};
+
+		frameId = window.requestAnimationFrame(animateHoverTransition);
+		return () => window.cancelAnimationFrame(frameId);
+	}, [hoveredCellId, targetPoints]);
+
+	useEffect(() => {
 		return () => {
 			clearTooltip();
 		};
@@ -478,10 +538,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				MIN_CELL_RADIUS,
 				MAX_CELL_RADIUS,
 			);
-			const influencedRadius =
-				hoveredCellId === point.id
-					? clamp(pulseRadius + HOVER_RADIUS_INFLUENCE_BOOST, MIN_CELL_RADIUS, MAX_CELL_RADIUS)
-					: pulseRadius;
+			const hoverIntensity = clamp(hoverIntensityById[point.id] ?? 0, 0, 1);
+			const influencedRadius = clamp(
+				pulseRadius + HOVER_RADIUS_INFLUENCE_BOOST * hoverIntensity,
+				MIN_CELL_RADIUS,
+				MAX_CELL_RADIUS,
+			);
 
 			return {
 				...point,
@@ -489,7 +551,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				radius: influencedRadius,
 			};
 		});
-	}, [animatedPoints, pulseClock, hoveredCellId]);
+	}, [animatedPoints, pulseClock, hoverIntensityById]);
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
