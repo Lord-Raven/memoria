@@ -42,6 +42,7 @@ const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_CELL_SCALE = 1.06;
+const HOVER_RADIUS_INFLUENCE_MULTIPLIER = 1.1;
 const SHOW_HOVER_DEBUG = true;
 
 const testImagePool = [
@@ -341,10 +342,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const [hoverDebug, setHoverDebug] = useState<{
 		x: number;
 		y: number;
-		targetCellId: string | null;
-		polygonMatchId: string | null;
-		radiusMatchId: string | null;
-	}>({ x: 0, y: 0, targetCellId: null, polygonMatchId: null, radiusMatchId: null });
+		candidateCellId: string | null;
+		source: "none" | "hit-path" | "polygon" | "radius";
+	}>({ x: 0, y: 0, candidateCellId: null, source: "none" });
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 
@@ -448,7 +448,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	useEffect(() => {
 		return () => {
-			setHoveredCellId(null);
 			clearTooltip();
 		};
 	}, [clearTooltip]);
@@ -475,18 +474,23 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			const pulse = getPulseProfile(point.id);
 			const wave = Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase);
 			const secondaryWave = Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase + 1.1);
+			const pulseRadius = clamp(
+				point.radius * (1 + secondaryWave * pulse.amplitude * 0.35),
+				MIN_CELL_RADIUS,
+				MAX_CELL_RADIUS,
+			);
+			const influencedRadius =
+				hoveredCellId === point.id
+					? clamp(pulseRadius * HOVER_RADIUS_INFLUENCE_MULTIPLIER, MIN_CELL_RADIUS, MAX_CELL_RADIUS)
+					: pulseRadius;
 
 			return {
 				...point,
 				weight: Math.max(0.05, point.weight * (1 + wave * pulse.amplitude)),
-				radius: clamp(
-					point.radius * (1 + secondaryWave * pulse.amplitude * 0.35),
-					MIN_CELL_RADIUS,
-					MAX_CELL_RADIUS,
-				),
+				radius: influencedRadius,
 			};
 		});
-	}, [animatedPoints, pulseClock]);
+	}, [animatedPoints, pulseClock, hoveredCellId]);
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
@@ -600,10 +604,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
 		if (!voronoiCells.length) {
-			if (hoveredCellId) {
-				setHoveredCellId(null);
-			}
-			setHoverDebug((current) => ({ ...current, targetCellId: null, polygonMatchId: null, radiusMatchId: null }));
+			setHoveredCellId((current) => (current ? null : current));
+			setHoverDebug((current) => ({ ...current, candidateCellId: null, source: "none" }));
 			return;
 		}
 
@@ -615,13 +617,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			setHoverDebug({
 				x: Math.round(x),
 				y: Math.round(y),
-				targetCellId,
-				polygonMatchId: targetCellId,
-				radiusMatchId: targetCellId,
+				candidateCellId: targetCellId,
+				source: "hit-path",
 			});
-			if (targetCellId !== hoveredCellId) {
-				setHoveredCellId(targetCellId);
-			}
+			setHoveredCellId((current) => (current === targetCellId ? current : targetCellId));
 			return;
 		}
 
@@ -652,13 +651,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			setHoverDebug({
 				x: Math.round(x),
 				y: Math.round(y),
-				targetCellId: null,
-				polygonMatchId: null,
-				radiusMatchId: nextHoveredCellId,
+				candidateCellId: nextHoveredCellId,
+				source: nextHoveredCellId ? "radius" : "none",
 			});
-			if (nextHoveredCellId !== hoveredCellId) {
-				setHoveredCellId(nextHoveredCellId);
-			}
+			setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
 			return;
 		}
 
@@ -666,26 +662,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		setHoverDebug({
 			x: Math.round(x),
 			y: Math.round(y),
-			targetCellId: null,
-			polygonMatchId: nextHoveredCellId,
-			radiusMatchId: nextHoveredCellId,
+			candidateCellId: nextHoveredCellId,
+			source: "polygon",
 		});
-		if (nextHoveredCellId !== hoveredCellId) {
-			setHoveredCellId(nextHoveredCellId);
-		}
+		setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
 	};
 
 	const handleMapPointerLeave = () => {
-		if (hoveredCellId) {
-			setHoveredCellId(null);
-		}
-		setHoverDebug((current) => ({ ...current, targetCellId: null, polygonMatchId: null, radiusMatchId: null }));
+		setHoveredCellId((current) => (current ? null : current));
+		setHoverDebug((current) => ({ ...current, candidateCellId: null, source: "none" }));
 	};
 
 	const handleCellPointerEnter = (cellId: string) => {
-		if (hoveredCellId !== cellId) {
-			setHoveredCellId(cellId);
-		}
+		setHoveredCellId((current) => (current === cellId ? current : cellId));
 	};
 
 	const clearLocations = () => {
@@ -848,7 +837,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										transition: "transform 140ms ease-out",
 									}}
 								>
-									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
 									<path
 										d={cell.path}
 										fill={`url(#${cell.patternId})`}
@@ -914,10 +902,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 									{`Hovered: ${hoveredCellId || "none"}`}
 								</text>
 								<text x={24} y={98} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
-									{`Target cell: ${hoverDebug.targetCellId || "none"}`}
+									{`Candidate: ${hoverDebug.candidateCellId || "none"}`}
 								</text>
 								<text x={24} y={118} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
-									{`Poly/radius: ${hoverDebug.polygonMatchId || "none"} / ${hoverDebug.radiusMatchId || "none"}`}
+									{`Source: ${hoverDebug.source}`}
 								</text>
 							</g>
 						)}
