@@ -41,8 +41,7 @@ const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
-const HOVER_CELL_SCALE = 1.06;
-const HOVER_RADIUS_INFLUENCE_MULTIPLIER = 1.1;
+const HOVER_RADIUS_INFLUENCE_BOOST = 30;
 const SHOW_HOVER_DEBUG = true;
 
 const testImagePool = [
@@ -481,7 +480,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			);
 			const influencedRadius =
 				hoveredCellId === point.id
-					? clamp(pulseRadius * HOVER_RADIUS_INFLUENCE_MULTIPLIER, MIN_CELL_RADIUS, MAX_CELL_RADIUS)
+					? clamp(pulseRadius + HOVER_RADIUS_INFLUENCE_BOOST, MIN_CELL_RADIUS, MAX_CELL_RADIUS)
 					: pulseRadius;
 
 			return {
@@ -825,18 +824,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						{voronoiCells.map((cell) => {
 							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 							const isHovered = hoveredCellId === cell.point.id;
-							const hoverScale = isHovered ? HOVER_CELL_SCALE : 1;
-							const transformOrigin = `${cell.point.x.toFixed(2)} ${cell.point.y.toFixed(2)}`;
 
 							return (
-								<g
-									key={cell.point.id}
-									transform={`translate(${cell.point.x.toFixed(2)} ${cell.point.y.toFixed(2)}) scale(${hoverScale}) translate(${-cell.point.x.toFixed(2)} ${-cell.point.y.toFixed(2)})`}
-									style={{
-										transformOrigin,
-										transition: "transform 140ms ease-out",
-									}}
-								>
+								<g key={cell.point.id}>
 									<path
 										d={cell.path}
 										fill={`url(#${cell.patternId})`}
