@@ -21,7 +21,7 @@ interface VoronoiPoint {
 	x: number;
 	y: number;
 	weight: number;
-	maxRadius: number;
+	radius: number;
 	imageUrl: string;
 	themeColor: string;
 }
@@ -42,6 +42,76 @@ const testImagePool = [
 	"https://media.charhub.io/d41042d5-5860-4f76-85ac-885e65e92c2b/95fdc548-1c75-4101-a62e-65fc90a97437.png",
 ];
 
+type DefaultLocationSeed = {
+	id: string;
+	name: string;
+	description: string;
+	weight: number;
+	imageUrl: string;
+	center: { x: number; y: number };
+	themeColor: string;
+};
+
+// Customize this list to define which locations are restored when the map is cleared.
+// Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.
+// Ardeia is a fantasy sci-fi city with a mixture of heavy gothic architecture mixed with overgrown greenery and archaically high-tech machinery that feels ancient and alien at once.
+const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
+	{
+		id: "ardeia-streets",
+		name: "Streets of Ardeia",
+		description: "",
+		weight: 1,
+		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/65f8275a-a798-4c0e-b5ea-22b7779c7b52/52c92a1a-e727-4419-af67-40e9cc5635e9.png',
+		center: { x: 0.5, y: 0.5 },
+		themeColor: "#5aa3d8",
+	},
+	{
+		id: "ardeia-library",
+		name: "The Library",
+		description: "",
+		weight: 0.8,
+		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/959a3d92-2cff-48c9-bb6a-0d5dd9cef2e5/d66d42be-516d-4fb4-91b0-b3aae9ee1a2a.png',
+		center: { x: 0.4, y: 0.45 },
+		themeColor: "#d8a45a",
+	},
+	{
+		id: "ardeia-temple",
+		name: "The Temple",
+		description: "",
+		weight: 0.8,
+		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/382bbbd6-5080-4c72-9c28-641efcbc87c0/84066e0e-9e62-4001-aaa1-a78c144fddef.png',
+		center: { x: 0.45, y: 0.6 },
+		themeColor: "#d86f5a",
+	},
+	{
+		id: "ardeia-gardens",
+		name: "The Gardens",
+		description: "",
+		weight: 0.8,
+		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1b1d80c6-08e6-42a6-9a94-3e643304b152/81a86b0f-4f6e-445c-afdb-db019e37ab0c.png',
+		center: { x: 0.6, y: 0.55 },
+		themeColor: "#7ecfbe",
+	},
+	{
+		id: "ardeia-plaza",
+		name: "The Plaza",
+		description: "",
+		weight: 0.8,
+		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/0d9d311c-9f3b-42b2-854b-894f4534c24c/f645dd78-90f7-4813-a4b1-566599446aaf.png',
+		center: { x: 0.55, y: 0.4 },
+		themeColor: "#7ecfbe",
+	},
+];
+
+const createDefaultAtlas = () => {
+	const atlas: Record<string, Location> = {};
+	for (const seed of DEFAULT_ATLAS_LOCATIONS) {
+		const location = new Location(seed);
+		atlas[location.id] = location;
+	}
+	return atlas;
+};
+
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const lerp = (start: number, end: number, t: number) => start + (end - start) * t;
 
@@ -57,9 +127,15 @@ const hashString = (value: string) => {
 const getPulseProfile = (id: string) => {
 	const hash = hashString(id);
 	const phase = ((hash & 0xffff) / 0xffff) * Math.PI * 2;
-	const frequency = 0.14 + (((hash >> 16) & 0xff) / 255) * 0.22;
-	const amplitude = 0.018 + (((hash >> 24) & 0xff) / 255) * 0.045;
+	const frequency = 0.05 + (((hash >> 16) & 0xff) / 255) * 0.09;
+	const amplitude = 0.006 + (((hash >> 24) & 0xff) / 255) * 0.014;
 	return { phase, frequency, amplitude };
+};
+
+const getRadiusFromWeight = (weight: number) => {
+	const normalizedWeight = clamp(weight, 0.05, 4);
+	const derivedRadius = 70 + Math.pow(normalizedWeight, 0.9) * 48;
+	return clamp(derivedRadius, MIN_CELL_RADIUS, MAX_CELL_RADIUS);
 };
 
 const normalizeCoordinate = (value: number, max: number) => {
@@ -213,7 +289,7 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 };
 
 const getPowerWeight = (point: VoronoiPoint) => {
-	const radius = Math.max(1, point.maxRadius);
+	const radius = Math.max(1, point.radius);
 	// Power-diagram weights are radius-squared; this moves borders toward smaller cells.
 	return radius * radius;
 };
@@ -248,17 +324,15 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		const save = stage().getSave();
 		const atlasEntries = Object.values(save.atlas as Record<string, Location>);
 		return atlasEntries.map((location) => {
-			const requestedMaxRadius = Number(location.maxRadius);
-			const fallbackRadius = 72 + Math.max(0, location.weight || 1) * 20;
-			const maxRadius = Number.isFinite(requestedMaxRadius) && requestedMaxRadius > 0 ? requestedMaxRadius : fallbackRadius;
+			const weight = Math.max(0.05, location.weight || 1);
 
 			return {
 				id: location.id,
 				name: location.name || "Unnamed Location",
 				x: normalizeCoordinate(location.center?.x ?? 0.5, MAP_WIDTH),
 				y: normalizeCoordinate(location.center?.y ?? 0.5, MAP_HEIGHT),
-				weight: Math.max(0.05, location.weight || 1),
-				maxRadius: clamp(maxRadius, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
+				weight,
+				radius: getRadiusFromWeight(weight),
 				imageUrl: location.imageUrl,
 				themeColor: location.themeColor,
 			};
@@ -287,7 +361,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return {
 				...targetPoint,
 				weight: Math.max(0.05, targetPoint.weight * 0.4),
-				maxRadius: clamp(targetPoint.maxRadius * 0.45, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
+				radius: clamp(targetPoint.radius * 0.45, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
 			};
 		});
 
@@ -305,8 +379,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 					x: lerp(startPoint.x, targetPoint.x, easedProgress),
 					y: lerp(startPoint.y, targetPoint.y, easedProgress),
 					weight: Math.max(0.05, lerp(startPoint.weight, targetPoint.weight, easedProgress)),
-					maxRadius: clamp(
-						lerp(startPoint.maxRadius, targetPoint.maxRadius, easedProgress),
+					radius: clamp(
+						lerp(startPoint.radius, targetPoint.radius, easedProgress),
 						MIN_CELL_RADIUS,
 						MAX_CELL_RADIUS,
 					),
@@ -348,8 +422,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return {
 				...point,
 				weight: Math.max(0.05, point.weight * (1 + wave * pulse.amplitude)),
-				maxRadius: clamp(
-					point.maxRadius * (1 + secondaryWave * pulse.amplitude * 0.6),
+				radius: clamp(
+					point.radius * (1 + secondaryWave * pulse.amplitude * 0.35),
 					MIN_CELL_RADIUS,
 					MAX_CELL_RADIUS,
 				),
@@ -403,7 +477,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				continue;
 			}
 
-			const radiusPolygon = createCirclePolygon(point.x, point.y, point.maxRadius);
+			const radiusPolygon = createCirclePolygon(point.x, point.y, point.radius);
 			let clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
 
 			if (clippedPolygon.length < 3) {
@@ -436,14 +510,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		const save = getSaveForMutation(stage());
 		const locationCount = Object.keys(save.atlas).length;
 		const randomWeight = Number((0.25 + Math.random() * 2.75).toFixed(2));
-		const randomMaxRadius = Math.round(64 + randomWeight * 22 + Math.random() * 36);
 		const randomImageUrl = testImagePool[Math.floor(Math.random() * testImagePool.length)];
 
 		const newLocation = new Location({
 			name: `Test Location ${locationCount + 1}`,
 			description: "Generated from MapScreen click for Voronoi testing.",
 			weight: randomWeight,
-			maxRadius: randomMaxRadius,
 			imageUrl: randomImageUrl,
 			center: {
 				x: Number((x / MAP_WIDTH).toFixed(3)),
@@ -455,7 +527,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		stage().saveGame();
 		setRevision((value) => value + 1);
 		stage().showPriorityMessage(
-			`Added ${newLocation.name} (weight ${randomWeight}, radius ${randomMaxRadius}).`,
+			`Added ${newLocation.name} (weight ${randomWeight}, radius auto-derived).`,
 			undefined,
 			2200,
 		);
@@ -464,21 +536,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const clearLocations = () => {
 		const save = getSaveForMutation(stage());
 		const atlas = save.atlas as Record<string, Location>;
-		const locationCount = Object.keys(atlas).length;
+		const previousCount = Object.keys(atlas).length;
+		const defaultAtlas = createDefaultAtlas();
+		const defaultCount = Object.keys(defaultAtlas).length;
 
-		if (locationCount === 0) {
-			stage().showPriorityMessage("Atlas is already empty.", undefined, 1800);
-			return;
-		}
-
-		for (const id of Object.keys(atlas)) {
-			delete atlas[id];
-		}
+		save.atlas = defaultAtlas;
 
 		stage().saveGame();
 		setRevision((value) => value + 1);
 		stage().showPriorityMessage(
-			locationCount === 1 ? "Cleared 1 location from the atlas." : `Cleared ${locationCount} locations from the atlas.`,
+			previousCount === 0
+				? `Initialized atlas with ${defaultCount} default locations.`
+				: `Reset atlas from ${previousCount} to ${defaultCount} default locations.`,
 			undefined,
 			2200,
 		);
@@ -532,7 +601,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<Button
 							variant="menu"
 							onClick={clearLocations}
-							onMouseEnter={() => setTooltip("Delete all atlas locations", DeleteSweep)}
+							onMouseEnter={() => setTooltip("Reset atlas to default locations", DeleteSweep)}
 							onMouseLeave={clearTooltip}
 							style={{
 								minWidth: "160px",
@@ -541,7 +610,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 								borderColor: "rgba(255, 120, 120, 0.35)",
 							}}
 						>
-							Clear Locations
+							Reset Locations
 						</Button>
 					</Box>
 
