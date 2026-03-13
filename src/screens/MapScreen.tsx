@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FC, MouseEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
@@ -32,6 +32,8 @@ const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
 const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
+const HOVER_TARGET_RADIUS_PAD = 26;
+const HOVER_CELL_SCALE = 1.06;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -69,7 +71,7 @@ const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
 		id: "ardeia-library",
 		name: "The Library",
 		description: "",
-		weight: 0.8,
+		weight: 0.5,
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/959a3d92-2cff-48c9-bb6a-0d5dd9cef2e5/d66d42be-516d-4fb4-91b0-b3aae9ee1a2a.png',
 		center: { x: 0.4, y: 0.45 },
 		themeColor: "#d8a45a",
@@ -78,7 +80,7 @@ const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
 		id: "ardeia-temple",
 		name: "The Temple",
 		description: "",
-		weight: 0.8,
+		weight: 0.5,
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/382bbbd6-5080-4c72-9c28-641efcbc87c0/84066e0e-9e62-4001-aaa1-a78c144fddef.png',
 		center: { x: 0.45, y: 0.6 },
 		themeColor: "#d86f5a",
@@ -87,7 +89,7 @@ const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
 		id: "ardeia-gardens",
 		name: "The Gardens",
 		description: "",
-		weight: 0.8,
+		weight: 0.5,
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1b1d80c6-08e6-42a6-9a94-3e643304b152/81a86b0f-4f6e-445c-afdb-db019e37ab0c.png',
 		center: { x: 0.6, y: 0.55 },
 		themeColor: "#7ecfbe",
@@ -96,7 +98,7 @@ const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
 		id: "ardeia-plaza",
 		name: "The Plaza",
 		description: "",
-		weight: 0.8,
+		weight: 0.5,
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/0d9d311c-9f3b-42b2-854b-894f4534c24c/f645dd78-90f7-4813-a4b1-566599446aaf.png',
 		center: { x: 0.55, y: 0.4 },
 		themeColor: "#7ecfbe",
@@ -305,6 +307,7 @@ const getSaveForMutation = (stage: Stage) => {
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const [revision, setRevision] = useState(0);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
+	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 
@@ -408,9 +411,26 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	useEffect(() => {
 		return () => {
+			setHoveredCellId(null);
 			clearTooltip();
 		};
 	}, [clearTooltip]);
+
+	useEffect(() => {
+		if (!hoveredCellId) {
+			clearTooltip();
+			return;
+		}
+
+		const hoveredPoint = targetPoints.find((point) => point.id === hoveredCellId);
+		if (!hoveredPoint) {
+			setHoveredCellId(null);
+			clearTooltip();
+			return;
+		}
+
+		setTooltip(hoveredPoint.name);
+	}, [hoveredCellId, targetPoints, setTooltip, clearTooltip]);
 
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;
@@ -533,6 +553,48 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		);
 	};
 
+	const getMapPointerCoordinates = (event: PointerEvent<SVGSVGElement>) => {
+		const rect = event.currentTarget.getBoundingClientRect();
+		const x = ((event.clientX - rect.left) / rect.width) * MAP_WIDTH;
+		const y = ((event.clientY - rect.top) / rect.height) * MAP_HEIGHT;
+		return { x, y };
+	};
+
+	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
+		if (!voronoiCells.length) {
+			if (hoveredCellId) {
+				setHoveredCellId(null);
+			}
+			return;
+		}
+
+		const { x, y } = getMapPointerCoordinates(event);
+		let bestMatch: { id: string; distanceSq: number } | null = null;
+
+		for (const cell of voronoiCells) {
+			const dx = x - cell.point.x;
+			const dy = y - cell.point.y;
+			const distanceSq = dx * dx + dy * dy;
+			const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
+			if (distanceSq <= targetRadius * targetRadius) {
+				if (!bestMatch || distanceSq < bestMatch.distanceSq) {
+					bestMatch = { id: cell.point.id, distanceSq };
+				}
+			}
+		}
+
+		const nextHoveredCellId = bestMatch?.id ?? null;
+		if (nextHoveredCellId !== hoveredCellId) {
+			setHoveredCellId(nextHoveredCellId);
+		}
+	};
+
+	const handleMapPointerLeave = () => {
+		if (hoveredCellId) {
+			setHoveredCellId(null);
+		}
+	};
+
 	const clearLocations = () => {
 		const save = getSaveForMutation(stage());
 		const atlas = save.atlas as Record<string, Location>;
@@ -645,6 +707,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
 						preserveAspectRatio="none"
 						onClick={addRandomLocation}
+						onPointerMove={handleMapPointerMove}
+						onPointerLeave={handleMapPointerLeave}
 						style={{ cursor: "crosshair", display: "block" }}
 					>
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
@@ -678,12 +742,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 						{voronoiCells.map((cell) => {
 							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
+							const isHovered = hoveredCellId === cell.point.id;
+							const hoverScale = isHovered ? HOVER_CELL_SCALE : 1;
+							const transformOrigin = `${cell.point.x.toFixed(2)} ${cell.point.y.toFixed(2)}`;
 
 							return (
 								<g
 									key={cell.point.id}
-									onMouseEnter={() => setTooltip(cell.point.name)}
-									onMouseLeave={clearTooltip}
+									transform={`translate(${cell.point.x.toFixed(2)} ${cell.point.y.toFixed(2)}) scale(${hoverScale}) translate(${-cell.point.x.toFixed(2)} ${-cell.point.y.toFixed(2)})`}
+									style={{
+										transformOrigin,
+										transition: "transform 140ms ease-out",
+									}}
 								>
 									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
 									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" />
@@ -691,7 +761,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										d={cell.path}
 										fill="none"
 										stroke={borderPalette.outerStroke}
-										strokeWidth={4.8}
+										strokeWidth={isHovered ? 5.4 : 4.8}
 										strokeLinejoin="round"
 										clipPath={`url(#${cell.clipPathId})`}
 									/>
@@ -707,7 +777,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										d={cell.path}
 										fill="none"
 										stroke={borderPalette.innerStroke}
-										strokeWidth={1.2}
+										strokeWidth={isHovered ? 1.6 : 1.2}
 										strokeLinejoin="round"
 										clipPath={`url(#${cell.clipPathId})`}
 									/>
