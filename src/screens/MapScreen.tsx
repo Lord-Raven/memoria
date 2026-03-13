@@ -42,6 +42,7 @@ const POINT_TRANSITION_MS = 700;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_CELL_SCALE = 1.06;
+const SHOW_HOVER_DEBUG = true;
 
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
@@ -337,6 +338,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const [revision, setRevision] = useState(0);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
+	const [hoverDebug, setHoverDebug] = useState<{
+		x: number;
+		y: number;
+		targetCellId: string | null;
+		polygonMatchId: string | null;
+		radiusMatchId: string | null;
+	}>({ x: 0, y: 0, targetCellId: null, polygonMatchId: null, radiusMatchId: null });
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 
@@ -595,10 +603,28 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			if (hoveredCellId) {
 				setHoveredCellId(null);
 			}
+			setHoverDebug((current) => ({ ...current, targetCellId: null, polygonMatchId: null, radiusMatchId: null }));
 			return;
 		}
 
 		const { x, y } = getMapPointerCoordinates(event);
+		const eventTarget = event.target as Element | null;
+		const targetCellId = eventTarget?.getAttribute("data-cell-id") ?? null;
+
+		if (targetCellId) {
+			setHoverDebug({
+				x: Math.round(x),
+				y: Math.round(y),
+				targetCellId,
+				polygonMatchId: targetCellId,
+				radiusMatchId: targetCellId,
+			});
+			if (targetCellId !== hoveredCellId) {
+				setHoveredCellId(targetCellId);
+			}
+			return;
+		}
+
 		let hoveredCell: VoronoiCell | null = null;
 
 		for (const cell of voronoiCells) {
@@ -623,6 +649,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 
 			const nextHoveredCellId = bestMatch?.id ?? null;
+			setHoverDebug({
+				x: Math.round(x),
+				y: Math.round(y),
+				targetCellId: null,
+				polygonMatchId: null,
+				radiusMatchId: nextHoveredCellId,
+			});
 			if (nextHoveredCellId !== hoveredCellId) {
 				setHoveredCellId(nextHoveredCellId);
 			}
@@ -630,6 +663,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		}
 
 		const nextHoveredCellId = hoveredCell.point.id;
+		setHoverDebug({
+			x: Math.round(x),
+			y: Math.round(y),
+			targetCellId: null,
+			polygonMatchId: nextHoveredCellId,
+			radiusMatchId: nextHoveredCellId,
+		});
 		if (nextHoveredCellId !== hoveredCellId) {
 			setHoveredCellId(nextHoveredCellId);
 		}
@@ -639,17 +679,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		if (hoveredCellId) {
 			setHoveredCellId(null);
 		}
+		setHoverDebug((current) => ({ ...current, targetCellId: null, polygonMatchId: null, radiusMatchId: null }));
 	};
 
 	const handleCellPointerEnter = (cellId: string) => {
 		if (hoveredCellId !== cellId) {
 			setHoveredCellId(cellId);
-		}
-	};
-
-	const handleCellPointerLeave = (cellId: string) => {
-		if (hoveredCellId === cellId) {
-			setHoveredCellId(null);
 		}
 	};
 
@@ -814,7 +849,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 									}}
 								>
 									<path d={cell.path} fill={`url(#${cell.patternId})`} style={{ transition: "opacity 180ms ease" }} />
-									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" />
+									<path
+										d={cell.path}
+										fill={`url(#${cell.patternId})`}
+										style={{ transition: "opacity 180ms ease", pointerEvents: "none" }}
+									/>
+									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" style={{ pointerEvents: "none" }} />
 									<path
 										d={cell.path}
 										fill="none"
@@ -822,6 +862,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										strokeWidth={isHovered ? 5.4 : 4.8}
 										strokeLinejoin="round"
 										clipPath={`url(#${cell.clipPathId})`}
+										style={{ pointerEvents: "none" }}
 									/>
 									<path
 										d={cell.path}
@@ -830,6 +871,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										strokeWidth={2.8}
 										strokeLinejoin="round"
 										clipPath={`url(#${cell.clipPathId})`}
+										style={{ pointerEvents: "none" }}
 									/>
 									<path
 										d={cell.path}
@@ -838,18 +880,47 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 										strokeWidth={isHovered ? 1.6 : 1.2}
 										strokeLinejoin="round"
 										clipPath={`url(#${cell.clipPathId})`}
+										style={{ pointerEvents: "none" }}
 									/>
-									<circle cx={cell.point.x} cy={cell.point.y} r={4.2} fill="rgba(255,255,255,0.88)" />
+									<circle
+										cx={cell.point.x}
+										cy={cell.point.y}
+										r={4.2}
+										fill="rgba(255,255,255,0.88)"
+										style={{ pointerEvents: "none" }}
+									/>
 									<path
 										d={cell.path}
 										fill="rgba(255,255,255,0)"
 										style={{ pointerEvents: "all" }}
+										data-cell-id={cell.point.id}
 										onPointerEnter={() => handleCellPointerEnter(cell.point.id)}
-										onPointerLeave={() => handleCellPointerLeave(cell.point.id)}
+										onPointerMove={() => handleCellPointerEnter(cell.point.id)}
 									/>
 								</g>
 							);
 						})}
+
+						{SHOW_HOVER_DEBUG && (
+							<g style={{ pointerEvents: "none" }}>
+								<rect x={12} y={12} width={370} height={118} rx={8} fill="rgba(0,0,0,0.62)" stroke="rgba(255,255,255,0.22)" />
+								<text x={24} y={36} fill="rgba(255,255,255,0.92)" style={{ fontSize: "15px", fontWeight: 700 }}>
+									Hover Debug
+								</text>
+								<text x={24} y={58} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
+									{`Pointer: (${hoverDebug.x}, ${hoverDebug.y})`}
+								</text>
+								<text x={24} y={78} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
+									{`Hovered: ${hoveredCellId || "none"}`}
+								</text>
+								<text x={24} y={98} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
+									{`Target cell: ${hoverDebug.targetCellId || "none"}`}
+								</text>
+								<text x={24} y={118} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
+									{`Poly/radius: ${hoverDebug.polygonMatchId || "none"} / ${hoverDebug.radiusMatchId || "none"}`}
+								</text>
+							</g>
+						)}
 
 						{!hasAtlasLocations && (
 							<text
