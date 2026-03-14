@@ -1,8 +1,8 @@
 import { Stage } from "../Stage";
 import { ScriptEntry, Skit, SkitType } from "../content/Skit";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { ScreenType } from "./BaseScreen";
-import { Actor, findBestNameMatch, removeBackgroundFromEmotionImage } from "../content/Actor";
+import { Actor } from "../content/Actor";
 import { NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Emotion } from "../content/Emotion";
 import { Box, Typography } from "@mui/material";
@@ -49,13 +49,10 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<{ent
     };
 }
 
-// This screen represents the main game screen in a gameshow studio setting. The player will make some basic choices that lead to different skits and direct the flow of the game.
+// Main skit scene where narrative flow and user prompts are rendered.
 export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
     const [isGeneratingNextSkit, setIsGeneratingNextSkit] = useState(false);
     const { setTooltip, clearTooltip } = useTooltip();
-    
-    // This is a physical description of the studio space for SoulMatcher, a dating gameshow on which the player is a contestant.
-    const studioDescription = "The studio is a vibrant and dynamic space, designed to evoke the excitement and glamour of a high-stakes dating gameshow. The stage is set with bright, colorful lights that create an energetic atmosphere, while large LED screens display dynamic backgrounds that change with each skit. The audience area is filled with enthusiastic spectators, their cheers and reactions adding to the lively ambiance. The contestant's podium is sleek and modern, equipped with interactive elements that allow the player to make choices that influence the flow of the game. Overall, the studio is a visually stimulating environment that immerses the player in the thrilling world of SoulMatcher.";
 
     // Handle ESC key to open menu
     const handleEscapeKey = useCallback((e: KeyboardEvent) => {
@@ -115,7 +112,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
     let skit = stage().getCurrentSkit();
 
 
-    const bannerTitle = 'Default Thing';
+    const bannerTitle = skit?.initialLocationId
+        ? `Node: ${stage().getSave().atlas[skit.initialLocationId]?.name || skit.initialLocationId}`
+        : 'Memoria Chronicle';
 
     return (
         <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -126,23 +125,23 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     top: 16,
                     left: 16,
                     zIndex: 1000,
-                    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                    backdropFilter: 'blur(4px)',
+                    backgroundColor: 'rgba(22, 28, 44, 0.76)',
+                    backdropFilter: 'blur(6px)',
                     padding: '8px 24px',
                     borderRadius: '20px',
-                    border: '2px solid #FFD700',
-                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)',
+                    border: '1px solid rgba(138, 176, 204, 0.48)',
+                    boxShadow: '0 4px 18px rgba(10, 16, 29, 0.55), 0 0 16px rgba(138, 176, 204, 0.2)',
                 }}
             >
                 <Typography
                     variant="h6"
                     sx={{
-                        color: '#FFD700',
+                        color: '#edf2f2',
                         fontWeight: 'bold',
                         fontSize: '1.1rem',
-                        letterSpacing: '0.5px',
+                        letterSpacing: '0.08em',
                         textTransform: 'uppercase',
-                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                        textShadow: '0 2px 6px rgba(0, 0, 0, 0.6), 0 0 10px rgba(138, 176, 204, 0.24)',
                     }}
                 >
                     {bannerTitle}
@@ -195,10 +194,11 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     <Box
                         sx={{
                             padding: 2,
-                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            backgroundColor: 'rgba(21, 27, 41, 0.9)',
                             borderRadius: 2,
-                            border: `2px solid ${typedActor.themeColor || '#ffffff'}`,
+                            border: `1px solid ${typedActor.themeColor || '#8ab0cc'}`,
                             maxWidth: 300,
+                            boxShadow: '0 12px 28px rgba(0, 0, 0, 0.55)',
                         }}
                     >
                         <Box sx={{ marginBottom: 1 }}>
@@ -212,9 +212,9 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 sx={{
                                     display: 'block',
                                     marginBottom: 1,
-                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    color: 'rgba(185, 210, 227, 0.84)',
                                     fontStyle: 'italic',
-                                    fontFamily: 'serif',
+                                    fontFamily: '"Alegreya", serif',
                                 }}
                             >
                                 by {authorName}
@@ -222,7 +222,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                         )}
                         <Box
                             sx={{
-                                color: '#ffffff',
+                                color: '#edf2f2',
                                 fontSize: '0.9rem',
                                 lineHeight: 1.4,
                             }}

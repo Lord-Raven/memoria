@@ -1,39 +1,39 @@
 /**
  * Material UI Theme Configuration
- * Mysterious post-apocalyptic sci-fi meets fantasy vibe:
+ * Memoria visual language: ruin-tech, pale light, and weathered metal.
  */
 
 import { createTheme } from '@mui/material/styles';
 
-// Color palette inspired by classic game shows
+// Shared palette for all screen classes.
 export const colors = {
   primary: {
-    main: '#FF1493',      // Hot pink - main accent
-    light: '#FF69B4',     // Light pink
-    dark: '#C71585',      // Deep pink
-    contrastText: '#FFFFFF',
+    main: '#8ab0cc',
+    light: '#b9d2e3',
+    dark: '#5f7f9b',
+    contrastText: '#edf2f2',
   },
   secondary: {
-    main: '#FFD700',      // Gold - secondary accent
-    light: '#FFED4E',     // Light gold
-    dark: '#FFA500',      // Orange gold
-    contrastText: '#000000',
+    main: '#89cd87',
+    light: '#b5dfb3',
+    dark: '#5f9360',
+    contrastText: '#1a1e30',
   },
   accent: {
-    purple: '#9370DB',    // Medium purple
-    cyan: '#00CED1',      // Dark cyan
-    coral: '#FF7F50',     // Coral
+    lichen: '#7a7b6b',
+    ember: '#b98f6e',
+    signal: '#d9e9f7',
   },
   background: {
-    default: '#1a0a2e',   // Deep purple-black
-    paper: '#240741',     // Dark purple
-    glass: 'rgba(255, 20, 147, 0.08)', // Semi-transparent pink
-    glassLight: 'rgba(255, 215, 0, 0.12)', // Semi-transparent gold
+    default: '#1a1e30',
+    paper: '#25293f',
+    glass: 'rgba(138, 176, 204, 0.08)',
+    glassLight: 'rgba(137, 205, 135, 0.14)',
   },
   text: {
-    primary: '#FFFFFF',
-    secondary: '#FFD700',
-    disabled: 'rgba(255, 255, 255, 0.38)',
+    primary: '#edf2f2',
+    secondary: '#b9d2e3',
+    disabled: 'rgba(237, 242, 242, 0.42)',
   },
 };
 
@@ -49,19 +49,19 @@ export const theme = createTheme({
     text: colors.text,
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Space Grotesk", "Alegreya Sans SC", "Segoe UI", sans-serif',
     h1: {
       fontSize: '2.5rem',
       fontWeight: 700,
-      letterSpacing: '0.1em',
+      letterSpacing: '0.12em',
       textTransform: 'uppercase',
-      textShadow: '0 0 20px rgba(255, 20, 147, 0.6), 0 0 40px rgba(255, 20, 147, 0.4)',
+      textShadow: '0 0 24px rgba(138, 176, 204, 0.26)',
     },
     h2: {
       fontSize: '2rem',
       fontWeight: 700,
       letterSpacing: '0.08em',
-      textShadow: '0 0 15px rgba(255, 215, 0, 0.5)',
+      textShadow: '0 0 18px rgba(137, 205, 135, 0.2)',
     },
     h3: {
       fontSize: '1.75rem',
@@ -83,7 +83,7 @@ export const theme = createTheme({
     button: {
       textTransform: 'uppercase',
       fontWeight: 700,
-      letterSpacing: '0.05em',
+      letterSpacing: '0.08em',
     },
   },
   shape: {
@@ -91,9 +91,9 @@ export const theme = createTheme({
   },
   shadows: [
     'none',
-    '0 0 10px rgba(255, 20, 147, 0.3)',
-    '0 0 20px rgba(255, 20, 147, 0.4)',
-    '0 0 30px rgba(255, 20, 147, 0.5)',
+    '0 0 10px rgba(138, 176, 204, 0.22)',
+    '0 0 20px rgba(138, 176, 204, 0.28)',
+    '0 0 30px rgba(137, 205, 135, 0.24)',
     '0 4px 20px rgba(0, 0, 0, 0.5)',
     '0 6px 25px rgba(0, 0, 0, 0.6)',
     '0 8px 30px rgba(0, 0, 0, 0.7)',
@@ -123,16 +123,16 @@ export const theme = createTheme({
           borderRadius: '8px',
           padding: '10px 24px',
           transition: 'all 0.3s ease',
-          boxShadow: '0 0 15px rgba(255, 20, 147, 0.3)',
+          boxShadow: '0 0 14px rgba(138, 176, 204, 0.24)',
           '&:hover': {
-            boxShadow: '0 0 25px rgba(255, 20, 147, 0.5)',
+            boxShadow: '0 0 24px rgba(137, 205, 135, 0.3)',
             transform: 'translateY(-2px)',
           },
         },
         contained: {
-          background: 'linear-gradient(135deg, #FF1493 0%, #C71585 100%)',
+          background: 'linear-gradient(135deg, #5f7f9b 0%, #8ab0cc 45%, #89cd87 100%)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #FF69B4 0%, #FF1493 100%)',
+            background: 'linear-gradient(135deg, #6c90ae 0%, #9ac0dc 45%, #9ad897 100%)',
           },
         },
         outlined: {
@@ -142,7 +142,7 @@ export const theme = createTheme({
           '&:hover': {
             borderWidth: '2px',
             borderColor: colors.primary.light,
-            backgroundColor: 'rgba(255, 20, 147, 0.1)',
+            backgroundColor: 'rgba(138, 176, 204, 0.1)',
           },
         },
       },
@@ -154,7 +154,7 @@ export const theme = createTheme({
           backgroundColor: colors.background.paper,
           border: '2px solid',
           borderImageSlice: 1,
-          borderImageSource: 'linear-gradient(135deg, #FF1493, #FFD700)',
+          borderImageSource: 'linear-gradient(135deg, #8ab0cc, #89cd87)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
         },
       },
@@ -164,11 +164,11 @@ export const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: 'rgba(255, 215, 0, 0.3)',
+              borderColor: 'rgba(138, 176, 204, 0.4)',
               borderWidth: '2px',
             },
             '&:hover fieldset': {
-              borderColor: 'rgba(255, 215, 0, 0.5)',
+              borderColor: 'rgba(138, 176, 204, 0.62)',
             },
             '&.Mui-focused fieldset': {
               borderColor: colors.secondary.main,
@@ -188,12 +188,12 @@ export const theme = createTheme({
         root: {
           height: 10,
           borderRadius: 5,
-          backgroundColor: 'rgba(255, 215, 0, 0.15)',
+          backgroundColor: 'rgba(122, 123, 107, 0.35)',
         },
         bar: {
           borderRadius: 5,
-          background: 'linear-gradient(90deg, #FF1493 0%, #FFD700 100%)',
-          boxShadow: '0 0 10px rgba(255, 20, 147, 0.5)',
+          background: 'linear-gradient(90deg, #5f7f9b 0%, #8ab0cc 45%, #89cd87 100%)',
+          boxShadow: '0 0 10px rgba(138, 176, 204, 0.45)',
         },
       },
     },
@@ -205,7 +205,7 @@ export const theme = createTheme({
           color: colors.text.primary,
           fontWeight: 600,
           '&:hover': {
-            backgroundColor: 'rgba(255, 20, 147, 0.15)',
+            backgroundColor: 'rgba(138, 176, 204, 0.16)',
           },
         },
       },

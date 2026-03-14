@@ -49,7 +49,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     }, [screenType]);
 
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+        <div className="memoria-screen-root">
             {screenType === ScreenType.MENU && (
                 // Render menu screen
                 <MenuScreen stage={stage} setScreenType={setScreenType} />

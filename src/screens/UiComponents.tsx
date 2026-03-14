@@ -8,7 +8,7 @@ import React, { FC, ReactNode } from 'react';
 import { Actor } from '../content/Actor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HourglassTop, HourglassBottom, Link } from '@mui/icons-material';
-import { Box, lighten, Button as MuiButton, Chip as MuiChip, Typography } from '@mui/material';
+import { Box, lighten, Chip as MuiChip, Typography } from '@mui/material';
 import { useTooltip } from './TooltipContext';
 
 /* ===============================================
@@ -107,7 +107,7 @@ export const GridOverlay: FC<GridOverlayProps> = ({ size = 60 }) => {
 };
 
 /* ===============================================
-   PROGRESS INDICATORS (Custom for gameshow theme)
+	PROGRESS INDICATORS
    =============================================== */
 
 interface TurnIndicatorProps {
@@ -139,8 +139,8 @@ export const TurnIndicator: FC<TurnIndicatorProps> = ({ currentTurn, totalTurns 
 					>
 						<HourglassIcon
 							sx={{
-								color: isSpent ? 'rgba(255, 215, 0, 0.4)' : '#FFD700',
-								filter: isSpent ? 'none' : 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.6))',
+								color: isSpent ? 'rgba(122, 123, 107, 0.55)' : 'var(--mem-mist)',
+								filter: isSpent ? 'none' : 'drop-shadow(0 0 8px rgba(138, 176, 204, 0.45))',
 								fontSize: '28px',
 							}}
 						/>
@@ -203,7 +203,7 @@ export const NamePlate: FC<NamePlateProps> = ({
 		return null;
 	}
 
-	const themeColor = actor.themeColor || '#FFD700';
+	const themeColor = actor.themeColor || '#8ab0cc';
 	const lightColor = lighten(themeColor, 0.6);
 	const { setTooltip, clearTooltip } = useTooltip();
 
@@ -226,18 +226,18 @@ export const NamePlate: FC<NamePlateProps> = ({
 				position: 'relative',
 				overflow: 'hidden',
 				borderRadius: '10px',
-				background: `linear-gradient(135deg, rgba(40, 25, 70, 0.65) 0%, rgba(55, 35, 85, 0.6) 100%), 
+				background: `linear-gradient(135deg, rgba(27, 33, 51, 0.78) 0%, rgba(34, 42, 64, 0.72) 100%), 
 					radial-gradient(circle at 50% 50%, ${themeColor}15, transparent 70%)`,
 				backdropFilter: 'blur(12px)',
 				border: '2px solid transparent',
 				backgroundImage: `
-					linear-gradient(135deg, rgba(40, 25, 70, 0.65) 0%, rgba(55, 35, 85, 0.6) 100%),
+					linear-gradient(135deg, rgba(27, 33, 51, 0.78) 0%, rgba(34, 42, 64, 0.72) 100%),
 					radial-gradient(circle at 50% 50%, ${themeColor}15, transparent 70%),
 					linear-gradient(135deg, ${themeColor}, ${themeColor})
 				`,
 				backgroundOrigin: 'border-box',
 				backgroundClip: 'padding-box, padding-box, border-box',
-				boxShadow: `0 6px 16px rgba(0, 0, 0, 0.5), 0 0 15px ${themeColor}40`,
+				boxShadow: `0 6px 16px rgba(0, 0, 0, 0.5), 0 0 15px ${themeColor}33`,
 				color: lightColor,
 				textShadow: `0 0 8px ${themeColor}80, 0 2px 4px rgba(0, 0, 0, 0.8)`,
 				fontWeight: 700,
@@ -368,7 +368,7 @@ export const MenuItem: FC<MenuItemProps> = ({
 					display: 'flex',
 					justifyContent: 'space-between',
 					alignItems: 'center',
-					background: isExpanded ? 'rgba(255, 20, 147, 0.15)' : 'transparent',
+					background: isExpanded ? 'rgba(138, 176, 204, 0.16)' : 'transparent',
 				}}
 			>
 				<span>{title}</span>
@@ -393,8 +393,8 @@ export const MenuItem: FC<MenuItemProps> = ({
 				}}
 				style={{ 
 					overflow: 'hidden',
-					background: 'rgba(36, 7, 65, 0.7)',
-					border: isExpanded ? '2px solid rgba(255, 20, 147, 0.3)' : 'none',
+					background: 'rgba(24, 31, 48, 0.86)',
+					border: isExpanded ? '2px solid rgba(138, 176, 204, 0.35)' : 'none',
 					borderTop: 'none',
 					borderRadius: '0 0 8px 8px',
 				}}
@@ -460,13 +460,13 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
 						transition={{ duration: 0.2, ease: 'easeOut' }}
 						onClick={(e) => e.stopPropagation()}
 						style={{
-							background: 'linear-gradient(135deg, rgba(36, 7, 65, 0.95) 0%, rgba(26, 10, 46, 0.95) 100%)',
-							border: '2px solid rgba(255, 20, 147, 0.5)',
+							background: 'linear-gradient(135deg, rgba(31, 37, 58, 0.95) 0%, rgba(24, 29, 45, 0.95) 100%)',
+							border: '2px solid rgba(138, 176, 204, 0.45)',
 							borderRadius: '12px',
 							padding: '30px',
 							maxWidth: '500px',
 							width: '100%',
-							boxShadow: '0 10px 40px rgba(255, 20, 147, 0.3)',
+							boxShadow: '0 10px 40px rgba(8, 14, 28, 0.55)',
 						}}
 					>
 						{/* Title */}

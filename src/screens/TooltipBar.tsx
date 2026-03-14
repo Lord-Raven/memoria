@@ -118,9 +118,9 @@ export const TooltipBar: FC<TooltipBarProps> = ({
                         {Icon && (
                             <Icon
                                 sx={{
-                                    color: '#FFD700',
+                                    color: 'var(--mem-mist)',
                                     fontSize: '28px',
-                                    filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.5))',
+                                    filter: 'drop-shadow(0 0 8px rgba(138, 176, 204, 0.45))',
                                     flexShrink: 0,
                                 }}
                             />
@@ -128,10 +128,10 @@ export const TooltipBar: FC<TooltipBarProps> = ({
                         <Typography
                             variant="body1"
                             sx={{
-                                color: '#FFD700',
+                                color: 'var(--mem-fog)',
                                 fontSize: '16px',
                                 fontWeight: 600,
-                                textShadow: '0 0 10px rgba(255, 215, 0, 0.4)',
+                                textShadow: '0 0 10px rgba(138, 176, 204, 0.35)',
                                 textAlign: 'center',
                             }}
                         >

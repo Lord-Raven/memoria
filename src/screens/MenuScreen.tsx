@@ -131,8 +131,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
 
     return (
         <BlurredBackground
-            imageUrl="https://media.charhub.io/d41042d5-5860-4f76-85ac-885e65e92c2b/95fdc548-1c75-4101-a62e-65fc90a97437.png"
-            overlay="linear-gradient(135deg, rgba(26, 10, 46, 0.7) 0%, rgba(36, 7, 65, 0.8) 100%)"
+            imageUrl="https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png"
+            overlay="linear-gradient(142deg, rgba(19, 24, 39, 0.78) 0%, rgba(37, 45, 66, 0.76) 52%, rgba(31, 47, 43, 0.72) 100%)"
         >
             <Box 
                 sx={{
@@ -153,7 +153,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className="glass-panel-bright"
+                    className="glass-panel-bright memoria-entrance"
                     style={{
                         padding: 'clamp(20px, 5vh, 40px) clamp(20px, 5vw, 40px)',
                         minWidth: '300px',
@@ -179,7 +179,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                 fontSize: 'clamp(18px, 5vw, 32px)' 
                             }}
                         >
-                            SoulMatcher
+                            Memoria
                         </Title>
                     </motion.div>
 
@@ -230,11 +230,12 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         style={{
                             textAlign: 'center',
                             marginTop: 'clamp(20px, 4vh, 30px)',
-                            color: 'rgba(255, 215, 0, 0.6)',
+                            color: 'rgba(185, 210, 227, 0.72)',
                             fontSize: 'clamp(10px, 1.5vw, 12px)',
+                            letterSpacing: '0.04em',
                         }}
                     >
-                        {'v2026.02.27 - Improved emotion detection, cast randomization.'}
+                        {'v2026.03.14 - Ruinfield visual pass, atmospheric shell updates.'}
                     </motion.div>
                 </motion.div>
             </Box>

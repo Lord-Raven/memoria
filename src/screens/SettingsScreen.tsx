@@ -35,7 +35,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
     // Load existing settings or use defaults
     const [settings, setSettings] = useState<SettingsData>({
         playerName: stage().getPlayerActor()?.name || stage().primaryUser?.name || 'Player',
-        playerDescription: stage().getPlayerActor()?.description || stage().primaryUser?.chatProfile ||'An enimgmatic contestant on Soulmatcher!',
+        playerDescription: stage().getPlayerActor()?.description || stage().primaryUser?.chatProfile || 'An enigmatic wanderer tracing impossible echoes through the ruins.',
         textToSpeech: (stage().getSave()?.textToSpeech ?? true),
         language: stage().getSave()?.language || 'English',
     });
@@ -109,7 +109,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: 'rgba(0, 10, 20, 0.85)',
+                    background: 'rgba(10, 14, 24, 0.84)',
                     backdropFilter: 'blur(8px)',
                     display: 'flex',
                     alignItems: 'center',
@@ -163,7 +163,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                 style={{
                                     background: 'transparent',
                                     border: 'none',
-                                    color: 'rgba(255, 20, 147, 0.7)',
+                                    color: 'rgba(138, 176, 204, 0.75)',
                                     cursor: 'pointer',
                                     fontSize: '24px',
                                     padding: '5px',
@@ -184,13 +184,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                     htmlFor="player-name"
                                     style={{
                                         display: 'block',
-                                        color: '#FFD700',
+                                        color: '#b9d2e3',
                                         fontSize: '14px',
                                         fontWeight: 'bold',
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Contestant Name
+                                    Wanderer Name
                                 </label>
                                 <TextInput
                                     id="player-name"
@@ -208,13 +208,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                     htmlFor="player-description"
                                     style={{
                                         display: 'block',
-                                        color: '#FFD700',
+                                        color: '#b9d2e3',
                                         fontSize: '14px',
                                         fontWeight: 'bold',
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Contestant Bio
+                                    Field Notes
                                 </label>
                                 <textarea
                                     id="player-description"
@@ -237,13 +237,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                 <label 
                                     style={{
                                         display: 'block',
-                                        color: '#FFD700',
+                                        color: '#b9d2e3',
                                         fontSize: '14px',
                                         fontWeight: 'bold',
                                         marginBottom: '12px',
                                     }}
                                 >
-                                    Generation Settings (Mars recommended)
+                                    Generation Settings
                                 </label>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {/* Text-to-Speech Toggle */}
@@ -256,11 +256,11 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         style={{
                                             padding: '12px',
                                             background: settings.textToSpeech
-                                                ? 'rgba(255, 20, 147, 0.15)'
-                                                : 'rgba(36, 7, 65, 0.7)',
+                                                ? 'rgba(137, 205, 135, 0.18)'
+                                                : 'rgba(28, 34, 52, 0.8)',
                                             border: settings.textToSpeech
-                                                ? '2px solid rgba(255, 20, 147, 0.5)'
-                                                : '2px solid rgba(255, 215, 0, 0.3)',
+                                                ? '2px solid rgba(137, 205, 135, 0.5)'
+                                                : '2px solid rgba(138, 176, 204, 0.34)',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
                                             transition: 'all 0.2s ease',
@@ -274,8 +274,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                                 width: '20px',
                                                 height: '20px',
                                                 borderRadius: '4px',
-                                                background: settings.textToSpeech ? '#FF1493' : 'rgba(255, 255, 255, 0.1)',
-                                                border: '2px solid ' + (settings.textToSpeech ? '#FF1493' : 'rgba(255, 215, 0, 0.3)'),
+                                                background: settings.textToSpeech ? '#89cd87' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.textToSpeech ? '#89cd87' : 'rgba(138, 176, 204, 0.35)'),
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -299,7 +299,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         </div>
                                         <span
                                             style={{
-                                                color: settings.textToSpeech ? '#FF1493' : 'rgba(255, 255, 255, 0.7)',
+                                                color: settings.textToSpeech ? '#89cd87' : 'rgba(237, 242, 242, 0.72)',
                                                 fontSize: '13px',
                                                 fontWeight: settings.textToSpeech ? 'bold' : 'normal',
                                             }}
@@ -314,7 +314,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             htmlFor="language-input"
                                             style={{
                                                 display: 'block',
-                                                color: '#FFD700',
+                                                color: '#b9d2e3',
                                                 fontSize: '14px',
                                                 fontWeight: 'bold',
                                                 marginBottom: '12px'
@@ -354,8 +354,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                                             left: 0,
                                                             right: 0,
                                                             marginTop: '4px',
-                                                            background: 'rgba(36, 7, 65, 0.95)',
-                                                            border: '2px solid rgba(255, 20, 147, 0.5)',
+                                                            background: 'rgba(26, 32, 49, 0.97)',
+                                                            border: '2px solid rgba(138, 176, 204, 0.5)',
                                                             borderRadius: '8px',
                                                             overflow: 'hidden',
                                                             zIndex: 1000,
@@ -378,12 +378,12 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                                                     fontSize: '13px',
                                                                     transition: 'all 0.15s ease',
                                                                     borderBottom: index < languageSuggestions.length - 1 
-                                                                        ? '1px solid rgba(255, 20, 147, 0.1)' 
+                                                                        ? '1px solid rgba(138, 176, 204, 0.14)' 
                                                                         : 'none',
                                                                 }}
                                                                 onMouseEnter={(e) => {
-                                                                    e.currentTarget.style.background = 'rgba(255, 20, 147, 0.15)';
-                                                                    e.currentTarget.style.color = '#FF1493';
+                                                                    e.currentTarget.style.background = 'rgba(138, 176, 204, 0.17)';
+                                                                    e.currentTarget.style.color = '#8ab0cc';
                                                                 }}
                                                                 onMouseLeave={(e) => {
                                                                     e.currentTarget.style.background = 'transparent';

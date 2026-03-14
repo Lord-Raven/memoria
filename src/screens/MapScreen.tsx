@@ -8,6 +8,7 @@ import { ArrowBack, DeleteSweep } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Button } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
+import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 
 interface MapScreenProps {
@@ -26,12 +27,8 @@ interface VoronoiPoint {
 	themeColor: string;
 }
 
-interface VoronoiCell {
-	point: VoronoiPoint;
-	path: string;
+interface VoronoiCell extends MapCellData {
 	polygon: number[][];
-	patternId: string;
-	clipPathId: string;
 }
 
 const MAP_WIDTH = 1000;
@@ -43,15 +40,12 @@ const HOVER_TRANSITION_MS = 240;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_RADIUS_INFLUENCE_BOOST = 30;
-const SHOW_HOVER_DEBUG = true;
-
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
 	"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
 	"https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?auto=format&fit=crop&w=1200&q=80",
 	"https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1200&q=80",
 	"https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80",
-	"https://media.charhub.io/d41042d5-5860-4f76-85ac-885e65e92c2b/95fdc548-1c75-4101-a62e-65fc90a97437.png",
 ];
 
 type DefaultLocationSeed = {
@@ -158,47 +152,6 @@ const normalizeCoordinate = (value: number, max: number) => {
 		return (value / 100) * max;
 	}
 	return clamp(value, 0, max);
-};
-
-const asHexColor = (value: string) => {
-	const normalized = (value ?? 'fff').trim();
-	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
-};
-
-const hexToRgb = (hexColor: string) => {
-	const hex = asHexColor(hexColor).replace("#", "");
-	if (!hex) {
-		return null;
-	}
-
-	const expandedHex = hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
-	const parsed = Number.parseInt(expandedHex, 16);
-	if (!Number.isFinite(parsed)) {
-		return null;
-	}
-
-	return {
-		r: (parsed >> 16) & 255,
-		g: (parsed >> 8) & 255,
-		b: parsed & 255,
-	};
-};
-
-const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
-	const rgb = hexToRgb(hexColor);
-	if (!rgb) {
-		return fallback;
-	}
-	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp(alpha, 0, 1)})`;
-};
-
-const getLocationBorderPalette = (themeColor: string) => {
-	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
-	return {
-		outerStroke: colorWithAlpha(normalizedThemeColor, 0.92, "rgba(215, 190, 122, 0.92)"),
-		innerStroke: colorWithAlpha(normalizedThemeColor, 0.72, "rgba(215, 190, 122, 0.72)"),
-		gapStroke: "rgba(3, 11, 19, 0.9)",
-	};
 };
 
 const toPolygonPath = (polygon: number[][]) => {
@@ -339,12 +292,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const [revision, setRevision] = useState(0);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
-	const [hoverDebug, setHoverDebug] = useState<{
-		x: number;
-		y: number;
-		candidateCellId: string | null;
-		source: "none" | "hit-path" | "polygon" | "radius";
-	}>({ x: 0, y: 0, candidateCellId: null, source: "none" });
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
@@ -624,6 +571,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	}, [pulsedPoints]);
 
 	const hasAtlasLocations = targetPoints.length > 0;
+	const targetRadiusById = useMemo(
+		() => Object.fromEntries(targetPoints.map((point) => [point.id, point.radius])),
+		[targetPoints],
+	);
 
 	const addRandomLocation = (event: MouseEvent<SVGSVGElement>) => {
 		const rect = event.currentTarget.getBoundingClientRect();
@@ -666,7 +617,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
 		if (!voronoiCells.length) {
 			setHoveredCellId((current) => (current ? null : current));
-			setHoverDebug((current) => ({ ...current, candidateCellId: null, source: "none" }));
 			return;
 		}
 
@@ -675,12 +625,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		const targetCellId = eventTarget?.getAttribute("data-cell-id") ?? null;
 
 		if (targetCellId) {
-			setHoverDebug({
-				x: Math.round(x),
-				y: Math.round(y),
-				candidateCellId: targetCellId,
-				source: "hit-path",
-			});
 			setHoveredCellId((current) => (current === targetCellId ? current : targetCellId));
 			return;
 		}
@@ -709,29 +653,16 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			}
 
 			const nextHoveredCellId = bestMatch?.id ?? null;
-			setHoverDebug({
-				x: Math.round(x),
-				y: Math.round(y),
-				candidateCellId: nextHoveredCellId,
-				source: nextHoveredCellId ? "radius" : "none",
-			});
 			setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
 			return;
 		}
 
 		const nextHoveredCellId = hoveredCell.point.id;
-		setHoverDebug({
-			x: Math.round(x),
-			y: Math.round(y),
-			candidateCellId: nextHoveredCellId,
-			source: "polygon",
-		});
 		setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
 	};
 
 	const handleMapPointerLeave = () => {
 		setHoveredCellId((current) => (current ? null : current));
-		setHoverDebug((current) => ({ ...current, candidateCellId: null, source: "none" }));
 	};
 
 	const handleCellPointerEnter = (cellId: string) => {
@@ -884,83 +815,16 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						</defs>
 
 						{voronoiCells.map((cell) => {
-							const borderPalette = getLocationBorderPalette(cell.point.themeColor);
-							const isHovered = hoveredCellId === cell.point.id;
-
 							return (
-								<g key={cell.point.id}>
-									<path
-										d={cell.path}
-										fill={`url(#${cell.patternId})`}
-										style={{ transition: "opacity 180ms ease", pointerEvents: "none" }}
-									/>
-									<path d={cell.path} fill="rgba(10, 26, 39, 0.28)" style={{ pointerEvents: "none" }} />
-									<path
-										d={cell.path}
-										fill="none"
-										stroke={borderPalette.outerStroke}
-										strokeWidth={isHovered ? 5.4 : 4.8}
-										strokeLinejoin="round"
-										clipPath={`url(#${cell.clipPathId})`}
-										style={{ pointerEvents: "none" }}
-									/>
-									<path
-										d={cell.path}
-										fill="none"
-										stroke={borderPalette.gapStroke}
-										strokeWidth={2.8}
-										strokeLinejoin="round"
-										clipPath={`url(#${cell.clipPathId})`}
-										style={{ pointerEvents: "none" }}
-									/>
-									<path
-										d={cell.path}
-										fill="none"
-										stroke={borderPalette.innerStroke}
-										strokeWidth={isHovered ? 1.6 : 1.2}
-										strokeLinejoin="round"
-										clipPath={`url(#${cell.clipPathId})`}
-										style={{ pointerEvents: "none" }}
-									/>
-									<circle
-										cx={cell.point.x}
-										cy={cell.point.y}
-										r={4.2}
-										fill="rgba(255,255,255,0.88)"
-										style={{ pointerEvents: "none" }}
-									/>
-									<path
-										d={cell.path}
-										fill="rgba(255,255,255,0)"
-										style={{ pointerEvents: "all" }}
-										data-cell-id={cell.point.id}
-										onPointerEnter={() => handleCellPointerEnter(cell.point.id)}
-										onPointerMove={() => handleCellPointerEnter(cell.point.id)}
-									/>
-								</g>
+								<MapCell
+									key={cell.point.id}
+									cell={cell}
+									targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
+									onPointerEnter={handleCellPointerEnter}
+									onPointerLeave={handleMapPointerLeave}
+								/>
 							);
 						})}
-
-						{SHOW_HOVER_DEBUG && (
-							<g style={{ pointerEvents: "none" }}>
-								<rect x={12} y={12} width={370} height={118} rx={8} fill="rgba(0,0,0,0.62)" stroke="rgba(255,255,255,0.22)" />
-								<text x={24} y={36} fill="rgba(255,255,255,0.92)" style={{ fontSize: "15px", fontWeight: 700 }}>
-									Hover Debug
-								</text>
-								<text x={24} y={58} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
-									{`Pointer: (${hoverDebug.x}, ${hoverDebug.y})`}
-								</text>
-								<text x={24} y={78} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
-									{`Hovered: ${hoveredCellId || "none"}`}
-								</text>
-								<text x={24} y={98} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
-									{`Candidate: ${hoverDebug.candidateCellId || "none"}`}
-								</text>
-								<text x={24} y={118} fill="rgba(210,231,255,0.95)" style={{ fontSize: "13px" }}>
-									{`Source: ${hoverDebug.source}`}
-								</text>
-							</g>
-						)}
 
 						{!hasAtlasLocations && (
 							<text
