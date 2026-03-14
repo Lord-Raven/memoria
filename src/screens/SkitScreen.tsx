@@ -214,7 +214,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                     marginBottom: 1,
                                     color: 'rgba(185, 210, 227, 0.84)',
                                     fontStyle: 'italic',
-                                    fontFamily: '"Alegreya", serif',
+                                    fontFamily: '"Lora", Georgia, serif',
                                 }}
                             >
                                 by {authorName}

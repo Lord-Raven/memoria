@@ -41,6 +41,7 @@ const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_RADIUS_INFLUENCE_BOOST = 30;
 const OUTSIDE_ID = "__outside__";
+const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
 	"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
@@ -706,7 +707,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	return (
 		<BlurredBackground
-			imageUrl="https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png"
+			imageUrl={MAP_BACKGROUND_IMAGE}
 			overlay="linear-gradient(130deg, rgba(5, 24, 34, 0.78) 0%, rgba(18, 47, 32, 0.72) 50%, rgba(37, 24, 57, 0.78) 100%)"
 		>
 			<Box
@@ -787,7 +788,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						overflow: "hidden",
 						border: "1px solid rgba(255,255,255,0.15)",
 						boxShadow: "0 10px 40px rgba(0,0,0,0.42)",
-						background: "rgba(0,0,0,0.24)",
+						background: `linear-gradient(180deg, rgba(4, 12, 22, 0.16), rgba(4, 12, 22, 0.34)), url(${MAP_BACKGROUND_IMAGE}) center / cover no-repeat`,
 					}}
 				>
 					<svg
@@ -800,7 +801,16 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						onPointerLeave={handleMapPointerLeave}
 						style={{ cursor: "crosshair", display: "block" }}
 					>
-						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.6)" />
+						<image
+							href={MAP_BACKGROUND_IMAGE}
+							x={0}
+							y={0}
+							width={MAP_WIDTH}
+							height={MAP_HEIGHT}
+							preserveAspectRatio="xMidYMid slice"
+							opacity={0.94}
+						/>
+						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.34)" />
 
 						<defs>
 							{voronoiCells.map((cell) => (

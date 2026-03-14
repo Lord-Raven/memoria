@@ -49,8 +49,9 @@ export const theme = createTheme({
     text: colors.text,
   },
   typography: {
-    fontFamily: '"Space Grotesk", "Alegreya Sans SC", "Segoe UI", sans-serif',
+    fontFamily: '"Geologica", sans-serif',
     h1: {
+      fontFamily: '"Lora", Georgia, serif',
       fontSize: '2.5rem',
       fontWeight: 700,
       letterSpacing: '0.12em',
@@ -58,21 +59,25 @@ export const theme = createTheme({
       textShadow: '0 0 24px rgba(138, 176, 204, 0.26)',
     },
     h2: {
+      fontFamily: '"Lora", Georgia, serif',
       fontSize: '2rem',
       fontWeight: 700,
       letterSpacing: '0.08em',
       textShadow: '0 0 18px rgba(137, 205, 135, 0.2)',
     },
     h3: {
+      fontFamily: '"Lora", Georgia, serif',
       fontSize: '1.75rem',
       fontWeight: 600,
       letterSpacing: '0.05em',
     },
     h4: {
+      fontFamily: '"Lora", Georgia, serif',
       fontSize: '1.5rem',
       fontWeight: 600,
     },
     h5: {
+      fontFamily: '"Lora", Georgia, serif',
       fontSize: '1.25rem',
       fontWeight: 500,
     },
@@ -81,6 +86,7 @@ export const theme = createTheme({
       lineHeight: 1.6,
     },
     button: {
+      fontFamily: '"Geologica", sans-serif',
       textTransform: 'uppercase',
       fontWeight: 700,
       letterSpacing: '0.08em',
@@ -121,6 +127,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: '8px',
+          fontFamily: '"Geologica", sans-serif',
           padding: '10px 24px',
           transition: 'all 0.3s ease',
           boxShadow: '0 0 14px rgba(138, 176, 204, 0.24)',
@@ -162,6 +169,7 @@ export const theme = createTheme({
     MuiTextField: {
       styleOverrides: {
         root: {
+          fontFamily: '"Geologica", sans-serif',
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
               borderColor: 'rgba(138, 176, 204, 0.4)',
@@ -203,6 +211,7 @@ export const theme = createTheme({
           backgroundColor: colors.background.glass,
           border: `1px solid ${colors.primary.main}`,
           color: colors.text.primary,
+          fontFamily: '"Geologica", sans-serif',
           fontWeight: 600,
           '&:hover': {
             backgroundColor: 'rgba(138, 176, 204, 0.16)',

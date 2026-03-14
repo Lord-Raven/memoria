@@ -15,6 +15,8 @@
   --mem-text-secondary: #b9d2e3;
   --mem-shadow: 0 14px 34px rgba(2, 8, 18, 0.48);
   --mem-glow: 0 0 20px rgba(138, 176, 204, 0.26);
+  --mem-font-flavor: "Lora", Georgia, serif;
+  --mem-font-ui: "Geologica", sans-serif;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -31,7 +33,7 @@ html, body, #root {
 
 body {
   color: var(--mem-text-primary);
-  font-family: "Space Grotesk", "Alegreya Sans", "Segoe UI", sans-serif;
+  font-family: var(--mem-font-ui);
   background:
     radial-gradient(1200px 700px at 12% 10%, rgba(138, 176, 204, 0.2), transparent 56%),
     radial-gradient(950px 560px at 88% 90%, rgba(137, 205, 135, 0.16), transparent 62%),
@@ -95,12 +97,14 @@ body {
 
 .text-glow-primary {
   color: var(--mem-fog);
+  font-family: var(--mem-font-flavor);
   letter-spacing: 0.1em;
   text-shadow: 0 0 18px rgba(138, 176, 204, 0.34), 0 4px 10px rgba(3, 7, 15, 0.66);
 }
 
 .text-gradient {
   color: transparent;
+  font-family: var(--mem-font-flavor);
   background: linear-gradient(95deg, var(--mem-mist) 0%, var(--mem-verdant) 52%, var(--mem-fog) 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -113,6 +117,7 @@ body {
   border: 1px solid transparent;
   border-radius: 10px;
   color: var(--mem-fog);
+  font-family: var(--mem-font-ui);
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -167,7 +172,7 @@ body {
   color: var(--mem-text-primary);
   background: linear-gradient(145deg, rgba(27, 33, 51, 0.92), rgba(21, 26, 40, 0.92));
   padding: 12px 14px;
-  font-family: "Alegreya Sans", "Segoe UI", sans-serif;
+  font-family: var(--mem-font-ui);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
