@@ -6,6 +6,7 @@ import { Item } from "./content/Item";
 import { Skit } from "./content/Skit";
 import { Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
+import { createDefaultAtlas } from "./screens/MapScreen";
 
 type MessageStateType = any;
 
@@ -67,6 +68,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     primaryUser: User;
     primaryCharacter: Character;
     betaMode: boolean;
+    imageGenerationPromises: {[key: string]: Promise<string>} = {};
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -115,36 +117,52 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         //}
     }
 
-    saveGame() {
-        this.messenger.updateChatState(this.saveData);
-    }
-
-    getSave(): SaveType {
-        return this.saveData.saves[this.saveData.lastSaveSlot] || {
-            playerId: this.primaryCharacter.anonymizedId,
+    generateFreshSave(playerData: {name: string, personality: string}): SaveType {
+        return {playerId: this.primaryCharacter.anonymizedId,
             actors: {
                 [this.primaryCharacter.anonymizedId]: {
                     id: this.primaryCharacter.anonymizedId,
-                    name: this.primaryCharacter.name,
+                    name: playerData.name,
                     type: ActorType.PLAYER,
-                    description: '',
-                    avatarImageUrl: '',
-                    emotionPack: {},
+                    personality: playerData.personality,
+                    avatarImageUrl: '', // Unneeded; the player is never seen.
+                    appearances: [], // Ditto.
+                    appearanceId: '', // Ditto.
                     fullPath: '',
                     motive: '',
-                    profile: '',
                     themeColor: '',
                     themeFontFamily: '',
                     voiceId: ''
                 },
             },
-            atlas: {},
+            atlas: createDefaultAtlas(),
             inventory: [],
             timeline: [],
             turn: 0,
             timestamp: Date.now(),
-
         };
+    }
+
+    startNewGame(playerData: {name: string, personality: string}) {
+        // Get empty save slot or replace the oldest save if all slots are full
+        const emptySlotIndex = this.saveData.saves.findIndex(save => save === undefined);
+        const saveSlotIndex = emptySlotIndex !== -1 ? emptySlotIndex : (this.saveData.lastSaveSlot + 1) % this.SAVE_SLOT_COUNT;
+
+        // Create new save data structure
+        const newSave: SaveType = this.generateFreshSave(playerData);
+
+        // Save the new game
+        this.saveData.saves[saveSlotIndex] = newSave;
+        this.saveData.lastSaveSlot = saveSlotIndex;
+        this.saveGame();
+    }
+
+    saveGame() {
+        this.messenger.updateChatState(this.saveData);
+    }
+
+    getSave(): SaveType {
+        return this.saveData.saves[this.saveData.lastSaveSlot] || this.generateFreshSave({name: this.primaryCharacter.name, personality: this.primaryCharacter.personality});
     }
 
     getPlayerActor(): Actor {
@@ -185,6 +203,35 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.priorityMessageCallback(message, icon, durationMs);
         } else {
             console.warn('Priority message callback not set:', message);
+        }
+    }
+
+        async makeImage(imageRequest: Object, defaultUrl: string): Promise<string> {
+        return (await this.generator.makeImage(imageRequest))?.url ?? defaultUrl;
+    }
+
+    async makeImageFromImage(imageToImageRequest: any, defaultUrl: string): Promise<string> {
+
+        const imageUrl = (await this.generator.imageToImage(imageToImageRequest))?.url ?? defaultUrl;
+        if (imageToImageRequest.remove_background && imageUrl != defaultUrl) {
+            try {
+                return this.removeBackground(imageUrl);
+            } catch (exception: any) {
+                console.error(`Error removing background from image, error`, exception);
+                return imageUrl;
+            }
+        }
+        return imageUrl;
+    }
+
+    async removeBackground(imageUrl: string) {
+        if (!imageUrl) return imageUrl;
+        try {
+            const response = await this.generator.removeBackground({image: imageUrl});
+            return response?.url ?? imageUrl;
+        } catch (error) {
+            console.error(`Error removing background`, error);
+            return imageUrl;
         }
     }
 

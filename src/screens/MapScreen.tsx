@@ -50,20 +50,10 @@ const testImagePool = [
 	"https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80",
 ];
 
-type DefaultLocationSeed = {
-	id: string;
-	name: string;
-	description: string;
-	weight: number;
-	imageUrl: string;
-	center: { x: number; y: number };
-	themeColor: string;
-};
-
 // Customize this list to define which locations are restored when the map is cleared.
 // Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.
 // Ardeia is a fantasy sci-fi city with a mixture of heavy gothic architecture mixed with overgrown greenery and archaically high-tech machinery that feels ancient and alien at once.
-const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
+const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 	{
 		id: "ardeia-streets",
 		name: "Streets of Ardeia",
@@ -111,7 +101,7 @@ const DEFAULT_ATLAS_LOCATIONS: DefaultLocationSeed[] = [
 	},
 ];
 
-const createDefaultAtlas = () => {
+export const createDefaultAtlas = () => {
 	const atlas: Record<string, Location> = {};
 	for (const seed of DEFAULT_ATLAS_LOCATIONS) {
 		const location = new Location(seed);

@@ -1,10 +1,10 @@
 import { FC, useEffect, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
-import { FiberNew, Map, PlayArrow, Settings } from "@mui/icons-material";
+import { FiberNew, PlayArrow, Settings } from "@mui/icons-material";
 import { SettingsScreen } from "./SettingsScreen";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
-import { Button, GridOverlay, Title, ConfirmDialog } from "./UiComponents";
+import { Button, GridOverlay, Title } from "./UiComponents";
 import { motion } from "framer-motion";
 import { Box } from "@mui/material";
 import { useTooltip } from "./TooltipContext";
@@ -18,7 +18,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [hoveredButton, setHoveredButton] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(false);
     const [isNewGameSettings, setIsNewGameSettings] = useState(false);
-    const [showConfirmNewGame, setShowConfirmNewGame] = useState(false);
     const { setTooltip, clearTooltip } = useTooltip();
     const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
     
@@ -49,30 +48,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         setScreenType(ScreenType.SKIT);
     };
 
-    const handleMap = () => {
-        setScreenType(ScreenType.MAP);
-    };
-
     const handleNewGame = () => {
-        // Check if a save exists
-        if (saveExists()) {
-            // Show confirmation dialog
-            setShowConfirmNewGame(true);
-        } else {
-            // No save exists, proceed directly to settings
-            setIsNewGameSettings(true);
-            setShowSettings(true);
-        }
-    };
-
-    const handleConfirmNewGame = () => {
-        setShowConfirmNewGame(false);
         setIsNewGameSettings(true);
         setShowSettings(true);
-    };
-
-    const handleCancelNewGame = () => {
-        setShowConfirmNewGame(false);
     };
 
     const handleSettings = () => {
@@ -118,14 +96,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             enabled: !disableAllButtons,
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
             icon: Settings
-        },
-        {
-            key: 'map',
-            label: 'Atlas Map',
-            onClick: handleMap,
-            enabled: !disableAllButtons,
-            tooltip: disableAllButtons ? 'Currently unavailable' : 'Inspect atlas locations as Voronoi cells',
-            icon: Map
         }
     ];
 
@@ -249,17 +219,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     isNewGame={isNewGameSettings}
                 />
             )}
-
-            {/* Confirm New Game Dialog */}
-            <ConfirmDialog
-                isOpen={showConfirmNewGame}
-                title="Overwrite Save?"
-                message="Starting a new game will overwrite your existing save. Are you sure you want to continue? (You can start a new chat to avoid this.)"
-                confirmText="Start New Game"
-                cancelText="Cancel"
-                onConfirm={handleConfirmNewGame}
-                onCancel={handleCancelNewGame}
-            />
         </BlurredBackground>
     );
 };

@@ -1,6 +1,7 @@
 import { v4 as generateUuid } from 'uuid';
-import { Emotion, EmotionPack } from './Emotion';
+import { Emotion, EMOTION_PROMPTS, EmotionPack } from './Emotion';
 import { Stage } from '../Stage';
+import { AspectRatio } from '@chub-ai/stages-ts';
 
 export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
@@ -9,21 +10,27 @@ export enum ActorType {
 
 }
 
+// An appearance represents an outfit or physical transformation that can be applied to a specific actor; each appearance comes with a full set of emotions
+export type Appearance = {
+    id: string;
+    name: string;
+    description: string;
+    emotionPack: EmotionPack;
+}
+
 export class Actor {
     id: string; // UUID
     type: ActorType = ActorType.PRISONER; // Default to PRISONER
     name: string = ''; // Display name
     fullPath: string = ''; // Path to original character definition
-    forkPath?: string; // If this character is a fork of another, the path to the original character definition
     avatarImageUrl: string = ''; // Original reference image
-    description: string = ''; // Physical description of character
-    profile: string = ''; // Obvious personality profile description of character
-    motive: string = ''; // The character's agenda for being on the show or what they hope to get out of it. This could be an ulterior motive, or it could align with their profile.
-    emotionPack: EmotionPack = {}; // URLs for character's emotion images
+    personality: string = ''; // Personality profile description of character
+    motive: string = ''; // Character's hidden motives or drives (even if they are aligned with their apparent personality)
+    appearanceId: string = ''; // The ID of the current appearance (outfit/description) for this actor; if empty, use the first appearance index
+    appearances: Appearance[] = []; // Sets of appearances representing outfits or transformations for this actor; each appearance has a full set of emotions
     themeColor: string = ''; // Theme color (hex code)
     themeFontFamily: string = ''; // Font family stack for CSS styling
-    voiceId: string = ''; // Voice ID
-    flagForBackgroundRemoval?: boolean; // Use to indicate that a character's emotionPack images should have backgrounds removed.
+    voiceId: string = ''; // Voice ID for TTS
 
     /**
      * Rehydrate an Actor from saved data
@@ -47,57 +54,6 @@ export async function loadReserveActorFromFullPath(fullPath: string, stage: Stag
     const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
     console.log(item);
 
-    const candidatePacks = [item.node.definition.extensions?.chub?.expressions ?? null, ...Object.values(item.node.definition.extensions?.chub?.alt_expressions ?? {})]
-        .filter(pack => pack !== null && Object.values(pack.expressions).some(imageUrl => !(imageUrl as String).includes("emotions/1/")) && pack.expressions['neutral'] && !pack.expressions['neutral'].includes("emotions/1/"));
-    
-    let flagForBackgroundRemoval = false;
-    // Check each pack asynchronously for transparency and size requirements
-    const packChecks = await Promise.all(
-        candidatePacks.map(async pack => {
-            // Fetch an image from each emotion pack and inspect the top left pixel to see if it's transparent. If not, discard this emotion pack
-            // Fetch the neutral image from the pack
-            try {
-                const imgResponse = await fetch(pack.expressions['neutral']);
-                const imgBlob = await imgResponse.blob();
-                const imgBitmap = await createImageBitmap(imgBlob);
-                const canvas = document.createElement('canvas');
-                canvas.width = imgBitmap.width;
-                canvas.height = imgBitmap.height;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return false;
-                ctx.drawImage(imgBitmap, 0, 0);
-                const pixelData = ctx.getImageData(0, 0, 1, 1).data;
-                // Check if the pixel is transparent (alpha value of 0)
-                const isTransparent = pixelData[3] === 0;
-                if (imgBitmap.width < 400 || imgBitmap.height < 600) {
-                    console.log(`Discarding ${dataName}'s emotion pack due to small image size: ${pack.expressions['neutral']}`);
-                    return false;
-                } else if (!isTransparent) {
-                    if (false) { //stage.saveData.removeBackgrounds) {
-                        console.log(`Flagging ${dataName}'s emotion pack for background removal: ${pack.expressions['neutral']}`);
-                        flagForBackgroundRemoval = true;
-                        return true;
-                    } else {
-                        console.log(`Discarding ${dataName}'s emotion pack due to non-transparent pixels: ${pack.expressions['neutral']}`);
-                        return false;
-                    }
-                } 
-                return true;
-            } catch (error) {
-                // Failed to fetch avatar image.
-                console.log(`Discarding actor due to failed avatar image fetch: ${dataName}`);
-                return false;
-            }
-        })
-    );
-    
-    const emotionPacks: EmotionPack[] = candidatePacks.filter((_, index) => packChecks[index]);
-
-    if (emotionPacks.length === 0) {
-        console.log(`Discarding actor due to missing or unsupported emotion pack: ${dataName}`);
-        return null;
-    }
-
     const data = {
         name: dataName,
         fullPath: item.node.fullPath,
@@ -105,13 +61,6 @@ export async function loadReserveActorFromFullPath(fullPath: string, stage: Stag
         avatar: item.node.max_res_url,
         // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
         voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : '',
-        // Use the first emotionPack, but modify any entries that include "emotions/1/" to be undefined (they will default to neutral in-game).
-        emotionPack: Object.fromEntries(
-            Object.entries(emotionPacks[0].expressions).map(([key, value]) =>
-                value.includes("emotions/1/") ? [key, undefined] : [key, value]
-            )
-        ),
-        flagForBackgroundRemoval: flagForBackgroundRemoval,
     };
     return loadReserveActor(data, stage);
 }
@@ -186,23 +135,26 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
-            `\n\nBackground: This game is a modern dating gameshow hosted by the literal Roman god of love, Cupid. ` +
-            `The player of this game, ${stage.getPlayerActor()?.name || 'Player'}, is the primary contestant who will interview multiple candidate contestants and ultimately be matched up with one to be inexorably soul-matched by Cupid. ` +
-            `The candidate contestants are generated from content pulled from other sources; they may span time periods or genres, and will require editing to repurpose for this game's setting. ` +
-            `\n\nThe Original Details below describe a character or scenario (${data.name}) to convert into one of these candidate contestants. ` +
-            `This request and response must digest and distill these details to suit the game's narrative scenario, ` +
-            `crafting a candidate contestant who is appropriately single and ready to mingle, but in a way that respects the original source material. ` +
+            `\n\nBackground: This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
+            `The denizens of this world—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. Most have only vague memories of their past lives, ` +
+            `but all have rich and detailed personalities that persist and even new motives driving their existence in a new world. ` +
+            `All prisoners live in the sole populated city of Ardeia and serve its Warden, Cassiel, an eight-foot, angelic woman who oversees the city's operations with a mix of benevolence and authority. ` +
+            `The player of this game, ${stage.getPlayerActor()?.name || 'Player'}, is one of the many prisoners, bearing the signature bracer that binds them to Ardeia and the Warden. ` +
+            `The prisoners work to keep the city running while also exploring the Outside, beyond the cities walls and Barriers. Some are new arrivals, while others have been here for centuries. ` +
+            `They find all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. ` +
+            `\n\nThe Original Details below describe a character of this world or its past (${data.name}) to convert into a set of defined fields for this game. ` +
             `\n\n` +
             `The provided Original Details may reference 'Individual X' who was a part of their original background; ` +
-            `if Individual X remains relevant to this character, Individual X should be replaced with an appropriate name in the distillation below.\n\n` +
+            `if Individual X remains relevant to this character, Individual X should be replaced with an invented yet appropriate name in the distillation below.\n\n` +
             `Original Details about ${data.name}:\n ${data.personality}\n\n` +
             `Available Voices:\n` +
             Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => '  - ' + voiceId + ': ' + voiceDesc).join('\n') +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
-            `PROFILE: A brief summary of the character's observable surface-level personality traits, mannerisms, and public persona. Focus on what others would notice immediately about them.\n` +
-            `MOTIVE: The character's hidden agenda, underlying emotional drive, or what they truly hope to gain from being on the show. This may align with or differ from their public profile. Keep it concise but revealing of their true intentions.\n` +
+            `OUTFIT: A one- to two-word name for the character's current outfit that matches the description.\n` +
+            `PERSONALITY: A brief summary of the character's observable surface-level personality traits, mannerisms, and public persona. Focus on what others would notice immediately about them.\n` +
+            `MOTIVE: The character's hidden agenda, underlying emotional drive, or what they hope to achieve here. This may align with or differ from their personality. Keep it concise but revealing of their true intentions.\n` +
             `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
@@ -210,7 +162,8 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `Example Response:\n` +
             `NAME: Jane Doe\n` +
             `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She wears a simple, utilitarian outfit made from durable materials.\n` +
-            `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. She has sharp wit and isn't afraid to speak her mind.\n` +
+            `OUTFIT: Adventurer's Gear\n` +
+            `PERSONALITY: Jane is confident and determined, quick-witted, and fiercely independent. She has sharp wit and isn't afraid to speak her mind.\n` +
             `MOTIVE: Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
             `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
             `COLOR: #333333\n` +
@@ -250,60 +203,188 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         name: (parsedData['name'] || data.name).replace(/["“”]/g, "'"),
         fullPath: data.fullPath || '',
         avatar: data.avatar || '',
-        description: parsedData['description'] || '',
         profile: parsedData['profile'] || '',
         motive: parsedData['motive'] || '',
         voiceId: data.voiceId || parsedData['voice'] || '',
         themeColor: themeColor,
         font: parsedData['font'] || 'Arial, sans-serif',
-        emotionPack: data.emotionPack || {},
-        flagForBackgroundRemoval: data.flagForBackgroundRemoval || false,
+        appearances: []
     });
+
+
+    const defaultAppearanceName = parsedData['outfit'] || 'Default Outfit';
+    const defaultAppearanceDescription = (parsedData['description'] || '');
+
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
-    // If name, description, profile, or motive are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
+    // If name, description, personality, or motive are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
     // Rewrite discard reasons to log which reason applied:
     if (!newActor.name) {
         console.log(`Discarding actor due to missing name: ${newActor.name}`);
         return null;
-    } else if (!newActor.description) {
+    } else if (!defaultAppearanceDescription) {
         console.log(`Discarding actor due to missing description: ${newActor.name}`);
         return null;
-    } else if (!newActor.profile) {
-        console.log(`Discarding actor due to missing profile: ${newActor.name}`);
+    } else if (!newActor.personality) {
+        console.log(`Discarding actor due to missing personality: ${newActor.name}`);
         return null;
-    } else if (!newActor.motive) {
-        console.log(`Discarding actor due to missing motive: ${newActor.name}`);
-        return null;
-    } else if (Object.keys(bannedWordSubstitutes).some(word => newActor.description.toLowerCase().includes(word))) {
+    } else if (Object.keys(bannedWordSubstitutes).some(word => defaultAppearanceDescription.toLowerCase().includes(word))) {
         console.log(`Discarding actor due to banned words in description: ${newActor.name}`);
         return null;
     } else if (newActor.name.length <= 2 || newActor.name.length >= 30) {
         console.log(`Discarding actor due to extreme name length: ${newActor.name}`);
         return null;
-    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${newActor.description}${newActor.profile}`)) {
-        console.log(`Discarding actor due to non-english characters in name/description/profile: ${newActor.name}`);
+    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${defaultAppearanceDescription}${newActor.personality}`)) {
+        console.log(`Discarding actor due to non-english characters in name/description/personality: ${newActor.name}`);
         return null;
     }
 
+    // Add shell of an initial appearance
+    newActor.appearances.push({
+        id: generateUuid(),
+        name: defaultAppearanceName,
+        description: defaultAppearanceDescription,
+        emotionPack: {}, // This will be filled in later when the player views this character and the emotions are generated on demand.
+    });
+
+    // Kick off emotion image:
+    void generateBaseActorImage(newActor, stage, false, true, newActor.appearanceId, newActor.avatarImageUrl);
     return newActor;
 }
 
-// Remove the background from a target emotion image in actor's emotionPack using stage.generator.removeBackground.
-export async function removeBackgroundFromEmotionImage(actor: Actor, emotion: Emotion, stage: Stage): Promise<void> {
-    const imageUrl = actor.emotionPack[emotion];
-    if (!imageUrl) return;
-    try {
-        const response = await stage.generator.removeBackground({image: imageUrl});
-        if (!response?.url) {
-            console.error(`Background removal failed for ${actor.name}'s ${emotion} emotion. Keeping original image.`);
-        } else {
-            console.log(`Background removed for ${actor.name}'s ${emotion} emotion. Updating emotion pack to ${response?.url}.`);
-            actor.emotionPack[emotion] = response?.url ?? imageUrl;
-        }
-    } catch (error) {
-        console.error(`Error removing background`, error);
+function getActiveAppearance(actor: Actor): Appearance {
+    if (actor.appearances.length === 0) {
+        // Return a default appearance if none exist to avoid errors; this will be updated with real data when the emotion images are generated.
+        return {
+            id: '',
+            name: 'Default Appearance',
+            description: '',
+            emotionPack: {}
+        };
+    } else if (!actor.appearanceId) {
+        return actor.appearances[0];
+    } else {
+        return actor.appearances.find(appearance => appearance.id === actor.appearanceId) || actor.appearances[0];
     }
+}
+
+function getAppearanceById(actor: Actor, appearanceId: string = ''): Appearance {
+    const resolvedAppearanceId = appearanceId || actor.appearanceId;
+    return actor.appearances.find((appearance) => appearance.id === resolvedAppearanceId) || getActiveAppearance(actor);
+}
+
+export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?: Stage, appearanceId: string = ''): string {
+    const targetAppearanceId = appearanceId || actor.appearanceId;
+    const emotionKey = typeof emotion === 'string' ? emotion : emotion;
+    const emotionPack = getAppearanceById(actor, targetAppearanceId).emotionPack;
+    const emotionUrl = emotionPack[emotionKey];
+    const neutralUrl = emotionPack['neutral'] || emotionPack['base'];
+    const fallbackUrl = neutralUrl || actor.avatarImageUrl || '';
+
+    // Check if we need to generate the image
+    if (stage && (emotion === 'neutral' /*|| !stage.getSave().disableEmotionImages*/) && (!emotionUrl || emotionUrl === actor.avatarImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
+        // Kick off generation in the background (don't wait)
+        generateEmotionImage(actor, emotion as Emotion, stage, false, targetAppearanceId);
+    }
+
+    // Return the emotion image or fallback
+    return emotionUrl || fallbackUrl;
+}
+
+function setEmotionImageUrl(actor: Actor, emotion: Emotion | string, appearanceId: string = '', url: string = '') {
+    const targetAppearanceId = appearanceId || actor.appearanceId;
+    const emotionPack = getAppearanceById(actor, targetAppearanceId).emotionPack;
+    emotionPack[emotion] = url;
+}
+
+export async function generateBaseActorImage(
+    actor: Actor,
+    stage: Stage,
+    force: boolean = false,
+    fromAvatar: boolean = true,
+    appearanceId: string = '',
+    sourceImageUrl: string = ''
+): Promise<void> {
+    const targetAppearanceId = appearanceId || actor.appearanceId;
+    console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
+    // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
+    if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
+        console.log(`Generating neutral emotion image for actor ${actor.name}`);
+        // Want to clear in-progress stuff if forcing
+        if (force) {
+            getAppearanceById(actor, targetAppearanceId).emotionPack = {};
+            delete stage.imageGenerationPromises[`actor/${actor.id}`];
+        }
+        let imageUrl = '';
+        let baseSourceImage = sourceImageUrl || actor.avatarImageUrl || '';
+        
+        if (!baseSourceImage || !fromAvatar) {
+            console.log(`Generating new image for actor ${actor.name} from description`);
+            // Use stage.makeImage to create a neutral expression based on the description
+            imageUrl = await stage.makeImage({
+                prompt: `Illustrate this character in a hyperrealistic anime visual novel style: ` +
+                    `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
+                aspect_ratio: AspectRatio.PHOTO_VERTICAL
+            }, '');
+            baseSourceImage = imageUrl || '';
+        }
+
+        // Use stage.makeImageFromImage to create a base image.
+        imageUrl = await stage.makeImageFromImage({
+            image: baseSourceImage,
+            prompt: `Illustrate this character in a hyperrealistic anime visual novel style: ` +
+                `Create a waist-up portrait of this character to match this updated description: ${getAppearanceById(actor, targetAppearanceId).description}\nGive them a neutral expression and pose and place them on a light gray background. ` +
+                `Regardless of the description, zoom and crop the image at their waist, but maintain a margin of negative space over their head/hair.`,
+            remove_background: true,
+            transfer_type: 'edit'
+        }, '');
+        
+        console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
+        
+        setEmotionImageUrl(actor, 'base', targetAppearanceId, imageUrl || '');
+
+        if (force) {
+            // Invalidate all other emotions
+            getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
+        }
+        // Generate neutral but don't wait up.
+        void generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
+    }
+}
+
+export async function generateAdditionalActorImages(actor: Actor, stage: Stage, appearanceId: string = ''): Promise<void> {
+    const targetAppearanceId = appearanceId || actor.appearanceId;
+
+    console.log(`Generating additional emotion images for actor ${actor.name} (ID: ${actor.id})`);
+    if (getEmotionImage(actor, 'neutral', stage, targetAppearanceId)) {
+        // Generate in serial and not parallel as below:
+        for (const emotion of Object.values(Emotion)) {
+            // Only generate if the emotion image is missing, and only if the actor is in the save
+            if (!getEmotionImage(actor, emotion, stage, targetAppearanceId) && (Object.keys(stage.getSave().actors).includes(actor.id))) {
+                await generateEmotionImage(actor, emotion, stage, false, targetAppearanceId);
+            }
+        }
+    }
+}
+
+export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, appearanceId: string = ''): Promise<string> {
+    const targetAppearanceId = appearanceId || actor.appearanceId;
+    if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.imageGenerationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
+        console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
+        const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
+        stage.imageGenerationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
+            image: getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
+            prompt: `${emotionPrompt}`,
+            remove_background: true,
+            transfer_type: 'edit'
+        }, '');
+        const imageUrl = await stage.imageGenerationPromises[`actor/${actor.id}`];
+        delete stage.imageGenerationPromises[`actor/${actor.id}`];
+        console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
+        getAppearanceById(actor, targetAppearanceId).emotionPack[emotion] = imageUrl || '';
+        return imageUrl || '';
+    }
+    return '';
 }
 
 /**
@@ -324,7 +405,6 @@ export function getNameSimilarity(name: string, possibleName: string): number {
 
     // Check word-based matching first (higher priority)
     const names = name.split(' ');
-    const possibleNames = possibleName.split(' ');
     
     // Count matching words
     let matchingWords = 0;

@@ -2,7 +2,7 @@ import { Stage } from "../Stage";
 import { ScriptEntry, Skit, SkitType } from "../content/Skit";
 import { FC, useEffect, useState } from "react";
 import { ScreenType } from "./BaseScreen";
-import { Actor } from "../content/Actor";
+import { Actor, getEmotionImage } from "../content/Actor";
 import { NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Emotion } from "../content/Emotion";
 import { Box, Typography } from "@mui/material";
@@ -167,11 +167,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             getPresentActors={(script, index: number) => (script as Skit).initialActors?.map(actorId => stage().getSave().actors[actorId]).filter(actor => actor) || []}
             getActorImageUrl={(actor, script, index: number) => {
                 const emotion = determineEmotion(actor.id, script as Skit, index);
-                // If this actor is flagged for background removal and the emotion image URL has "avatars" in it, it's part of an official pack that was determined to be non-transparent; use neutral for now.
-                if (actor.flagForBackgroundRemoval && actor.emotionPack[emotion] && actor.emotionPack[emotion].includes('avatars')) {
-                    return actor.emotionPack[Emotion.neutral] || '';
-                }
-                return actor.emotionPack[emotion] || actor.emotionPack[Emotion.neutral] || '';
+
+                return getEmotionImage(actor, emotion, stage(), actor.appearanceId) || getEmotionImage(actor, 'neutral', stage(), actor.appearanceId) || '';
             }}
             onSubmitInput={handleSubmit}
             getSubmitButtonConfig={(script, index, inputText) => {
@@ -227,7 +224,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 lineHeight: 1.4,
                             }}
                         >
-                            {typedActor.profile}
+                            {typedActor.personality}
                         </Box>
                     </Box>
                 );
