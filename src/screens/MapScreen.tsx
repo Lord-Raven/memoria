@@ -6,7 +6,7 @@ import { BlurredBackground } from "@lord-raven/novel-visualizer";
 import { Box, Typography } from "@mui/material";
 import { ArrowBack, DeleteSweep } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { Button } from "./UiComponents";
+import { Button, ConfirmDialog } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
@@ -40,6 +40,7 @@ const HOVER_TRANSITION_MS = 240;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_RADIUS_INFLUENCE_BOOST = 30;
+const OUTSIDE_ID = "__outside__";
 const testImagePool = [
 	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
 	"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
@@ -296,6 +297,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
 	const [hoverIntensityById, setHoverIntensityById] = useState<Record<string, number>>({});
+	const [pendingLocation, setPendingLocation] = useState<{ name: string; isArdeia: boolean } | null>(null);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -464,6 +466,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			return;
 		}
 
+		if (hoveredCellId === OUTSIDE_ID) {
+			setTooltip("The Outside");
+			return;
+		}
+
 		const hoveredPoint = targetPoints.find((point) => point.id === hoveredCellId);
 		if (!hoveredPoint) {
 			setHoveredCellId(null);
@@ -576,35 +583,43 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		[targetPoints],
 	);
 
-	const addRandomLocation = (event: MouseEvent<SVGSVGElement>) => {
+	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
 		const rect = event.currentTarget.getBoundingClientRect();
 		const x = ((event.clientX - rect.left) / rect.width) * MAP_WIDTH;
 		const y = ((event.clientY - rect.top) / rect.height) * MAP_HEIGHT;
 
-		const save = getSaveForMutation(stage());
-		const locationCount = Object.keys(save.atlas).length;
-		const randomWeight = Number((0.25 + Math.random() * 2.75).toFixed(2));
-		const randomImageUrl = testImagePool[Math.floor(Math.random() * testImagePool.length)];
+		let clickedCell: VoronoiCell | null = null;
 
-		const newLocation = new Location({
-			name: `Test Location ${locationCount + 1}`,
-			description: "Generated from MapScreen click for Voronoi testing.",
-			weight: randomWeight,
-			imageUrl: randomImageUrl,
-			center: {
-				x: Number((x / MAP_WIDTH).toFixed(3)),
-				y: Number((y / MAP_HEIGHT).toFixed(3)),
-			},
-		});
+		for (const cell of voronoiCells) {
+			if (isPointInsidePolygon(x, y, cell.polygon)) {
+				clickedCell = cell;
+				break;
+			}
+		}
 
-		(save.atlas as Record<string, Location>)[newLocation.id] = newLocation;
-		stage().saveGame();
-		setRevision((value) => value + 1);
-		stage().showPriorityMessage(
-			`Added ${newLocation.name} (weight ${randomWeight}, radius auto-derived).`,
-			undefined,
-			2200,
-		);
+		if (!clickedCell) {
+			let bestMatch: { cell: VoronoiCell; distanceSq: number } | null = null;
+			for (const cell of voronoiCells) {
+				const dx = x - cell.point.x;
+				const dy = y - cell.point.y;
+				const distanceSq = dx * dx + dy * dy;
+				const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
+				if (distanceSq <= targetRadius * targetRadius) {
+					if (!bestMatch || distanceSq < bestMatch.distanceSq) {
+						bestMatch = { cell, distanceSq };
+					}
+				}
+			}
+			clickedCell = bestMatch?.cell ?? null;
+		}
+
+		if (clickedCell) {
+			const isArdeia = clickedCell.point.id.startsWith("ardeia-");
+			const locationName = targetPoints.find((p) => p.id === clickedCell!.point.id)?.name ?? clickedCell.point.id;
+			setPendingLocation({ name: locationName, isArdeia });
+		} else {
+			setPendingLocation({ name: "The Outside", isArdeia: false });
+		}
 	};
 
 	const getMapPointerCoordinates = (event: PointerEvent<SVGSVGElement>) => {
@@ -616,7 +631,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
 		if (!voronoiCells.length) {
-			setHoveredCellId((current) => (current ? null : current));
+			setHoveredCellId((current) => (current !== OUTSIDE_ID ? OUTSIDE_ID : current));
 			return;
 		}
 
@@ -652,7 +667,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				}
 			}
 
-			const nextHoveredCellId = bestMatch?.id ?? null;
+			const nextHoveredCellId = bestMatch?.id ?? OUTSIDE_ID;
 			setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
 			return;
 		}
@@ -691,7 +706,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	return (
 		<BlurredBackground
-			imageUrl="https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1400&q=80"
+			imageUrl="https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png"
 			overlay="linear-gradient(130deg, rgba(5, 24, 34, 0.78) 0%, rgba(18, 47, 32, 0.72) 50%, rgba(37, 24, 57, 0.78) 100%)"
 		>
 			<Box
@@ -757,7 +772,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							fontSize: { xs: "0.85rem", md: "1rem" },
 						}}
 					>
-						Click anywhere in the map to generate a new test location.
+						Click a location or the surrounding area to travel.
 					</Typography>
 				</Box>
 
@@ -780,7 +795,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						height="100%"
 						viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
 						preserveAspectRatio="none"
-						onClick={addRandomLocation}
+						onClick={handleMapClick}
 						onPointerMove={handleMapPointerMove}
 						onPointerLeave={handleMapPointerLeave}
 						style={{ cursor: "crosshair", display: "block" }}
@@ -850,8 +865,24 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							</text>
 						)}
 					</svg>
-				</motion.div>
-			</Box>
-		</BlurredBackground>
-	);
+					</motion.div>
+				</Box>
+
+				<ConfirmDialog
+					isOpen={pendingLocation !== null}
+					title={
+						pendingLocation
+							? pendingLocation.isArdeia
+								? `Visit ${pendingLocation.name}?`
+								: `Journey to ${pendingLocation.name}?`
+							: ""
+					}
+					message=""
+					confirmText={pendingLocation?.isArdeia ? "Visit" : "Journey"}
+					cancelText="Stay"
+					onConfirm={() => setPendingLocation(null)}
+					onCancel={() => setPendingLocation(null)}
+				/>
+			</BlurredBackground>
+		);
 };

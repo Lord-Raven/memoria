@@ -60,18 +60,14 @@ const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
 const getLocationBorderPalette = (themeColor: string) => {
 	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
 	return {
-		outerStroke: colorWithAlpha(normalizedThemeColor, 0.86, "rgba(215, 190, 122, 0.86)"),
-		innerStroke: colorWithAlpha(normalizedThemeColor, 0.56, "rgba(215, 190, 122, 0.56)"),
-		centerStroke: "rgba(2, 10, 18, 0.92)",
+		stroke: colorWithAlpha(normalizedThemeColor, 0.86, "rgba(215, 190, 122, 0.86)"),
 	};
 };
 
 export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, onPointerLeave }) => {
 	const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
-	const outerStrokeWidth = 4.8 + emphasis * 0.6;
-	const centerStrokeWidth = 4.6 + emphasis * 0.9;
-	const innerStrokeWidth = 1.2 + emphasis * 0.35;
+	const outlineStrokeWidth = 5.2 + emphasis * 0.8;
 	const shadeOpacity = 0.28 - emphasis * 0.06;
 
 	return (
@@ -85,26 +81,8 @@ export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, 
 			<path
 				d={cell.path}
 				fill="none"
-				stroke={borderPalette.outerStroke}
-				strokeWidth={outerStrokeWidth}
-				strokeLinejoin="round"
-				clipPath={`url(#${cell.clipPathId})`}
-				style={{ pointerEvents: "none" }}
-			/>
-			<path
-				d={cell.path}
-				fill="none"
-				stroke={borderPalette.centerStroke}
-				strokeWidth={centerStrokeWidth}
-				strokeLinejoin="round"
-				clipPath={`url(#${cell.clipPathId})`}
-				style={{ pointerEvents: "none" }}
-			/>
-			<path
-				d={cell.path}
-				fill="none"
-				stroke={borderPalette.innerStroke}
-				strokeWidth={innerStrokeWidth}
+				stroke={borderPalette.stroke}
+				strokeWidth={outlineStrokeWidth}
 				strokeLinejoin="round"
 				clipPath={`url(#${cell.clipPathId})`}
 				style={{ pointerEvents: "none" }}
