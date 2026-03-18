@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType } from "./content/Actor";
+import { Actor, ActorType, loadReserveActorFromFullPath } from "./content/Actor";
 import { Item } from "./content/Item";
 import { Skit } from "./content/Skit";
 import { Location } from "./content/Location";
@@ -62,13 +62,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         `&require_expressions=true&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
+    readonly INITIAL_ACTORS = 5;
 
     saveData: ChatStateType;
     currentSkit: Skit | null = null;
     primaryUser: User;
     primaryCharacter: Character;
     betaMode: boolean;
-    imageGenerationPromises: {[key: string]: Promise<string|void>} = {};
+    generationPromises: {[key: string]: Promise<string|void>} = {};
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -167,7 +168,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             voiceId: ''
         };
 
-        // Generate a few initial characters. Use the 
+        // Generate a few initial characters.
+        this.loadActors();
 
         // Save the new game
         this.saveData.saves[saveSlotIndex] = newSave;
@@ -251,6 +253,53 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             console.error(`Error removing background`, error);
             return imageUrl;
         }
+    }
+
+    async loadActors() {
+        if (Object.keys(this.generationPromises).includes('loadActors')) {
+            return this.generationPromises['loadActors'];
+        }
+
+        const promise = new Promise<string>(async () => {
+            try {
+                console.log('Loading reserve actors...');
+                let actors = this.getSave().actors || {};
+                while (Object.keys(actors).length < this.INITIAL_ACTORS) {
+                    // Populate reserve actors; this is loaded with data from a service, calling the characterServiceQuery URL:
+                    const exclusions = /*(this.getSave().bannedTags || []).concat*/(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
+                    const response = await fetch(this.characterSearchQuery
+                        .replace('{{PAGE_NUMBER}}', '1')
+                        .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
+                        .replace('{{SEARCH_TAGS}}', ['female'].concat(['woman']).join('%2C')));
+                    const searchResults = await response.json();
+                    console.log(searchResults);
+                    // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
+                    const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.INITIAL_ACTORS - Object.keys(actors).length).map((item: any) => item.fullPath) || [];
+                    /*if (searchResults.data?.nodes.length === 0) {
+                        console.warn('No more characters found from search results; resetting page number to 1 to retry with the same parameters.');
+                        this.actorPageNumber = 1;
+                    } else {
+                        this.actorPageNumber = (this.actorPageNumber % this.MAX_PAGES) + 1;
+                    }*/
+                    console.log(basicCharacterData);
+
+                    const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
+                        return loadReserveActorFromFullPath(fullPath, this);
+                    }));
+
+                    this.getSave().actors = {...actors, ...Object.fromEntries(newActors.filter(a => a !== null).map(a => [a!.id, a!]))};
+                    actors = this.getSave().actors || {};
+                }
+                this.saveGame();
+            } catch (err) {
+                console.error('Error loading reserve actors', err);
+            }
+        }).then(() => {
+            delete this.generationPromises['loadActors'];
+        });
+
+        this.generationPromises['loadActors'] = promise;
+        return promise;
     }
 
     isVerticalLayout(): boolean {

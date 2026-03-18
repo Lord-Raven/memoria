@@ -317,7 +317,7 @@ export async function generateBaseActorImage(
         // Want to clear in-progress stuff if forcing
         if (force) {
             getAppearanceById(actor, targetAppearanceId).emotionPack = {};
-            delete stage.imageGenerationPromises[`actor/${actor.id}`];
+            delete stage.generationPromises[`actor/${actor.id}`];
         }
         let imageUrl = '';
         let baseSourceImage = sourceImageUrl || actor.avatarImageUrl || '';
@@ -373,17 +373,17 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage, 
 
 export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, appearanceId: string = ''): Promise<string> {
     const targetAppearanceId = appearanceId || actor.appearanceId;
-    if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.imageGenerationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
+    if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.generationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
         const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
-        stage.imageGenerationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
+        stage.generationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
             image: getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
             prompt: `${emotionPrompt}`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
-        const imageUrl = await stage.imageGenerationPromises[`actor/${actor.id}`];
-        delete stage.imageGenerationPromises[`actor/${actor.id}`];
+        const imageUrl = await stage.generationPromises[`actor/${actor.id}`];
+        delete stage.generationPromises[`actor/${actor.id}`];
         console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
         getAppearanceById(actor, targetAppearanceId).emotionPack[emotion] = imageUrl || '';
         return imageUrl || '';

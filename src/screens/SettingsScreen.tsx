@@ -4,12 +4,14 @@ import { Stage } from '../Stage';
 import { GlassPanel, Title, Button, TextInput } from './UiComponents';
 import { Close, VoiceChat } from '@mui/icons-material';
 import { useTooltip } from './TooltipContext';
+import { ScreenType } from './BaseScreen';
 
 interface SettingsScreenProps {
     stage: () => Stage;
     onCancel: () => void;
     onConfirm: () => void;
     isNewGame?: boolean;
+    setScreenType: (type: ScreenType) => void;
 }
 
 interface SettingsData {
@@ -19,7 +21,7 @@ interface SettingsData {
     language: string;
 }
 
-export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onConfirm, isNewGame = false }) => {
+export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onConfirm, isNewGame = false, setScreenType }) => {
     const { setTooltip, clearTooltip } = useTooltip();
 
     // Common languages for autocomplete
@@ -57,6 +59,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                 name: settings.playerName,
                 personality: settings.playerDescription,
             });
+            setScreenType(ScreenType.LOADING);
         } else {
             console.log('Updating settings');
             const player = stage().getPlayerActor();
