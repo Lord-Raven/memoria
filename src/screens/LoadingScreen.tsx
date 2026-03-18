@@ -29,6 +29,9 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
     useEffect(() => {
         const interval = setInterval(() => {
             const loadPromises = stage().generationPromises;
+
+            // Temporarily output keys of loadPromises for debugging
+            console.log('Current load promises:', Object.keys(loadPromises).join(', '));
             
             // If all load promises have completed (array is empty), transition to studio screen
             if (!loadPromises || Object.keys(loadPromises).length === 0) {

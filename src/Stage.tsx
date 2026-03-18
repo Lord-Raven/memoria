@@ -39,6 +39,13 @@ type TimelineEntry = {
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
+    readonly WHITELISTED_FULLPATHS = [
+        'ashen1n/melina-mel-argyra-68a8d1c1c55a',
+        'Ruranel/soren-rokhe-d7bcedc04e37',
+        'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58',
+        'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba',
+        'Richarrd/elowen-bridgewater-f2bfac00b888'
+    ]
     readonly SAVE_SLOT_COUNT = 10;
     readonly FETCH_AT_TIME = 200;
     readonly bannedTagsDefault = [
@@ -266,7 +273,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Populate reserve actors; this is loaded with data from a service, calling the characterServiceQuery URL:
-                    const exclusions = /*(this.getSave().bannedTags || []).concat*/(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
+                    /*const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
                     const response = await fetch(this.characterSearchQuery
                         .replace('{{PAGE_NUMBER}}', '1')
                         .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
@@ -275,12 +282,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     console.log(searchResults);
                     // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
                     const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.INITIAL_ACTORS - Object.keys(actors).length).map((item: any) => item.fullPath) || [];
-                    /*if (searchResults.data?.nodes.length === 0) {
+                    if (searchResults.data?.nodes.length === 0) {
                         console.warn('No more characters found from search results; resetting page number to 1 to retry with the same parameters.');
                         this.actorPageNumber = 1;
                     } else {
                         this.actorPageNumber = (this.actorPageNumber % this.MAX_PAGES) + 1;
-                    }*/
+                    }
                     console.log(basicCharacterData);
 
                     const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
@@ -288,13 +295,23 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }));
 
                     this.getSave().actors = {...actors, ...Object.fromEntries(newActors.filter(a => a !== null).map(a => [a!.id, a!]))};
-                    actors = this.getSave().actors || {};
+                    actors = this.getSave().actors || {};*/
+
+                    // Instead, load one random actor from a hardcoded whitelist of fullPaths
+                    const fullPath = this.WHITELISTED_FULLPATHS[Math.floor(Math.random() * this.WHITELISTED_FULLPATHS.length)];
+                    const newActor = await loadReserveActorFromFullPath(fullPath, this);
+                    if (newActor) {
+                        this.getSave().actors = {...actors, [newActor.id]: newActor};
+                        actors = this.getSave().actors || {};
+                    } else {
+                        console.warn(`Failed to load actor from fullPath ${fullPath}`);
+                    }
                 }
                 this.saveGame();
             } catch (err) {
                 console.error('Error loading reserve actors', err);
             }
-        }).then(() => {
+        }).finally(() => {
             delete this.generationPromises['loadActors'];
         });
 
