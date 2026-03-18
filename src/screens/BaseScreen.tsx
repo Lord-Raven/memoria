@@ -7,6 +7,7 @@ import { MenuScreen } from './MenuScreen';
 import { TooltipBar } from './TooltipBar';
 import { theme } from './Theme';
 import { MapScreen } from './MapScreen';
+import { LoadingScreen } from './LoadingScreen';
 
 /*
  * Base screen management; the Stage class will display this, and this will track the current screen being displayed.
@@ -68,6 +69,9 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             )}
             {screenType === ScreenType.MAP && (
                 <MapScreen stage={stage} setScreenType={setScreenType} />
+            )}
+            {screenType === ScreenType.LOADING && (
+                <LoadingScreen stage={stage} setScreenType={setScreenType} />
             )}
             {/* Unified tooltip bar that renders over all screens */}
             <TooltipBar 

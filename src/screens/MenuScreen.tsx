@@ -217,6 +217,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     onCancel={handleSettingsCancel}
                     onConfirm={handleSettingsConfirm}
                     isNewGame={isNewGameSettings}
+                    setScreenType={setScreenType}
                 />
             )}
         </BlurredBackground>
