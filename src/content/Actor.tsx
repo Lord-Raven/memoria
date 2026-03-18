@@ -19,18 +19,18 @@ export type Appearance = {
 }
 
 export class Actor {
-    id: string; // UUID
+    id: string = ''; // UUID
     type: ActorType = ActorType.PRISONER; // Default to PRISONER
     name: string = ''; // Display name
     fullPath: string = ''; // Path to original character definition
     avatarImageUrl: string = ''; // Original reference image
-    personality: string = ''; // Personality profile description of character
-    motive: string = ''; // Character's hidden motives or drives (even if they are aligned with their apparent personality)
+    profile: string = ''; // Personality profile description of character
     appearanceId: string = ''; // The ID of the current appearance (outfit/description) for this actor; if empty, use the first appearance index
     appearances: Appearance[] = []; // Sets of appearances representing outfits or transformations for this actor; each appearance has a full set of emotions
     themeColor: string = ''; // Theme color (hex code)
     themeFontFamily: string = ''; // Font family stack for CSS styling
     voiceId: string = ''; // Voice ID for TTS
+    characterArc: string = ''; // A character arc summary that is updated after skits, to better reflect changes or developments in the character's personality, motives, or relationships. This is used to inform future skits and interactions with this character, and can be referenced in the script prompts as well.
 
     /**
      * Rehydrate an Actor from saved data
@@ -43,8 +43,9 @@ export class Actor {
 
     constructor(props: any) {
         Object.assign(this, props);
-        
-        this.id = generateUuid();
+        if (!this.id) {
+            this.id = generateUuid();
+        }
     }
 }
 
@@ -135,7 +136,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generatedResponse = await stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
-            `\n\nBackground: This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
+            `\n\nPremise: This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
             `The denizens of this world—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. Most have only vague memories of their past lives, ` +
             `but all have rich and detailed personalities that persist and even new motives driving their existence in a new world. ` +
             `All prisoners live in the sole populated city of Ardeia and serve its Warden, Cassiel, an eight-foot, angelic woman who oversees the city's operations with a mix of benevolence and authority. ` +
@@ -153,8 +154,8 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
             `OUTFIT: A one- to two-word name for the character's current outfit that matches the description.\n` +
-            `PERSONALITY: A brief summary of the character's observable surface-level personality traits, mannerisms, and public persona. Focus on what others would notice immediately about them.\n` +
-            `MOTIVE: The character's hidden agenda, underlying emotional drive, or what they hope to achieve here. This may align with or differ from their personality. Keep it concise but revealing of their true intentions.\n` +
+            `PROFILE: A brief summary of the character's personality traits, mannerisms, and public persona. Focus on what others would notice immediately about them.\n` +
+            `MOTIVE: The character's hidden agenda, underlying emotional drive, or what they hope to achieve here. This may align with or differ from their profile. Keep it concise but revealing of their true intentions.\n` +
             `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
@@ -163,7 +164,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `NAME: Jane Doe\n` +
             `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She wears a simple, utilitarian outfit made from durable materials.\n` +
             `OUTFIT: Adventurer's Gear\n` +
-            `PERSONALITY: Jane is confident and determined, quick-witted, and fiercely independent. She has sharp wit and isn't afraid to speak her mind.\n` +
+            `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention.\n` +
             `MOTIVE: Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
             `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
             `COLOR: #333333\n` +
@@ -204,7 +205,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         fullPath: data.fullPath || '',
         avatar: data.avatar || '',
         profile: parsedData['profile'] || '',
-        motive: parsedData['motive'] || '',
+        characterArc: parsedData['motive'] || '',
         voiceId: data.voiceId || parsedData['voice'] || '',
         themeColor: themeColor,
         font: parsedData['font'] || 'Arial, sans-serif',
@@ -217,7 +218,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
 
     console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
     console.log(newActor);
-    // If name, description, personality, or motive are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
+    // If name, description, profile, or motive are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
     // Rewrite discard reasons to log which reason applied:
     if (!newActor.name) {
         console.log(`Discarding actor due to missing name: ${newActor.name}`);
@@ -225,8 +226,11 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     } else if (!defaultAppearanceDescription) {
         console.log(`Discarding actor due to missing description: ${newActor.name}`);
         return null;
-    } else if (!newActor.personality) {
-        console.log(`Discarding actor due to missing personality: ${newActor.name}`);
+    } else if (!newActor.profile) {
+        console.log(`Discarding actor due to missing profile: ${newActor.name}`);
+        return null;
+    } else if (!newActor.characterArc) {
+        console.log(`Discarding actor due to missing motive/character arc: ${newActor.name}`);
         return null;
     } else if (Object.keys(bannedWordSubstitutes).some(word => defaultAppearanceDescription.toLowerCase().includes(word))) {
         console.log(`Discarding actor due to banned words in description: ${newActor.name}`);
@@ -234,8 +238,8 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     } else if (newActor.name.length <= 2 || newActor.name.length >= 30) {
         console.log(`Discarding actor due to extreme name length: ${newActor.name}`);
         return null;
-    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${defaultAppearanceDescription}${newActor.personality}`)) {
-        console.log(`Discarding actor due to non-english characters in name/description/personality: ${newActor.name}`);
+    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${defaultAppearanceDescription}${newActor.profile}${newActor.characterArc}`)) {
+        console.log(`Discarding actor due to non-english characters in name/description/profile/motive: ${newActor.name}`);
         return null;
     }
 

@@ -1,10 +1,9 @@
 import { Stage } from "../Stage";
-import { ScriptEntry, Skit, SkitType } from "../content/Skit";
+import { determineEmotion, generateSkitScript, ScriptEntry, Skit, SkitType } from "../content/Skit";
 import { FC, useEffect, useState } from "react";
 import { ScreenType } from "./BaseScreen";
 import { Actor, getEmotionImage } from "../content/Actor";
 import { NovelVisualizer } from "@lord-raven/novel-visualizer";
-import { Emotion } from "../content/Emotion";
 import { Box, Typography } from "@mui/material";
 import { LastPage, PlayArrow, Send } from "@mui/icons-material";
 import { useCallback } from "react";
@@ -25,27 +24,8 @@ export function generateNextSkit(): Skit {
         skitType: SkitType.SOCIAL,
         initialLocationId: '',
         script: [],
-        initialActors: []
-    };
-}
-
-// Also temporary:
-export async function generateSkitScript(skit: Skit, stage: Stage): Promise<{entries: ScriptEntry[]}> {
-    // For now, just return a placeholder script entry that references the skit's initial location and actors.
-    const locationDescription = skit.initialLocationId ? `Location: ${skit.initialLocationId}. ` : '';
-    const actorDescriptions = skit.initialActors.length > 0 ? `Actors present: ${skit.initialActors.map(actorId => stage.getSave().actors[actorId]?.name || actorId).join(', ')}. ` : '';
-    const content = `This is a generated script entry for the skit. ${locationDescription}${actorDescriptions}.`;
-    return {
-        entries: [
-            {
-                speakerId: '',
-                message: content,
-                speechUrl: '',
-                actorEmotions: {},
-                updatedActors: skit.initialActors,
-                updatedLocationId: skit.initialLocationId
-            }
-        ]
+        initialActors: [],
+        summary: ''
     };
 }
 
@@ -77,7 +57,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             // Generate the next skit and generate its initial script before returning
             const nextSkit = generateNextSkit();
             const scriptResult = await generateSkitScript(nextSkit, stage());
-            nextSkit.script.push(...scriptResult.entries);
+            nextSkit.script.push(...scriptResult);
             // TODO: Handle this.
             // stage().addSkit(nextSkit);
             stage().saveGame();
@@ -86,7 +66,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
         } else {
             console.log('Skit not over; generate more script.');
             const nextEntries = await generateSkitScript(skit as Skit, stage());
-            (skit as Skit).script.push(...nextEntries.entries);
+            (skit as Skit).script.push(...nextEntries);
             // Replace the stage skit with the updated skit:
             // TODO: Handle this.
             // stage().getSave().skits[skit.id] = {...stage().getSave().skits[skit.id], script: (skit as Skit).script};
@@ -95,19 +75,6 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             return skit;
         }
     };
-    
-    // Returns the last emotion for the given actor in the skit up to the current index, or neutral if none found.
-    const determineEmotion = (actorId: string, skit: Skit, index: number): Emotion => {
-        let emotion = Emotion.neutral;
-        for (let i = index; i >= 0; i--) {
-            const line = skit.script[i];
-            if (line && line.actorEmotions && line.actorEmotions[actorId]) {
-                emotion = line.actorEmotions[actorId];
-                break;
-            }
-        }
-        return emotion;
-    }
 
     let skit = stage().getCurrentSkit();
 
@@ -224,7 +191,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                                 lineHeight: 1.4,
                             }}
                         >
-                            {typedActor.personality}
+                            {typedActor.profile}
                         </Box>
                     </Box>
                 );

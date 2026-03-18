@@ -35,7 +35,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
     // Load existing settings or use defaults
     const [settings, setSettings] = useState<SettingsData>({
         playerName: stage().getPlayerActor()?.name || stage().primaryUser?.name || 'Player',
-        playerDescription: stage().getPlayerActor()?.personality || stage().primaryUser?.chatProfile || 'An enigmatic prisoner.',
+        playerDescription: stage().getPlayerActor()?.profile || stage().primaryUser?.chatProfile || 'An enigmatic prisoner.',
         textToSpeech: (stage().getSave()?.textToSpeech ?? true),
         language: stage().getSave()?.language || 'English',
     });
@@ -61,7 +61,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             console.log('Updating settings');
             const player = stage().getPlayerActor();
             player.name = settings.playerName;
-            player.personality = settings.playerDescription;
+            player.profile = settings.playerDescription;
         }
 
         stage().saveGame();

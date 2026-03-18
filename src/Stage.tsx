@@ -68,7 +68,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     primaryUser: User;
     primaryCharacter: Character;
     betaMode: boolean;
-    imageGenerationPromises: {[key: string]: Promise<string>} = {};
+    imageGenerationPromises: {[key: string]: Promise<string|void>} = {};
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -124,12 +124,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     id: this.primaryCharacter.anonymizedId,
                     name: playerData.name,
                     type: ActorType.PLAYER,
-                    personality: playerData.personality,
+                    profile: playerData.personality,
                     avatarImageUrl: '', // Unneeded; the player is never seen.
                     appearances: [], // Ditto.
                     appearanceId: '', // Ditto.
                     fullPath: '',
-                    motive: '',
+                    characterArc: '',
                     themeColor: '',
                     themeFontFamily: '',
                     voiceId: ''
@@ -150,6 +150,24 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Create new save data structure
         const newSave: SaveType = this.generateFreshSave(playerData);
+
+        // Create Cassiel as the Warden and add to actors
+        newSave.actors[`cassiel`] = {
+            id: `cassiel`,
+            name: 'Cassiel',
+            type: ActorType.WARDEN,
+            profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
+            avatarImageUrl: '',
+            appearances: [],
+            appearanceId: '',
+            fullPath: '',
+            characterArc: '',
+            themeColor: '#8b0000',
+            themeFontFamily: 'Georgia, serif',
+            voiceId: ''
+        };
+
+        // Generate a few initial characters. Use the 
 
         // Save the new game
         this.saveData.saves[saveSlotIndex] = newSave;
