@@ -177,12 +177,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 1;
 
-        // Generate a few initial characters.
-        this.loadActors();
-
         // Save the new game
         this.saveData.saves[saveSlotIndex] = newSave;
         this.saveData.lastSaveSlot = saveSlotIndex;
+
+        // Generate a few initial characters.
+        this.loadActors();
+        
         this.saveGame();
     }
 
@@ -353,6 +354,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const promise = new Promise<string>(async () => {
             try {
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
+                console.log(this.getSave().actors);
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Populate reserve actors; this is loaded with data from a service, calling the characterServiceQuery URL:
