@@ -308,7 +308,7 @@ body {
 
 .gear-slider-loading-icon {
   position: absolute;
-  top: 50%;
+  top: calc(var(--gsf-gear-size) * 0.5);
   left: 50%;
   width: calc(var(--gsf-gear-size) * 0.5);
   height: calc(var(--gsf-gear-size) * 0.5);
@@ -316,13 +316,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(26, 30, 48, 0.8);
-  filter: drop-shadow(0 2px 4px rgba(2, 8, 18, 0.4));
+  border-radius: 50%;
+  color: var(--mem-bg-deep);
+  background:
+    radial-gradient(circle at 34% 30%, rgba(237, 242, 242, 0.95) 0%, rgba(237, 242, 242, 0.3) 18%, rgba(237, 242, 242, 0) 28%),
+    radial-gradient(circle at 52% 54%, rgba(137, 205, 135, 0.24) 0%, rgba(137, 205, 135, 0) 44%),
+    linear-gradient(150deg, var(--gsf-gear-highlight) 0%, var(--gsf-gear-mid) 42%, var(--gsf-gear-shadow) 100%);
+  box-shadow: 0 6px 14px rgba(2, 8, 18, 0.45), inset 0 1px 0 rgba(237, 242, 242, 0.26);
+  filter: drop-shadow(0 2px 4px rgba(2, 8, 18, 0.25));
   pointer-events: none;
   z-index: 3;
 }
 
 .gear-slider-loading-icon svg {
-  width: 100%;
-  height: 100%;
+  width: 62%;
+  height: 62%;
 }

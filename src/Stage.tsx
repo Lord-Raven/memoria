@@ -313,7 +313,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             } catch (err) {
                 console.error('Error loading reserve actors', err);
             }
-        }).finally(() => {
+        });
+        promise.finally(() => {
             console.log('Finished load');
             delete this.generationPromises['loadActors'];
         });
