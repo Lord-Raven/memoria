@@ -68,7 +68,7 @@ const getPulseProfile = (id: string) => {
 	const hash = hashString(id);
 	const phase = ((hash & 0xffff) / 0xffff) * Math.PI * 2;
 	const frequency = 0.05 + (((hash >> 16) & 0xff) / 255) * 0.09;
-	const amplitude = 0.01 + (((hash >> 24) & 0xff) / 255) * 0.02;
+	const amplitude = 0.1 + (((hash >> 24) & 0xff) / 255) * 0.05;
 	return { phase, frequency, amplitude };
 };
 

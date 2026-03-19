@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, loadReserveActorFromFullPath } from "./content/Actor";
+import { Actor, ActorType, loadReserveActorFromFullPath, WHITELISTED_FULLPATHS } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateSkitScript, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -38,13 +38,7 @@ type TimelineEntry = {
 
 export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateType, ConfigType> {
 
-    readonly WHITELISTED_FULLPATHS = [
-        'ashen1n/melina-mel-argyra-68a8d1c1c55a',
-        'Ruranel/soren-rokhe-d7bcedc04e37',
-        'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58',
-        'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba',
-        'Richarrd/elowen-bridgewater-f2bfac00b888'
-    ]
+
     readonly SAVE_SLOT_COUNT = 10;
     readonly FETCH_AT_TIME = 200;
     readonly bannedTagsDefault = [
@@ -391,7 +385,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
                     // Instead, load one random actor from a hardcoded whitelist of fullPaths
                     console.log('Loading reserve actor from whitelist...');
-                    const fullPath = this.WHITELISTED_FULLPATHS[Math.floor(Math.random() * this.WHITELISTED_FULLPATHS.length)];
+                    const fullPath = WHITELISTED_FULLPATHS[Math.floor(Math.random() * WHITELISTED_FULLPATHS.length)];
                     const newActor = await loadReserveActorFromFullPath(fullPath, this);
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${fullPath}`);

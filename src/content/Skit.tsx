@@ -144,10 +144,10 @@ function generateSkitContext(skit: Skit, stage: Stage, historyLength: number): s
     const playerName = stage.getPlayerActor()?.name || 'The Prisoner';
     const save = stage.getSave();
     const location = save.atlas[skit.initialLocationId];
-    const pastEvents = save.timeline ? save.timeline.slice(-historyLength) : [];
+    const pastEvents = (save.timeline ? save.timeline.slice(-historyLength) : []).filter(e => e.skit !== skit);
     const currentActors = getCurrentActors(skit, skit.script.length - 1).map(actorId => save.actors?.[actorId]).filter(actor => actor !== undefined && actor !== stage.getPlayerActor()) as Actor[];
     
-    const coreContext = `{{messages}}\nPremise: {${buildPremise(playerName)}}\n` +
+    const coreContext = `{{messages}}\nPremise: ${buildPremise(playerName)}\n` +
         ((historyLength > 0 && pastEvents.length) ? 
                 // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
                 '\n\nRecent Events for additional context:' + pastEvents.map((v, index) =>  {

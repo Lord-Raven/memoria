@@ -80,8 +80,8 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
 
 
     const bannerTitle = skit?.initialLocationId
-        ? `Node: ${stage().getSave().atlas[skit.initialLocationId]?.name || skit.initialLocationId}`
-        : 'Memoria Chronicle';
+        ? `${stage().getSave().atlas[skit.initialLocationId]?.name || skit.initialLocationId}`
+        : 'Memoria';
 
     return (
         <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>

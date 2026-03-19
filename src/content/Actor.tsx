@@ -49,6 +49,26 @@ export class Actor {
     }
 }
 
+export const WHITELISTED_FULLPATHS = [
+    'ashen1n/melina-mel-argyra-68a8d1c1c55a',
+    'Ruranel/soren-rokhe-d7bcedc04e37',
+    'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58',
+    'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba',
+    'Richarrd/elowen-bridgewater-f2bfac00b888'
+]
+
+// This is a map of hard-coded actor appearances for a set of common full-paths, to reduce generation time for common characters.
+const hardCodedActorAppearances: {[fullPath: string]: Appearance} = {
+    /*'ashen1n/melina-mel-argyra-68a8d1c1c55a': {
+        id: 'default',
+        name: 'Default Appearance',
+        description: '',
+        emotionPack: {
+            neutral: ''    
+        }
+    },*/
+}
+
 export async function loadReserveActorFromFullPath(fullPath: string, stage: Stage): Promise<Actor|null> {
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
@@ -332,7 +352,7 @@ export async function generateBaseActorImage(
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `Illustrate this character in a hyperrealistic anime visual novel style: ` +
+                prompt: `Illustrate this character in a artful, messy, anime concept-art style: ` +
                     `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
@@ -342,7 +362,7 @@ export async function generateBaseActorImage(
         // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: baseSourceImage,
-            prompt: `Illustrate this character in a hyperrealistic anime visual novel style: ` +
+            prompt: `Illustrate this character in a artful, messy, anime concept-art style: ` +
                 `Create a waist-up portrait of this character to match this updated description: ${getAppearanceById(actor, targetAppearanceId).description}\nGive them a neutral expression and pose and place them on a light gray background. ` +
                 `Regardless of the description, zoom and crop the image at their waist, but maintain a margin of negative space over their head/hair.`,
             remove_background: true,
