@@ -1,7 +1,10 @@
 import { FC, CSSProperties, useMemo, useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
-import gearSvg from '../assets/gear.svg';
-import slideGearSvg from '../assets/slide-gear.svg';
+import gearSvgRaw from '../assets/gear.svg?raw';
+import slideGearSvgRaw from '../assets/slide-gear.svg?raw';
+
+const gearSvg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(gearSvgRaw)}`;
+const slideGearSvg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(slideGearSvgRaw)}`;
 
 interface GearSliderFidgetProps {
     className?: string;
