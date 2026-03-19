@@ -145,7 +145,7 @@ function generateSkitContext(skit: Skit, stage: Stage, historyLength: number): s
     const save = stage.getSave();
     const location = save.atlas[skit.initialLocationId];
     const pastEvents = save.timeline ? save.timeline.slice(-historyLength) : [];
-    const currentActors = getCurrentActors(skit, skit.script.length - 1).map(actorId => save.actors?.[actorId]).filter(actor => actor !== undefined) as Actor[];
+    const currentActors = getCurrentActors(skit, skit.script.length - 1).map(actorId => save.actors?.[actorId]).filter(actor => actor !== undefined && actor !== stage.getPlayerActor()) as Actor[];
     
     const coreContext = `{{messages}}\nPremise: {${buildPremise(playerName)}}\n` +
         ((historyLength > 0 && pastEvents.length) ? 

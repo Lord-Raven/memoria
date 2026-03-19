@@ -46,7 +46,6 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
             let nextCompletedPromiseCount = 0;
             seenPromiseKeysRef.current.forEach((key) => {
                 if (!currentPromiseKeySet.has(key)) {
-                    console.log('Promise key completed:', key);
                     nextCompletedPromiseCount += 1;
                 }
             });

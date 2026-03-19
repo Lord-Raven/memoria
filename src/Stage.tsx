@@ -166,7 +166,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             type: ActorType.WARDEN,
             profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
             avatarImageUrl: '',
-            appearances: [],
+            appearances: [{
+                id: 'default',
+                description: 'Default appearance of Cassiel, the Warden.',
+                name: 'Default',
+                emotionPack: {
+                    neutral: ''
+                }
+            }],
             appearanceId: '',
             fullPath: '',
             characterArc: '',
