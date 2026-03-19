@@ -1,5 +1,6 @@
 import { FC, CSSProperties, useMemo, useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
+import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded';
 import gearSvgRaw from '../assets/gear.svg?raw';
 import slideGearSvgRaw from '../assets/slide-gear.svg?raw';
 
@@ -135,6 +136,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                     animate={cogControls}
                 />
             </motion.button>
+
+            <span aria-hidden="true" className="gear-slider-loading-icon">
+                <HourglassEmptyRoundedIcon />
+            </span>
         </div>
     );
 };

@@ -301,17 +301,20 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const fullPath = this.WHITELISTED_FULLPATHS[Math.floor(Math.random() * this.WHITELISTED_FULLPATHS.length)];
                     const newActor = await loadReserveActorFromFullPath(fullPath, this);
                     if (newActor) {
+                        console.log(`Loaded reserve actor ${newActor.name} from fullPath ${fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};
                         actors = this.getSave().actors || {};
                     } else {
                         console.warn(`Failed to load actor from fullPath ${fullPath}`);
                     }
                 }
+                console.log('Finished loading reserve actors');
                 this.saveGame();
             } catch (err) {
                 console.error('Error loading reserve actors', err);
             }
         }).finally(() => {
+            console.log('Finished load');
             delete this.generationPromises['loadActors'];
         });
 

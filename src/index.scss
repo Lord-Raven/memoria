@@ -305,3 +305,24 @@ body {
   filter: drop-shadow(0 4px 10px rgba(2, 8, 18, 0.5));
   pointer-events: none;
 }
+
+.gear-slider-loading-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--gsf-gear-size) * 0.5);
+  height: calc(var(--gsf-gear-size) * 0.5);
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(26, 30, 48, 0.8);
+  filter: drop-shadow(0 2px 4px rgba(2, 8, 18, 0.4));
+  pointer-events: none;
+  z-index: 3;
+}
+
+.gear-slider-loading-icon svg {
+  width: 100%;
+  height: 100%;
+}
