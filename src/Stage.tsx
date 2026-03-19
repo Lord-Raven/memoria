@@ -69,7 +69,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         `&require_expressions=true&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
-    readonly INITIAL_ACTORS = 5;
+    readonly INITIAL_ACTORS = 3;
 
     saveData: ChatStateType;
     currentSkit: Skit | null = null;

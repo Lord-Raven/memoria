@@ -4,6 +4,7 @@ import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { GridOverlay, GlassPanel, Title } from './UiComponents';
 import { motion } from 'framer-motion';
+import { GearSliderFidget } from './GearSliderFidget';
 
 /*
  * Loading screen that displays while content is being loaded.
@@ -156,6 +157,15 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                     >
                         {currentPhase.message}
                     </Typography>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
+                        <GearSliderFidget
+                            gearSize={88}
+                            rackWidth={540}
+                            rackHeight={34}
+                            rackViewportWidth={270}
+                        />
+                    </Box>
                 </GlassPanel>
             </motion.div>
         </Box>
