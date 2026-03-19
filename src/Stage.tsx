@@ -3,7 +3,7 @@ import {StageBase, StageResponse, InitialData, Message, User, Character} from "@
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Actor, ActorType, loadReserveActorFromFullPath } from "./content/Actor";
 import { Item } from "./content/Item";
-import { Skit, SkitType } from "./content/Skit";
+import { generateSkitScript, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 
@@ -287,7 +287,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             skit,
         });
 
-        this.saveGame();
+        generateSkitScript(skit, this);
         return skit;
     }
 

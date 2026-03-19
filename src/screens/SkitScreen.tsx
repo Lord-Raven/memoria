@@ -1,5 +1,5 @@
 import { Stage } from "../Stage";
-import { determineEmotion, generateSkitScript, ScriptEntry, Skit, SkitType } from "../content/Skit";
+import { determineEmotion, generateSkitScript, getCurrentLocation, ScriptEntry, Skit, SkitType } from "../content/Skit";
 import { FC, useEffect, useState } from "react";
 import { ScreenType } from "./BaseScreen";
 import { Actor, getEmotionImage } from "../content/Actor";
@@ -49,10 +49,10 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
 
     // Handler for when the submit button is pressed in NovelVisualizer. At this point, if the user had input, it has been spliced into the script.
     const handleSubmit = async (input: string, skit: any, index: number) => {
-        if (input.trim() === '' && index < (skit as Skit).script.length - 1) {
+        if (input.trim() === '' && index < skit.script.length - 1) {
             console.log('No input and more skit to display; no action needed.');
             return skit;
-        } else if (input.trim() === '' && (skit as Skit).script[index].endScene) {
+        } else if (input.trim() === '' && skit.script.length > 0 && skit.script[index].endScene) {
             console.log('No input and skit complete; proceed to next phase or whatever.');
             // Generate the next skit and generate its initial script before returning
             const nextSkit = generateNextSkit();
@@ -126,7 +126,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     />
                 );
             }}
-            getBackgroundImageUrl={(script, index: number) => {return ''}}
+            getBackgroundImageUrl={(script, index: number) => {return stage().getSave().atlas[getCurrentLocation(script, index) || '']?.imageUrl || ''}}
             setTooltip={setTooltip}
             isVerticalLayout={isVerticalLayout}
             actors={stage().getSave().actors}

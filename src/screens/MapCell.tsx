@@ -30,6 +30,7 @@ interface MapCellProps {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const BACKGROUND_LOCKED_ZOOM = 1.5;
 
 const asHexColor = (value: string) => {
 	const normalized = (value ?? "fff").trim();
@@ -75,7 +76,16 @@ export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, 
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 	const outlineStrokeWidth = 5.2 + emphasis * 0.8;
 	const shadeOpacity = 0.28 - emphasis * 0.06;
-	const backgroundPosition = `${clamp(cell.point.focalPoint.x, 0, 1) * 100}% ${clamp(cell.point.focalPoint.y, 0, 1) * 100}%`;
+	const focalX = clamp(cell.point.focalPoint.x, 0, 1);
+	const focalY = clamp(cell.point.focalPoint.y, 0, 1);
+	const backgroundPosition = `${focalX * 100}% ${focalY * 100}%`;
+	const referenceDiameter = Math.max(1, targetRadius * 2);
+	const lockedBackgroundWidth = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
+	const lockedBackgroundHeight = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
+	const backgroundWidth = Math.max(cell.bounds.width, lockedBackgroundWidth);
+	const backgroundHeight = Math.max(cell.bounds.height, lockedBackgroundHeight);
+	const backgroundLeft = (cell.bounds.width - backgroundWidth) * focalX;
+	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
 
 	return (
 		<g>
@@ -91,14 +101,26 @@ export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, 
 					style={{
 						width: "100%",
 						height: "100%",
+						position: "relative",
+						overflow: "hidden",
 						backgroundColor: "rgba(14, 30, 43, 0.92)",
-						backgroundImage: `url(${cell.point.imageUrl})`,
-						backgroundPosition,
-						backgroundRepeat: "no-repeat",
-						backgroundSize: "cover",
-						transition: "opacity 180ms ease",
 					}}
-				/>
+				>
+					<div
+						style={{
+							position: "absolute",
+							left: backgroundLeft,
+							top: backgroundTop,
+							width: backgroundWidth,
+							height: backgroundHeight,
+							backgroundImage: `url(${cell.point.imageUrl})`,
+							backgroundPosition,
+							backgroundRepeat: "no-repeat",
+							backgroundSize: "cover",
+							transition: "opacity 180ms ease",
+						}}
+					/>
+				</div>
 			</foreignObject>
 			<path d={cell.path} fill={`rgba(10, 26, 39, ${shadeOpacity})`} style={{ pointerEvents: "none" }} />
 			<path

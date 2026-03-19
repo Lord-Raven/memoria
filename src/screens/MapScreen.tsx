@@ -288,7 +288,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
-		const atlasEntries = Object.values(save.atlas as Record<string, Location>);
+		const atlasEntries = Object.values(save.atlas as Record<string, Location>).filter(
+			(location) => location.discovered,
+		);
 		return atlasEntries.map((location, index) => {
 			const weight = Math.max(0.05, location.weight || 1);
 			const focalPoint = normalizeRelativePoint(location.focalPoint, normalizeRelativePoint(location.center));
