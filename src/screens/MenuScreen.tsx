@@ -78,6 +78,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
         setExpandedSection(section);
     };
 
+    const getSectionHeaderClass = (section: 'menu' | 'version' | 'attribution') =>
+        expandedSection === section ? 'menu-section-header is-active' : 'menu-section-header';
+
     const menuButtons = [
         ...(saveExists() ? [{ 
             key: 'continue', 
@@ -169,10 +172,11 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             <Button
                                 variant="menu"
                                 onClick={() => openSection('menu')}
+                                className={getSectionHeaderClass('menu')}
                                 style={{
                                     width: '100%',
-                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
-                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                    fontSize: 'clamp(11px, 2.2vw, 14px)',
+                                    padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
                                 Menu
@@ -222,10 +226,11 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             <Button
                                 variant="menu"
                                 onClick={() => openSection('version')}
+                                className={getSectionHeaderClass('version')}
                                 style={{
                                     width: '100%',
-                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
-                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                    fontSize: 'clamp(11px, 2.2vw, 14px)',
+                                    padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
                                 Version Notes
@@ -252,10 +257,11 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             <Button
                                 variant="menu"
                                 onClick={() => openSection('attribution')}
+                                className={getSectionHeaderClass('attribution')}
                                 style={{
                                     width: '100%',
-                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
-                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                    fontSize: 'clamp(11px, 2.2vw, 14px)',
+                                    padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
                                 by Miyo.
@@ -270,6 +276,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         color: 'rgba(185, 210, 227, 0.72)',
                                         fontSize: 'clamp(10px, 1.5vw, 12px)',
                                         lineHeight: 1.5,
+                                        maxWidth: '100%',
+                                        overflowWrap: 'anywhere',
+                                        wordBreak: 'break-word',
                                     }}
                                 >
                                     This is a shared setting. Read the setting document at{' '}
@@ -277,7 +286,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         href="https://mechabunny.com/jam/memoria/"
                                         target="_blank"
                                         rel="noreferrer"
-                                        style={{ color: 'inherit', textDecoration: 'underline' }}
+                                        style={{ color: 'inherit', textDecoration: 'underline', overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                                     >
                                         mechabunny.com/jam/memoria
                                     </a>{' '}
@@ -286,7 +295,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         href="https://chub.ai/users/miyo_rin"
                                         target="_blank"
                                         rel="noreferrer"
-                                        style={{ color: 'inherit', textDecoration: 'underline' }}
+                                        style={{ color: 'inherit', textDecoration: 'underline', overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                                     >
                                         chub.ai/users/miyo_rin
                                     </a>

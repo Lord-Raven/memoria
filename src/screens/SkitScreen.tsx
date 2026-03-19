@@ -7,6 +7,7 @@ import { NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, Typography } from "@mui/material";
 import { LastPage, PlayArrow, Send } from "@mui/icons-material";
 import { useCallback } from "react";
+import { useRef } from "react";
 import { NamePlate } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
 
@@ -33,6 +34,7 @@ export function generateNextSkit(): Skit {
 export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
     const [isGeneratingNextSkit, setIsGeneratingNextSkit] = useState(false);
     const { setTooltip, clearTooltip } = useTooltip();
+    const initializedSkitIdRef = useRef<string | null>(null);
 
     // Handle ESC key to open menu
     const handleEscapeKey = useCallback((e: KeyboardEvent) => {
@@ -53,30 +55,62 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             console.log('No input and more skit to display; no action needed.');
             return skit;
         } else if (input.trim() === '' && skit.script.length > 0 && skit.script[index].endScene) {
-            console.log('No input and skit complete; proceed to next phase or whatever.');
-            // Generate the next skit and generate its initial script before returning
-            const nextSkit = generateNextSkit();
-            const scriptResult = await generateSkitScript(nextSkit, stage());
-            nextSkit.script.push(...scriptResult);
-            // TODO: Handle this.
-            // stage().addSkit(nextSkit);
-            stage().saveGame();
-
-            return nextSkit;
+            setScreenType(ScreenType.MAP);
+            return null;
         } else {
             console.log('Skit not over; generate more script.');
             const nextEntries = await generateSkitScript(skit as Skit, stage());
             (skit as Skit).script.push(...nextEntries);
-            // Replace the stage skit with the updated skit:
-            // TODO: Handle this.
-            // stage().getSave().skits[skit.id] = {...stage().getSave().skits[skit.id], script: (skit as Skit).script};
-            stage().saveGame();
             console.log('Generated additional skit content after empty input.');
+            const currentTimelineEvent = stage().getSave().timeline?.find(e => e.skit?.id === skit.id);
+            if (currentTimelineEvent) {
+                currentTimelineEvent.skit = skit as Skit;
+                stage().saveGame();
+            }
             return skit;
         }
     };
 
     let skit = stage().getCurrentSkit();
+
+    useEffect(() => {
+        if (!skit || skit.script.length > 0) {
+            return;
+        }
+
+        if (initializedSkitIdRef.current === skit.id) {
+            return;
+        }
+        initializedSkitIdRef.current = skit.id;
+
+        let cancelled = false;
+        const initializeSkitScript = async () => {
+            setIsGeneratingNextSkit(true);
+            try {
+                const nextEntries = await generateSkitScript(skit, stage());
+                if (cancelled || nextEntries.length === 0) {
+                    return;
+                }
+
+                skit.script.push(...nextEntries);
+                const currentTimelineEvent = stage().getSave().timeline?.find(e => e.skit?.id === skit.id);
+                if (currentTimelineEvent) {
+                    currentTimelineEvent.skit = skit;
+                }
+                stage().saveGame();
+            } finally {
+                if (!cancelled) {
+                    setIsGeneratingNextSkit(false);
+                }
+            }
+        };
+
+        initializeSkitScript();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [skit, stage]);
 
 
     const bannerTitle = skit?.initialLocationId

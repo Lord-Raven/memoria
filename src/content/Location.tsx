@@ -83,6 +83,17 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         // off-white, in theme:
         themeColor: "#e8e4d1",
         discovered: false,
+    },
+    {
+        id: 'the-loom',
+        name: 'The Loom',
+        description: '',
+        weight: 0.5,
+        imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1d270bb4-97d0-44b4-92ea-a053997deac0/53b90fd3-1c3f-4227-bd7d-3566045a3c7f.png',
+        center: { x: 0.8, y: 0.3 }, // northeast
+        focalPoint: { x: 0.5, y: 0.5 },
+        themeColor: '#d17ed8',
+        discovered: false,
     }
 ];
 

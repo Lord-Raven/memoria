@@ -147,6 +147,24 @@ body {
   box-shadow: 0 10px 24px rgba(5, 10, 20, 0.34);
 }
 
+.menu-section-header {
+  border-radius: 8px;
+  min-height: 34px;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--mem-text-secondary);
+  background: linear-gradient(140deg, var(--mem-bg-soft), var(--mem-bg-mid));
+  border-color: var(--mem-border);
+  box-shadow: 0 6px 14px rgba(2, 8, 18, 0.3);
+}
+
+.menu-section-header.is-active {
+  color: var(--mem-fog);
+  border-color: var(--mem-border-strong);
+  box-shadow: var(--mem-glow);
+}
+
 .btn-primary:hover,
 .btn-secondary:hover,
 .btn-menu:hover {

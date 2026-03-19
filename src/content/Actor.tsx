@@ -160,7 +160,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     }
 
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
-    const generatedResponse = await stage.generator.textGen({
+    const generationRequest = stage.generator.textGen({
         prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
             `\n\nPremise: This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
             `The denizens of this world—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. Most have only vague memories of their past lives, ` +
@@ -200,6 +200,11 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
         max_tokens: 400,
     });
+    stage.generationPromises[`distilling_actor/${data.fullPath}`] = generationRequest.finally(() => {
+            console.log('Finished generating distillation for actor:', data.name);
+            delete stage.generationPromises[`distilling_actor/${data.fullPath}`];
+    });
+    const generatedResponse = await generationRequest;
     console.log('Generated character distillation:');
     console.log(generatedResponse);
     // Parse the generated response into components:

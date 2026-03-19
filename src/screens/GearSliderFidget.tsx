@@ -39,29 +39,29 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const rackIdleControls = useAnimationControls();
 
     const centeredRackX = useMemo(() => -(rackWidth - rackViewportWidth) / 2, [rackWidth, rackViewportWidth]);
+    const minToothIndex = 0;
+    const maxToothIndex = toothCount - 1;
+    const centerToothIndex = useMemo(() => Math.floor((toothCount - 1) / 2), [toothCount]);
+    const toothAngle = 360 / toothCount;
+    const toothStep = rackWidth / toothCount;
+    const idleRotation = useMemo(() => toothAngle * 0.18, [toothAngle]);
+    const idleRackTravel = useMemo(() => toothStep * 0.14, [toothStep]);
+    const thresholdIndex = useMemo(
+        () => Math.max(minToothIndex, Math.min(maxToothIndex, Math.floor(loadingPercentage / 10))),
+        [loadingPercentage, minToothIndex, maxToothIndex],
+    );
 
-    const [rotation, setRotation] = useState(0);
-    const [rackX, setRackX] = useState(centeredRackX);
+    const targetRotation = thresholdIndex * toothAngle;
+    const targetRackX = centeredRackX + (toothStep * centerToothIndex) - (thresholdIndex * toothStep); // Center, then shift to the starting tooth, then apply offset for current tooth.
+
+    const [rotation, setRotation] = useState(() => targetRotation);
+    const [rackX, setRackX] = useState(() => targetRackX);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isTampered, setIsTampered] = useState(false);
 
     const rotationRef = useRef(rotation);
     const rackXRef = useRef(rackX);
     const isAnimatingRef = useRef(isAnimating);
-
-    const toothAngle = 360 / toothCount;
-    const toothStep = rackWidth / toothCount;
-    const idleRotation = useMemo(() => toothAngle * 0.18, [toothAngle]);
-    const idleRackTravel = useMemo(() => toothStep * 0.14, [toothStep]);
-    const minToothIndex = 0;
-    const maxToothIndex = toothCount - 1;
-    const thresholdIndex = useMemo(
-        () => Math.max(0, Math.min(10, Math.floor(loadingPercentage / 10))),
-        [loadingPercentage],
-    );
-
-    const targetRotation = thresholdIndex * toothAngle;
-    const targetRackX = centeredRackX + (toothStep * 5) - (thresholdIndex * toothStep); // Center, then shift to the starting tooth, then apply offset for current tooth.
 
     useEffect(() => {
         rotationRef.current = rotation;
@@ -206,12 +206,12 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     );
 
     const rackXForToothIndex = (toothIndex: number) => (
-        centeredRackX + (toothStep * 5) - (toothIndex * toothStep)
+        centeredRackX + (toothStep * centerToothIndex) - (toothIndex * toothStep)
     );
 
     const toothIndexForRackX = (candidateRackX: number) => (
         clampToothIndex(
-            Math.round((centeredRackX + (toothStep * 5) - candidateRackX) / toothStep),
+            Math.round((centeredRackX + (toothStep * centerToothIndex) - candidateRackX) / toothStep),
         )
     );
 
