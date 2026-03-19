@@ -79,11 +79,25 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         if (disabled || isAnimating) {
             gearIdleControls.stop();
             rackIdleControls.stop();
+            void gearIdleControls.start({
+                rotate: 0,
+                transition: {
+                    duration: 0.2,
+                    ease: 'easeOut',
+                },
+            });
+            void rackIdleControls.start({
+                x: 0,
+                transition: {
+                    duration: 0.2,
+                    ease: 'easeOut',
+                },
+            });
             return;
         }
 
         void gearIdleControls.start({
-            rotate: [rotation, rotation + idleRotation, rotation, rotation - idleRotation, rotation],
+            rotate: [0, idleRotation, 0, -idleRotation, 0],
             transition: {
                 duration: 4.8,
                 times: [0, 0.25, 0.5, 0.75, 1],
@@ -92,7 +106,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             },
         });
         void rackIdleControls.start({
-            x: [rackX, rackX - idleRackTravel, rackX, rackX + idleRackTravel, rackX],
+            x: [0, -idleRackTravel, 0, idleRackTravel, 0],
             transition: {
                 duration: 4.8,
                 times: [0, 0.25, 0.5, 0.75, 1],
@@ -110,8 +124,6 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         isAnimating,
         idleRotation,
         idleRackTravel,
-        rotation,
-        rackX,
         gearIdleControls,
         rackIdleControls,
     ]);
@@ -273,40 +285,44 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             } as CSSProperties}
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
-                <motion.div
-                    className="gear-slider-rack"
-                    style={{
-                        width: `${rackWidth}px`,
-                        maskImage: `url("${slideGearSvg}")`,
-                        WebkitMaskImage: `url("${slideGearSvg}")`,
-                    }}
-                    initial={{ x: centeredRackX }}
-                    animate={isAnimating ? rackControls : rackIdleControls}
-                />
+                <motion.div initial={{ x: 0 }} animate={rackIdleControls}>
+                    <motion.div
+                        className="gear-slider-rack"
+                        style={{
+                            width: `${rackWidth}px`,
+                            maskImage: `url("${slideGearSvg}")`,
+                            WebkitMaskImage: `url("${slideGearSvg}")`,
+                        }}
+                        initial={{ x: rackX }}
+                        animate={rackControls}
+                    />
+                </motion.div>
             </div>
 
-            <motion.button
-                type="button"
-                className="gear-slider-cog-button"
-                onClick={handleTurn}
-                disabled={disabled || isAnimating}
-                whileHover={!disabled ? { scale: 1.03 } : undefined}
-                whileTap={!disabled ? { scale: 0.96 } : undefined}
-                initial={{ rotate: 0 }}
-                animate={isAnimating ? gearControls : gearIdleControls}
-                aria-label="Turn gear"
-                style={{
-                    maskImage: `url("${gearSvg}")`,
-                    WebkitMaskImage: `url("${gearSvg}")`,
-                }}
-            >
-                <motion.span
-                    aria-hidden="true"
-                    className="gear-slider-cog"
-                    initial={{ rotate: 0 }}
-                    animate={isAnimating ? cogControls : undefined}
-                />
-            </motion.button>
+            <motion.div initial={{ rotate: 0 }} animate={gearIdleControls}>
+                <motion.button
+                    type="button"
+                    className="gear-slider-cog-button"
+                    onClick={handleTurn}
+                    disabled={disabled || isAnimating}
+                    whileHover={!disabled ? { scale: 1.03 } : undefined}
+                    whileTap={!disabled ? { scale: 0.96 } : undefined}
+                    initial={{ rotate: rotation }}
+                    animate={gearControls}
+                    aria-label="Turn gear"
+                    style={{
+                        maskImage: `url("${gearSvg}")`,
+                        WebkitMaskImage: `url("${gearSvg}")`,
+                    }}
+                >
+                    <motion.span
+                        aria-hidden="true"
+                        className="gear-slider-cog"
+                        initial={{ rotate: -rotation }}
+                        animate={cogControls}
+                    />
+                </motion.button>
+            </motion.div>
 
             <span
                 aria-hidden="true"
