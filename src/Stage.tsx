@@ -126,10 +126,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     generateFreshSave(playerData: {name: string, personality: string}): SaveType {
-        return {playerId: this.primaryCharacter.anonymizedId,
+        return {playerId: this.primaryUser.anonymizedId,
             actors: {
-                [this.primaryCharacter.anonymizedId]: {
-                    id: this.primaryCharacter.anonymizedId,
+                [this.primaryUser.anonymizedId]: {
+                    id: this.primaryUser.anonymizedId,
                     name: playerData.name,
                     type: ActorType.PLAYER,
                     profile: playerData.personality,
@@ -189,7 +189,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     getSave(): SaveType {
-        return this.saveData.saves[this.saveData.lastSaveSlot] || this.generateFreshSave({name: this.primaryCharacter.name, personality: this.primaryCharacter.personality});
+        return this.saveData.saves[this.saveData.lastSaveSlot] || this.generateFreshSave({name: this.primaryUser.name, personality: this.primaryUser.chatProfile});
     }
 
     getPlayerActor(): Actor {
