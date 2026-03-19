@@ -40,7 +40,6 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
             }
 
             currentPromiseKeys.forEach((key) => {
-                console.log('New promise key observed:', key);
                 seenPromiseKeysRef.current.add(key);
             });
 
