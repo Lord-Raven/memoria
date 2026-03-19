@@ -1,8 +1,7 @@
 import { FC, CSSProperties, useMemo, useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
-
-const gearSvgUrl = new URL('../assets/gear.svg', import.meta.url).href;
-const slideGearSvgUrl = new URL('../assets/slide-gear.svg', import.meta.url).href;
+import gearSvg from '../assets/gear.svg';
+import slideGearSvg from '../assets/slide-gear.svg';
 
 interface GearSliderFidgetProps {
     className?: string;
@@ -91,7 +90,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
                 <motion.img
-                    src={slideGearSvgUrl}
+                    src={slideGearSvg}
                     alt=""
                     className="gear-slider-rack"
                     draggable={false}
@@ -112,7 +111,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 animate={gearControls}
                 aria-label="Turn gear"
             >
-                <img src={gearSvgUrl} alt="Interactive gear" className="gear-slider-cog" draggable={false} />
+                <img src={gearSvg} alt="Interactive gear" className="gear-slider-cog" draggable={false} />
             </motion.button>
         </div>
     );
