@@ -32,6 +32,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     onStep,
 }) => {
     const gearControls = useAnimationControls();
+    const cogControls = useAnimationControls();
     const rackControls = useAnimationControls();
 
     const centeredRackX = useMemo(() => -(rackWidth - rackViewportWidth) / 2, [rackWidth, rackViewportWidth]);
@@ -59,6 +60,14 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         await Promise.all([
             gearControls.start({
                 rotate: [rotation, nextRotation + rotationOvershoot, nextRotation],
+                transition: {
+                    duration: 0.36,
+                    times: [0, 0.74, 1],
+                    ease: 'easeOut',
+                },
+            }),
+            cogControls.start({
+                rotate: [-rotation, -(nextRotation + rotationOvershoot), -nextRotation],
                 transition: {
                     duration: 0.36,
                     times: [0, 0.74, 1],
@@ -114,14 +123,16 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 initial={{ rotate: 0 }}
                 animate={gearControls}
                 aria-label="Turn gear"
+                style={{
+                    maskImage: `url("${gearSvg}")`,
+                    WebkitMaskImage: `url("${gearSvg}")`,
+                }}
             >
-                <span
+                <motion.span
                     aria-hidden="true"
                     className="gear-slider-cog"
-                    style={{
-                        maskImage: `url("${gearSvg}")`,
-                        WebkitMaskImage: `url("${gearSvg}")`,
-                    }}
+                    initial={{ rotate: 0 }}
+                    animate={cogControls}
                 />
             </motion.button>
         </div>

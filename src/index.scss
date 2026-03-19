@@ -282,6 +282,12 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 2;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
 .gear-slider-cog-button:disabled {
@@ -296,12 +302,6 @@ body {
     radial-gradient(circle at 34% 30%, rgba(237, 242, 242, 0.95) 0%, rgba(237, 242, 242, 0.3) 18%, rgba(237, 242, 242, 0) 28%),
     radial-gradient(circle at 52% 54%, rgba(137, 205, 135, 0.24) 0%, rgba(137, 205, 135, 0) 44%),
     linear-gradient(150deg, var(--gsf-gear-highlight) 0%, var(--gsf-gear-mid) 42%, var(--gsf-gear-shadow) 100%);
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-position: center;
-  mask-size: contain;
-  -webkit-mask-size: contain;
   filter: drop-shadow(0 4px 10px rgba(2, 8, 18, 0.5));
   pointer-events: none;
 }

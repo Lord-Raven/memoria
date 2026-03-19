@@ -160,7 +160,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
                         <GearSliderFidget
-                            gearSize={88}
+                            gearSize={184}
                             rackWidth={540}
                             rackHeight={34}
                             rackViewportWidth={270}
