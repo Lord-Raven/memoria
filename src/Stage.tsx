@@ -310,13 +310,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
                 console.log('Finished loading reserve actors');
                 this.saveGame();
+                delete this.generationPromises['loadActors'];
             } catch (err) {
                 console.error('Error loading reserve actors', err);
+                delete this.generationPromises['loadActors'];
             }
-        });
-        promise.finally(() => {
-            console.log('Finished load');
-            delete this.generationPromises['loadActors'];
         });
 
         this.generationPromises['loadActors'] = promise;

@@ -1,4 +1,4 @@
-import { FC, CSSProperties, useMemo, useState } from 'react';
+import { FC, CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
 import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded';
 import gearSvgRaw from '../assets/gear.svg?raw';
@@ -11,6 +11,7 @@ interface GearSliderFidgetProps {
     className?: string;
     style?: CSSProperties;
     toothCount?: number;
+    loadingPercentage?: number;
     gearSize?: number;
     rackWidth?: number;
     rackHeight?: number;
@@ -24,6 +25,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     className,
     style,
     toothCount = 12,
+    loadingPercentage = 0,
     gearSize = 184,
     rackWidth = 520,
     rackHeight = 34,
@@ -41,18 +43,117 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const [rotation, setRotation] = useState(0);
     const [rackX, setRackX] = useState(centeredRackX);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [isTampered, setIsTampered] = useState(false);
+
+    const rotationRef = useRef(rotation);
+    const rackXRef = useRef(rackX);
+    const isAnimatingRef = useRef(isAnimating);
 
     const toothAngle = 360 / toothCount;
     const toothStep = rackWidth / toothCount; //(2 * Math.PI * ((gearSize * pitchRadiusRatio) / 2)) / toothCount;
+    const thresholdIndex = useMemo(
+        () => Math.max(0, Math.min(10, Math.floor(loadingPercentage / 10))),
+        [loadingPercentage],
+    );
+
+    const targetRotation = thresholdIndex * toothAngle;
+    const targetRackX = centeredRackX - (thresholdIndex * toothStep);
+
+    useEffect(() => {
+        rotationRef.current = rotation;
+    }, [rotation]);
+
+    useEffect(() => {
+        rackXRef.current = rackX;
+    }, [rackX]);
+
+    useEffect(() => {
+        isAnimatingRef.current = isAnimating;
+    }, [isAnimating]);
+
+    useEffect(() => {
+        const syncToThreshold = async () => {
+            if (isAnimatingRef.current) {
+                return;
+            }
+
+            const currentRotation = rotationRef.current;
+            const currentRackX = rackXRef.current;
+
+            if (
+                Math.abs(currentRotation - targetRotation) < 0.001
+                && Math.abs(currentRackX - targetRackX) < 0.001
+            ) {
+                setIsTampered(false);
+                return;
+            }
+
+            const direction: 1 | -1 = targetRotation >= currentRotation ? 1 : -1;
+            const rotationOvershoot = direction * toothAngle * 0.2;
+            const rackOvershoot = -direction * toothStep * 0.2;
+
+            setIsAnimating(true);
+            await Promise.all([
+                gearControls.start({
+                    rotate: [currentRotation, targetRotation + rotationOvershoot, targetRotation],
+                    transition: {
+                        duration: 0.36,
+                        times: [0, 0.74, 1],
+                        ease: 'easeOut',
+                    },
+                }),
+                cogControls.start({
+                    rotate: [-currentRotation, -(targetRotation + rotationOvershoot), -targetRotation],
+                    transition: {
+                        duration: 0.36,
+                        times: [0, 0.74, 1],
+                        ease: 'easeOut',
+                    },
+                }),
+                rackControls.start({
+                    x: [currentRackX, targetRackX + rackOvershoot, targetRackX],
+                    transition: {
+                        duration: 0.4,
+                        times: [0, 0.72, 1],
+                        ease: 'easeOut',
+                    },
+                }),
+            ]);
+
+            setRotation(targetRotation);
+            rotationRef.current = targetRotation;
+            setRackX(targetRackX);
+            rackXRef.current = targetRackX;
+            setIsAnimating(false);
+            setIsTampered(false);
+        };
+
+        void syncToThreshold();
+    }, [
+        thresholdIndex,
+        targetRotation,
+        targetRackX,
+        toothAngle,
+        toothStep,
+        gearControls,
+        cogControls,
+        rackControls,
+    ]);
+
+    const isAlignedToThreshold = (candidateRackX: number) => (
+        Math.abs(candidateRackX - targetRackX) < 0.001
+    );
 
     const handleTurn = async () => {
-        if (disabled || isAnimating) {
+        if (disabled || isAnimatingRef.current) {
             return;
         }
 
         const direction: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
-        const nextRotation = rotation + (direction * toothAngle);
-        const nextRackX = rackX - (direction * toothStep);
+        const currentRotation = rotationRef.current;
+        const currentRackX = rackXRef.current;
+        const nextRotation = currentRotation + (direction * toothAngle);
+        const nextRackX = currentRackX - (direction * toothStep);
 
         const rotationOvershoot = direction * toothAngle * 0.2;
         const rackOvershoot = -direction * toothStep * 0.2;
@@ -60,7 +161,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         setIsAnimating(true);
         await Promise.all([
             gearControls.start({
-                rotate: [rotation, nextRotation + rotationOvershoot, nextRotation],
+                rotate: [currentRotation, nextRotation + rotationOvershoot, nextRotation],
                 transition: {
                     duration: 0.36,
                     times: [0, 0.74, 1],
@@ -68,7 +169,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 },
             }),
             cogControls.start({
-                rotate: [-rotation, -(nextRotation + rotationOvershoot), -nextRotation],
+                rotate: [-currentRotation, -(nextRotation + rotationOvershoot), -nextRotation],
                 transition: {
                     duration: 0.36,
                     times: [0, 0.74, 1],
@@ -76,7 +177,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 },
             }),
             rackControls.start({
-                x: [rackX, nextRackX + rackOvershoot, nextRackX],
+                x: [currentRackX, nextRackX + rackOvershoot, nextRackX],
                 transition: {
                     duration: 0.4,
                     times: [0, 0.72, 1],
@@ -86,8 +187,11 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         ]);
 
         setRotation(nextRotation);
+        rotationRef.current = nextRotation;
         setRackX(nextRackX);
+        rackXRef.current = nextRackX;
         setIsAnimating(false);
+        setIsTampered(!isAlignedToThreshold(nextRackX));
         onStep?.(direction);
     };
 
@@ -137,7 +241,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 />
             </motion.button>
 
-            <span aria-hidden="true" className="gear-slider-loading-icon">
+            <span
+                aria-hidden="true"
+                className={`gear-slider-loading-icon ${isTampered ? 'is-tampered' : ''}`.trim()}
+            >
                 <HourglassEmptyRoundedIcon />
             </span>
         </div>

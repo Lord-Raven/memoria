@@ -326,9 +326,20 @@ body {
   filter: drop-shadow(0 2px 4px rgba(2, 8, 18, 0.25));
   pointer-events: none;
   z-index: 3;
+  transition: color 260ms ease, box-shadow 260ms ease;
 }
 
 .gear-slider-loading-icon svg {
   width: 62%;
   height: 62%;
+  transition: transform 260ms ease;
+}
+
+.gear-slider-loading-icon.is-tampered {
+  color: #d5623f;
+  box-shadow: 0 6px 14px rgba(2, 8, 18, 0.45), inset 0 1px 0 rgba(249, 145, 112, 0.35), 0 0 12px rgba(213, 98, 63, 0.3);
+}
+
+.gear-slider-loading-icon.is-tampered svg {
+  transform: scale(1.06);
 }

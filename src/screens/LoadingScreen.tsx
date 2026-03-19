@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from 'react';
-import { Box, LinearProgress, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { GridOverlay, GlassPanel, Title } from './UiComponents';
@@ -130,21 +130,6 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                         </Typography>
                     </Box>
 
-                    <LinearProgress
-                        variant="determinate"
-                        value={progress}
-                        sx={{
-                            height: 12,
-                            borderRadius: '999px',
-                            border: '1px solid rgba(138, 176, 204, 0.28)',
-                            backgroundColor: 'rgba(122, 123, 107, 0.34)',
-                            boxShadow: 'inset 0 0 12px rgba(10, 14, 24, 0.42)',
-                            '& .MuiLinearProgress-bar': {
-                                borderRadius: '999px',
-                            },
-                        }}
-                    />
-
                     <Typography
                         variant="body1"
                         sx={{
@@ -160,6 +145,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
                         <GearSliderFidget
+                            loadingPercentage={progress}
                             gearSize={184}
                             rackWidth={520}
                             rackHeight={34}
