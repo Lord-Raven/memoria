@@ -289,7 +289,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             skit,
         });
 
-        generateSkitScript(skit, this);
         return skit;
     }
 

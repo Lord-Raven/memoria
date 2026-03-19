@@ -5,7 +5,7 @@ import { FiberNew, PlayArrow, Settings } from "@mui/icons-material";
 import { SettingsScreen } from "./SettingsScreen";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
 import { Button, GridOverlay } from "./UiComponents";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Box } from "@mui/material";
 import { useTooltip } from "./TooltipContext";
 import memoriaLogo from "../assets/memoria-logo.png";
@@ -181,45 +181,60 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             >
                                 Menu
                             </Button>
-                            {expandedSection === 'menu' && (
-                                <div style={{ marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
-                                    {menuButtons.map((button, index) => (
-                                        <motion.div
-                                            key={button.key}
-                                            initial={{ opacity: 0, x: -30 }}
-                                            animate={{
-                                                opacity: 1,
-                                                x: hoveredButton === button.key && button.enabled ? 10 : 0
-                                            }}
-                                            transition={{
-                                                opacity: { delay: 0.4 + (index * 0.1), duration: 0.4, ease: 'easeOut' },
-                                                x: { duration: 0.2, ease: 'easeOut' }
-                                            }}
-                                            onMouseEnter={() => {
-                                                setHoveredButton(button.enabled ? button.key : null);
-                                                setTooltip(button.tooltip, button.icon);
-                                            }}
-                                            onMouseLeave={() => {
-                                                setHoveredButton(null);
-                                                clearTooltip();
-                                            }}
-                                        >
-                                            <Button
-                                                variant="menu"
-                                                onClick={button.enabled ? button.onClick : undefined}
-                                                disabled={!button.enabled}
-                                                style={{
-                                                    width: '100%',
-                                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
-                                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
-                                                }}
-                                            >
-                                                {button.label}
-                                            </Button>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            )}
+                            <AnimatePresence mode="wait">
+                                {expandedSection === 'menu' && (
+                                    <motion.div
+                                        key="menu-content"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        style={{
+                                            overflow: 'hidden',
+                                            width: '100%',
+                                            boxSizing: 'border-box',
+                                        }}
+                                    >
+                                        <div style={{ marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                                            {menuButtons.map((button, index) => (
+                                                <motion.div
+                                                    key={button.key}
+                                                    initial={{ opacity: 0, x: -30 }}
+                                                    animate={{
+                                                        opacity: 1,
+                                                        x: hoveredButton === button.key && button.enabled ? 10 : 0
+                                                    }}
+                                                    transition={{
+                                                        opacity: { delay: 0.15 + (index * 0.08), duration: 0.4, ease: 'easeOut' },
+                                                        x: { duration: 0.2, ease: 'easeOut' }
+                                                    }}
+                                                    onMouseEnter={() => {
+                                                        setHoveredButton(button.enabled ? button.key : null);
+                                                        setTooltip(button.tooltip, button.icon);
+                                                    }}
+                                                    onMouseLeave={() => {
+                                                        setHoveredButton(null);
+                                                        clearTooltip();
+                                                    }}
+                                                >
+                                                    <Button
+                                                        variant="menu"
+                                                        onClick={button.enabled ? button.onClick : undefined}
+                                                        disabled={!button.enabled}
+                                                        style={{
+                                                            width: '100%',
+                                                            fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                                            padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                                        }}
+                                                    >
+                                                        {button.label}
+                                                    </Button>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         <div>
@@ -235,22 +250,36 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             >
                                 Version Notes
                             </Button>
-                            {expandedSection === 'version' && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.3 }}
-                                    style={{
-                                        textAlign: 'center',
-                                        marginTop: 'clamp(8px, 1.5vh, 12px)',
-                                        color: 'rgba(185, 210, 227, 0.72)',
-                                        fontSize: 'clamp(10px, 1.5vw, 12px)',
-                                        letterSpacing: '0.04em',
-                                    }}
-                                >
-                                    {'v2026.03.19 - Alpha junk; lots going on.'}
-                                </motion.div>
-                            )}
+                            <AnimatePresence mode="wait">
+                                {expandedSection === 'version' && (
+                                    <motion.div
+                                        key="version-content"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        style={{
+                                            overflow: 'hidden',
+                                            width: '100%',
+                                            boxSizing: 'border-box',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                textAlign: 'center',
+                                                marginTop: 'clamp(8px, 1.5vh, 12px)',
+                                                color: 'rgba(185, 210, 227, 0.72)',
+                                                fontSize: 'clamp(10px, 1.5vw, 12px)',
+                                                letterSpacing: '0.04em',
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                            }}
+                                        >
+                                            {'v2026.03.19 - Alpha junk; lots going on.'}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         <div>
@@ -266,42 +295,63 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             >
                                 by Miyo.
                             </Button>
-                            {expandedSection === 'attribution' && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.3 }}
-                                    style={{
-                                        marginTop: 'clamp(8px, 1.5vh, 12px)',
-                                        color: 'rgba(185, 210, 227, 0.72)',
-                                        fontSize: 'clamp(10px, 1.5vw, 12px)',
-                                        lineHeight: 1.5,
-                                        maxWidth: '100%',
-                                        overflowWrap: 'anywhere',
-                                        wordBreak: 'break-word',
-                                    }}
-                                >
-                                    This is a shared setting. Read the setting document at{' '}
-                                    <a
-                                        href="https://mechabunny.com/jam/memoria/"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        style={{ color: 'inherit', textDecoration: 'underline', overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                            <AnimatePresence mode="wait">
+                                {expandedSection === 'attribution' && (
+                                    <motion.div
+                                        key="attribution-content"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        style={{
+                                            overflow: 'hidden',
+                                            width: '100%',
+                                            boxSizing: 'border-box',
+                                        }}
                                     >
-                                        mechabunny.com/jam/memoria
-                                    </a>{' '}
-                                    and visit Miyo&apos;s Chub profile at{' '}
-                                    <a
-                                        href="https://chub.ai/users/miyo_rin"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        style={{ color: 'inherit', textDecoration: 'underline', overflowWrap: 'anywhere', wordBreak: 'break-word' }}
-                                    >
-                                        chub.ai/users/miyo_rin
-                                    </a>
-                                    .
-                                </motion.div>
-                            )}
+                                        <div
+                                            style={{
+                                                marginTop: 'clamp(8px, 1.5vh, 12px)',
+                                                color: 'rgba(185, 210, 227, 0.72)',
+                                                fontSize: 'clamp(10px, 1.5vw, 12px)',
+                                                lineHeight: 1.5,
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                                wordBreak: 'break-word',
+                                                overflowWrap: 'break-word',
+                                            }}
+                                        >
+                                            This is a shared setting. Read the setting document at{' '}
+                                            <a
+                                                href="https://mechabunny.com/jam/memoria/"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                style={{ 
+                                                    color: 'inherit', 
+                                                    textDecoration: 'underline',
+                                                    wordBreak: 'break-all',
+                                                }}
+                                            >
+                                                mechabunny.com/jam/memoria
+                                            </a>{' '}
+                                            and visit Miyo&apos;s Chub profile at{' '}
+                                            <a
+                                                href="https://chub.ai/users/miyo_rin"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                style={{ 
+                                                    color: 'inherit', 
+                                                    textDecoration: 'underline',
+                                                    wordBreak: 'break-all',
+                                                }}
+                                            >
+                                                chub.ai/users/miyo_rin
+                                            </a>
+                                            .
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </motion.div>
