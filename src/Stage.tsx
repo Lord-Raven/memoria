@@ -3,10 +3,9 @@ import {StageBase, StageResponse, InitialData, Message, User, Character} from "@
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Actor, ActorType, loadReserveActorFromFullPath } from "./content/Actor";
 import { Item } from "./content/Item";
-import { Skit } from "./content/Skit";
-import { Location } from "./content/Location";
+import { Skit, SkitType } from "./content/Skit";
+import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
-import { createDefaultAtlas } from "./screens/MapScreen";
 
 type MessageStateType = any;
 
@@ -76,7 +75,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     primaryUser: User;
     primaryCharacter: Character;
     betaMode: boolean;
-    generationPromises: {[key: string]: Promise<string|void>} = {};
+    generationPromises: {[key: string]: Promise<any|void>} = {};
     anticipatedLoadingPromiseCount: number = 5;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
@@ -209,6 +208,87 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     getCurrentSkit(): Skit | null {
         return this.currentSkit;
+    }
+
+    private isArdeiaLocationId(locationId: string): boolean {
+        return locationId.startsWith('ardeia-');
+    }
+
+    private pickRandomLocation(locations: Location[]): Location | null {
+        if (!locations.length) {
+            return null;
+        }
+        const index = Math.floor(Math.random() * locations.length);
+        return locations[index] || null;
+    }
+
+    private buildTravelTimelineDescription(location: Location, skitType: SkitType): string {
+        if (skitType === SkitType.DISCOVERY) {
+            return `Discovered ${location.name}.`;
+        }
+        if (this.isArdeiaLocationId(location.id)) {
+            return `Visited ${location.name}.`;
+        }
+        return `Journeyed to ${location.name}.`;
+    }
+
+    startTravelSkit(selection: { selectedLocationId?: string; outsideSelected: boolean }): Skit | null {
+        const save = this.getSave();
+        const atlasLocations = Object.values(save.atlas || {});
+
+        let selectedLocation: Location | undefined;
+        let isFirstVisitOutsideLocation = false;
+
+        if (selection.outsideSelected) {
+            const undiscoveredLocations = atlasLocations.filter(location => !location.discovered);
+            const nonArdeiaLocations = atlasLocations.filter(location => !this.isArdeiaLocationId(location.id));
+            const outsideFallbackPool = nonArdeiaLocations.length > 0 ? nonArdeiaLocations : atlasLocations;
+
+            selectedLocation = this.pickRandomLocation(
+                undiscoveredLocations.length > 0 ? undiscoveredLocations : outsideFallbackPool,
+            ) || undefined;
+        } else if (selection.selectedLocationId) {
+            selectedLocation = save.atlas[selection.selectedLocationId];
+        }
+
+        if (!selectedLocation) {
+            return null;
+        }
+
+        const isArdeia = this.isArdeiaLocationId(selectedLocation.id);
+        if (!isArdeia && !selectedLocation.discovered) {
+            isFirstVisitOutsideLocation = true;
+        }
+
+        if (!selectedLocation.discovered) {
+            selectedLocation.discovered = true;
+        }
+
+        const skitType = isArdeia
+            ? SkitType.SOCIAL
+            : (isFirstVisitOutsideLocation ? SkitType.DISCOVERY : SkitType.ADVENTURE);
+
+        const skit = new Skit({
+            skitType,
+            initialLocationId: selectedLocation.id,
+            script: [],
+            initialActors: [this.getPlayerActor().id],
+            summary: '',
+        });
+
+        this.currentSkit = skit;
+        save.turn += 1;
+        if (!save.timeline) {
+            save.timeline = [];
+        }
+        save.timeline.push({
+            turn: save.turn,
+            description: this.buildTravelTimelineDescription(selectedLocation, skitType),
+            skit,
+        });
+
+        this.saveGame();
+        return skit;
     }
 
     // Callback to show priority messages in the tooltip bar

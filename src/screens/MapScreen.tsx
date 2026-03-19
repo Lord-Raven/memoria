@@ -3,10 +3,10 @@ import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
-import { Box, Typography } from "@mui/material";
-import { ArrowBack, DeleteSweep } from "@mui/icons-material";
+import { Box, IconButton } from "@mui/material";
+import { MenuRounded } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { Button, ConfirmDialog } from "./UiComponents";
+import { ConfirmDialog } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
@@ -24,6 +24,7 @@ interface VoronoiPoint {
 	weight: number;
 	radius: number;
 	imageUrl: string;
+	focalPoint: { x: number; y: number };
 	themeColor: string;
 }
 
@@ -50,65 +51,6 @@ const testImagePool = [
 	"https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80",
 ];
 
-// Customize this list to define which locations are restored when the map is cleared.
-// Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.
-// Ardeia is a fantasy sci-fi city with a mixture of heavy gothic architecture mixed with overgrown greenery and archaically high-tech machinery that feels ancient and alien at once.
-const DEFAULT_ATLAS_LOCATIONS: Location[] = [
-	{
-		id: "ardeia-streets",
-		name: "Streets of Ardeia",
-		description: "",
-		weight: 1,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/65f8275a-a798-4c0e-b5ea-22b7779c7b52/52c92a1a-e727-4419-af67-40e9cc5635e9.png',
-		center: { x: 0.5, y: 0.5 },
-		themeColor: "#5aa3d8",
-	},
-	{
-		id: "ardeia-library",
-		name: "The Library",
-		description: "",
-		weight: 0.5,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/959a3d92-2cff-48c9-bb6a-0d5dd9cef2e5/d66d42be-516d-4fb4-91b0-b3aae9ee1a2a.png',
-		center: { x: 0.4, y: 0.45 },
-		themeColor: "#d8a45a",
-	},
-	{
-		id: "ardeia-temple",
-		name: "The Temple",
-		description: "",
-		weight: 0.5,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/382bbbd6-5080-4c72-9c28-641efcbc87c0/84066e0e-9e62-4001-aaa1-a78c144fddef.png',
-		center: { x: 0.45, y: 0.6 },
-		themeColor: "#d86f5a",
-	},
-	{
-		id: "ardeia-gardens",
-		name: "The Gardens",
-		description: "",
-		weight: 0.5,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1b1d80c6-08e6-42a6-9a94-3e643304b152/81a86b0f-4f6e-445c-afdb-db019e37ab0c.png',
-		center: { x: 0.6, y: 0.55 },
-		themeColor: "#7ecfbe",
-	},
-	{
-		id: "ardeia-plaza",
-		name: "The Plaza",
-		description: "",
-		weight: 0.5,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/0d9d311c-9f3b-42b2-854b-894f4534c24c/f645dd78-90f7-4813-a4b1-566599446aaf.png',
-		center: { x: 0.55, y: 0.4 },
-		themeColor: "#7ecfbe",
-	},
-];
-
-export const createDefaultAtlas = () => {
-	const atlas: Record<string, Location> = {};
-	for (const seed of DEFAULT_ATLAS_LOCATIONS) {
-		const location = new Location(seed);
-		atlas[location.id] = location;
-	}
-	return atlas;
-};
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const lerp = (start: number, end: number, t: number) => start + (end - start) * t;
@@ -146,6 +88,27 @@ const normalizeCoordinate = (value: number, max: number) => {
 	return clamp(value, 0, max);
 };
 
+const normalizeRelativeCoordinate = (value: number | undefined, fallback: number) => {
+	if (!Number.isFinite(value)) {
+		return clamp(fallback, 0, 1);
+	}
+	if (value! >= 0 && value! <= 1) {
+		return value!;
+	}
+	if (value! >= 0 && value! <= 100) {
+		return value! / 100;
+	}
+	return clamp(value!, 0, 1);
+};
+
+const normalizeRelativePoint = (
+	point: { x?: number; y?: number } | undefined,
+	fallback: { x: number; y: number } = { x: 0.5, y: 0.5 },
+) => ({
+	x: normalizeRelativeCoordinate(point?.x, fallback.x),
+	y: normalizeRelativeCoordinate(point?.y, fallback.y),
+});
+
 const toPolygonPath = (polygon: number[][]) => {
 	if (!polygon || polygon.length < 3) {
 		return "";
@@ -166,6 +129,31 @@ const getPolygonCentroid = (polygon: number[][]) => {
 		y += point[1];
 	}
 	return [x / polygon.length, y / polygon.length] as number[];
+};
+
+const getPolygonBounds = (polygon: number[][]) => {
+	if (polygon.length === 0) {
+		return { x: 0, y: 0, width: 1, height: 1 };
+	}
+
+	let minX = polygon[0][0];
+	let maxX = polygon[0][0];
+	let minY = polygon[0][1];
+	let maxY = polygon[0][1];
+
+	for (const [x, y] of polygon) {
+		minX = Math.min(minX, x);
+		maxX = Math.max(maxX, x);
+		minY = Math.min(minY, y);
+		maxY = Math.max(maxY, y);
+	}
+
+	return {
+		x: minX,
+		y: minY,
+		width: Math.max(1, maxX - minX),
+		height: Math.max(1, maxY - minY),
+	};
 };
 
 const isPointInsidePolygon = (x: number, y: number, polygon: number[][]) => {
@@ -272,23 +260,19 @@ const getPowerWeight = (point: VoronoiPoint) => {
 	return radius * radius;
 };
 
-const getSaveForMutation = (stage: Stage) => {
-	const slot = stage.saveData.lastSaveSlot;
-	if (!stage.saveData.saves[slot]) {
-		stage.saveData.saves[slot] = stage.getSave();
-	}
-	return stage.saveData.saves[slot]!;
-};
-
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
-	const [revision, setRevision] = useState(0);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
 	const [hoverIntensityById, setHoverIntensityById] = useState<Record<string, number>>({});
-	const [pendingLocation, setPendingLocation] = useState<{ name: string; isArdeia: boolean } | null>(null);
+	const [pendingLocation, setPendingLocation] = useState<{
+		name: string;
+		isArdeia: boolean;
+		locationId?: string;
+		outsideSelected: boolean;
+	} | null>(null);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -305,8 +289,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
 		const atlasEntries = Object.values(save.atlas as Record<string, Location>);
-		return atlasEntries.map((location) => {
+		return atlasEntries.map((location, index) => {
 			const weight = Math.max(0.05, location.weight || 1);
+			const focalPoint = normalizeRelativePoint(location.focalPoint, normalizeRelativePoint(location.center));
 
 			return {
 				id: location.id,
@@ -315,11 +300,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 				y: normalizeCoordinate(location.center?.y ?? 0.5, MAP_HEIGHT),
 				weight,
 				radius: getRadiusFromWeight(weight),
-				imageUrl: location.imageUrl,
+				imageUrl: location.imageUrl || testImagePool[index % testImagePool.length],
+				focalPoint,
 				themeColor: location.themeColor,
 			};
 		});
-	}, [stage, revision]);
+	}, [stage]);
 
 	const [animatedPoints, setAnimatedPoints] = useState<VoronoiPoint[]>(targetPoints);
 
@@ -458,7 +444,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		}
 
 		if (hoveredCellId === OUTSIDE_ID) {
-			setTooltip("The Outside");
+			setTooltip("Outside");
 			return;
 		}
 
@@ -555,13 +541,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 			if (!path) {
 				continue;
 			}
+			const bounds = getPolygonBounds(clippedPolygon);
 
 			cells.push({
 				point,
 				path,
 				polygon: clippedPolygon,
-				patternId: `location-pattern-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+				bounds,
 			});
 		}
 
@@ -607,9 +594,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		if (clickedCell) {
 			const isArdeia = clickedCell.point.id.startsWith("ardeia-");
 			const locationName = targetPoints.find((p) => p.id === clickedCell!.point.id)?.name ?? clickedCell.point.id;
-			setPendingLocation({ name: locationName, isArdeia });
+			setPendingLocation({
+				name: locationName,
+				isArdeia,
+				locationId: clickedCell.point.id,
+				outsideSelected: false,
+			});
 		} else {
-			setPendingLocation({ name: "The Outside", isArdeia: false });
+			setPendingLocation({ name: "Outside", isArdeia: false, outsideSelected: true });
 		}
 	};
 
@@ -675,26 +667,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		setHoveredCellId((current) => (current === cellId ? current : cellId));
 	};
 
-	const clearLocations = () => {
-		const save = getSaveForMutation(stage());
-		const atlas = save.atlas as Record<string, Location>;
-		const previousCount = Object.keys(atlas).length;
-		const defaultAtlas = createDefaultAtlas();
-		const defaultCount = Object.keys(defaultAtlas).length;
-
-		save.atlas = defaultAtlas;
-
-		stage().saveGame();
-		setRevision((value) => value + 1);
-		stage().showPriorityMessage(
-			previousCount === 0
-				? `Initialized atlas with ${defaultCount} default locations.`
-				: `Reset atlas from ${previousCount} to ${defaultCount} default locations.`,
-			undefined,
-			2200,
-		);
-	};
-
 	return (
 		<BlurredBackground
 			imageUrl={MAP_BACKGROUND_IMAGE}
@@ -708,64 +680,33 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 					padding: { xs: "14px", md: "20px" },
 					display: "flex",
 					flexDirection: "column",
-					gap: 2,
+					position: "relative",
 				}}
 			>
-				<Box
+				<IconButton
+					onClick={() => setScreenType(ScreenType.MENU)}
+					onMouseEnter={() => setTooltip("Open menu", MenuRounded)}
+					onMouseLeave={clearTooltip}
+					aria-label="Open menu"
 					sx={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						gap: 2,
-						flexWrap: "wrap",
+						position: "absolute",
+						top: { xs: 20, md: 28 },
+						right: { xs: 20, md: 28 },
+						width: 58,
+						height: 58,
+						zIndex: 3,
+						color: "rgba(244, 250, 255, 0.94)",
+						background: "radial-gradient(circle at 30% 30%, rgba(151, 195, 221, 0.55), rgba(24, 45, 63, 0.82) 72%)",
+						border: "1px solid rgba(208, 233, 247, 0.42)",
+						backdropFilter: "blur(14px)",
+						boxShadow: "0 14px 28px rgba(0, 0, 0, 0.34), 0 0 22px rgba(138, 176, 204, 0.22)",
+						"&:hover": {
+							background: "radial-gradient(circle at 30% 30%, rgba(171, 214, 238, 0.72), rgba(28, 54, 75, 0.9) 72%)",
+						},
 					}}
 				>
-					<Box
-						sx={{
-							display: "flex",
-							gap: 1,
-							flexWrap: "wrap",
-						}}
-					>
-						<Button
-							variant="menu"
-							onClick={() => setScreenType(ScreenType.MENU)}
-							onMouseEnter={() => setTooltip("Return to menu", ArrowBack)}
-							onMouseLeave={clearTooltip}
-							style={{
-								minWidth: "150px",
-								fontSize: "14px",
-							}}
-						>
-							Back to Menu
-						</Button>
-
-						<Button
-							variant="menu"
-							onClick={clearLocations}
-							onMouseEnter={() => setTooltip("Reset atlas to default locations", DeleteSweep)}
-							onMouseLeave={clearTooltip}
-							style={{
-								minWidth: "160px",
-								fontSize: "14px",
-								background: "linear-gradient(180deg, rgba(122, 33, 33, 0.92), rgba(88, 19, 19, 0.95))",
-								borderColor: "rgba(255, 120, 120, 0.35)",
-							}}
-						>
-							Reset Locations
-						</Button>
-					</Box>
-
-					<Typography
-						sx={{
-							color: "#f4f4f4",
-							textShadow: "0 2px 8px rgba(0,0,0,0.6)",
-							fontSize: { xs: "0.85rem", md: "1rem" },
-						}}
-					>
-						Click a location or the surrounding area to travel.
-					</Typography>
-				</Box>
+					<MenuRounded sx={{ fontSize: 28 }} />
+				</IconButton>
 
 				<motion.div
 					initial={{ opacity: 0, y: 24 }}
@@ -803,25 +744,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.34)" />
 
 						<defs>
-							{voronoiCells.map((cell) => (
-								<pattern
-									key={cell.patternId}
-									id={cell.patternId}
-									patternUnits="objectBoundingBox"
-									width="1"
-									height="1"
-								>
-									<image
-										href={cell.point.imageUrl || testImagePool[0]}
-										x={0}
-										y={0}
-										width={MAP_WIDTH}
-										height={MAP_HEIGHT}
-										preserveAspectRatio="xMidYMid slice"
-										opacity={0.92}
-									/>
-								</pattern>
-							))}
 								{voronoiCells.map((cell) => (
 									<clipPath key={cell.clipPathId} id={cell.clipPathId} clipPathUnits="userSpaceOnUse">
 										<path d={cell.path} />
@@ -880,7 +802,21 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 					message=""
 					confirmText={pendingLocation?.isArdeia ? "Visit" : "Journey"}
 					cancelText="Stay"
-					onConfirm={() => setPendingLocation(null)}
+					onConfirm={() => {
+						if (!pendingLocation) {
+							return;
+						}
+
+						const skit = stage().startTravelSkit({
+							selectedLocationId: pendingLocation.locationId,
+							outsideSelected: pendingLocation.outsideSelected,
+						});
+
+						setPendingLocation(null);
+						if (skit) {
+							setScreenType(ScreenType.SKIT);
+						}
+					}}
 					onCancel={() => setPendingLocation(null)}
 				/>
 			</BlurredBackground>

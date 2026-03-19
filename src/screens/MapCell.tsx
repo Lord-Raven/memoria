@@ -6,14 +6,20 @@ export interface MapCellPoint {
 	y: number;
 	radius: number;
 	imageUrl: string;
+	focalPoint: { x: number; y: number };
 	themeColor: string;
 }
 
 export interface MapCellData {
 	point: MapCellPoint;
 	path: string;
-	patternId: string;
 	clipPathId: string;
+	bounds: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
 }
 
 interface MapCellProps {
@@ -69,14 +75,31 @@ export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, 
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 	const outlineStrokeWidth = 5.2 + emphasis * 0.8;
 	const shadeOpacity = 0.28 - emphasis * 0.06;
+	const backgroundPosition = `${clamp(cell.point.focalPoint.x, 0, 1) * 100}% ${clamp(cell.point.focalPoint.y, 0, 1) * 100}%`;
 
 	return (
 		<g>
-			<path
-				d={cell.path}
-				fill={`url(#${cell.patternId})`}
-				style={{ transition: "opacity 180ms ease", pointerEvents: "none" }}
-			/>
+			<foreignObject
+				x={cell.bounds.x}
+				y={cell.bounds.y}
+				width={cell.bounds.width}
+				height={cell.bounds.height}
+				clipPath={`url(#${cell.clipPathId})`}
+				style={{ pointerEvents: "none" }}
+			>
+				<div
+					style={{
+						width: "100%",
+						height: "100%",
+						backgroundColor: "rgba(14, 30, 43, 0.92)",
+						backgroundImage: `url(${cell.point.imageUrl})`,
+						backgroundPosition,
+						backgroundRepeat: "no-repeat",
+						backgroundSize: "cover",
+						transition: "opacity 180ms ease",
+					}}
+				/>
+			</foreignObject>
 			<path d={cell.path} fill={`rgba(10, 26, 39, ${shadeOpacity})`} style={{ pointerEvents: "none" }} />
 			<path
 				d={cell.path}

@@ -4,10 +4,11 @@ import { ScreenType } from "./BaseScreen";
 import { FiberNew, PlayArrow, Settings } from "@mui/icons-material";
 import { SettingsScreen } from "./SettingsScreen";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
-import { Button, GridOverlay, Title } from "./UiComponents";
+import { Button, GridOverlay } from "./UiComponents";
 import { motion } from "framer-motion";
 import { Box } from "@mui/material";
 import { useTooltip } from "./TooltipContext";
+import memoriaLogo from "../assets/memoria-logo.png";
 
 interface MenuScreenProps {
     stage: () => Stage;
@@ -45,7 +46,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     }, [showSettings]);
 
     const handleContinue = () => {
-        setScreenType(ScreenType.SKIT);
+        setScreenType(ScreenType.MAP);
     };
 
     const handleNewGame = () => {
@@ -135,22 +136,26 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         zIndex: 10,
                     }}
                 >
-                    {/* Title */}
+                    {/* Logo */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.5 }}
                     >
-                        <Title 
-                            variant="glow" 
+                        <Box
+                            component="img"
+                            src={memoriaLogo}
+                            alt="Memoria"
                             style={{ 
+                                display: 'block',
                                 textAlign: 'center', 
                                 marginBottom: 'clamp(20px, 5vh, 40px)', 
-                                fontSize: 'clamp(18px, 5vw, 32px)' 
+                                width: 'min(70vw, 360px)',
+                                height: 'auto',
+                                marginLeft: 'auto',
+                                marginRight: 'auto',
                             }}
-                        >
-                            Memoria
-                        </Title>
+                        />
                     </motion.div>
 
                     {/* Menu buttons */}
@@ -205,7 +210,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                             letterSpacing: '0.04em',
                         }}
                     >
-                        {'v2026.03.14 - Ruinfield visual pass, atmospheric shell updates.'}
+                        {'v2026.03.19 - Alpha junk; lots going on.'}
                     </motion.div>
                 </motion.div>
             </Box>

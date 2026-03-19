@@ -8,6 +8,7 @@ export enum SkitType {
     INTRO = 'INTRO',
     SOCIAL = 'SOCIAL',
     ADVENTURE = 'ADVENTURE',
+    DISCOVERY = 'DISCOVERY',
 }
 
 export class Skit {

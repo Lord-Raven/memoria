@@ -63,7 +63,13 @@ export async function loadReserveActorFromFullPath(fullPath: string, stage: Stag
         // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
         voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : '',
     };
-    return loadReserveActor(data, stage);
+
+    stage.generationPromises[`loading_actor/${data.fullPath}`] = loadReserveActor(data, stage).finally(() => {
+        console.log('Finished loading actor for path:', data.fullPath);
+        delete stage.generationPromises[`loading_actor/${data.fullPath}`];
+    });
+
+    return stage.generationPromises[`loading_actor/${data.fullPath}`];
 }
 
 // Mapping of voice IDs to a description of the voice, so the AI can choose an ID based on the character profile.
@@ -252,7 +258,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     });
 
     // Kick off emotion image:
-    void generateBaseActorImage(newActor, stage, false, true, newActor.appearanceId, newActor.avatarImageUrl);
+    await generateBaseActorImage(newActor, stage, false, true, newActor.appearanceId, newActor.avatarImageUrl);
     return newActor;
 }
 
