@@ -352,7 +352,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         const promise = new Promise<string>(async () => {
             try {
-                console.log('Loading reserve actors...');
+                console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Populate reserve actors; this is loaded with data from a service, calling the characterServiceQuery URL:
@@ -381,6 +381,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     actors = this.getSave().actors || {};*/
 
                     // Instead, load one random actor from a hardcoded whitelist of fullPaths
+                    console.log('Loading reserve actor from whitelist...');
                     const fullPath = this.WHITELISTED_FULLPATHS[Math.floor(Math.random() * this.WHITELISTED_FULLPATHS.length)];
                     const newActor = await loadReserveActorFromFullPath(fullPath, this);
                     if (newActor) {
