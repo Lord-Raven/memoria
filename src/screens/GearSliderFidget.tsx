@@ -42,7 +42,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const [isAnimating, setIsAnimating] = useState(false);
 
     const toothAngle = 360 / toothCount;
-    const toothStep = (2 * Math.PI * ((gearSize * pitchRadiusRatio) / 2)) / toothCount;
+    const toothStep = rackWidth / toothCount; //(2 * Math.PI * ((gearSize * pitchRadiusRatio) / 2)) / toothCount;
 
     const handleTurn = async () => {
         if (disabled || isAnimating) {
