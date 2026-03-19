@@ -250,6 +250,23 @@ body {
   box-shadow: inset 0 1px 0 rgba(237, 242, 242, 0.08), inset 0 -3px 7px rgba(0, 0, 0, 0.35);
 }
 
+.gear-slider-rack-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(7, 11, 18, 0.68) 0%,
+      rgba(7, 11, 18, 0.34) 10%,
+      rgba(7, 11, 18, 0) 24%,
+      rgba(7, 11, 18, 0) 76%,
+      rgba(7, 11, 18, 0.34) 90%,
+      rgba(7, 11, 18, 0.68) 100%
+    );
+}
+
 .gear-slider-rack {
   position: absolute;
   top: 0;

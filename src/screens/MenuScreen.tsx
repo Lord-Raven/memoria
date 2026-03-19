@@ -19,6 +19,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [hoveredButton, setHoveredButton] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(false);
     const [isNewGameSettings, setIsNewGameSettings] = useState(false);
+    const [expandedSection, setExpandedSection] = useState<'menu' | 'version' | 'attribution'>('menu');
     const { setTooltip, clearTooltip } = useTooltip();
     const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
     
@@ -71,6 +72,10 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             setIsNewGameSettings(false);
             setScreenType(ScreenType.LOADING);
         }
+    };
+
+    const openSection = (section: 'menu' | 'version' | 'attribution') => {
+        setExpandedSection(section);
     };
 
     const menuButtons = [
@@ -158,60 +163,138 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         />
                     </motion.div>
 
-                    {/* Menu buttons */}
+                    {/* Menu sections */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
-                        {menuButtons.map((button, index) => (
-                            <motion.div
-                                key={button.key}
-                                initial={{ opacity: 0, x: -30 }}
-                                animate={{ 
-                                    opacity: 1, 
-                                    x: hoveredButton === button.key && button.enabled ? 10 : 0
-                                }}
-                                transition={{ 
-                                    opacity: { delay: 0.4 + (index * 0.1), duration: 0.4, ease: 'easeOut' },
-                                    x: { duration: 0.2, ease: 'easeOut' }
-                                }}
-                                onMouseEnter={() => {
-                                    setHoveredButton(button.enabled ? button.key : null);
-                                    setTooltip(button.tooltip, button.icon);
-                                }}
-                                onMouseLeave={() => {
-                                    setHoveredButton(null);
-                                    clearTooltip();
+                        <div>
+                            <Button
+                                variant="menu"
+                                onClick={() => openSection('menu')}
+                                style={{
+                                    width: '100%',
+                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
                                 }}
                             >
-                                <Button
-                                    variant="menu"
-                                    onClick={button.enabled ? button.onClick : undefined}
-                                    disabled={!button.enabled}
+                                Menu
+                            </Button>
+                            {expandedSection === 'menu' && (
+                                <div style={{ marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                                    {menuButtons.map((button, index) => (
+                                        <motion.div
+                                            key={button.key}
+                                            initial={{ opacity: 0, x: -30 }}
+                                            animate={{
+                                                opacity: 1,
+                                                x: hoveredButton === button.key && button.enabled ? 10 : 0
+                                            }}
+                                            transition={{
+                                                opacity: { delay: 0.4 + (index * 0.1), duration: 0.4, ease: 'easeOut' },
+                                                x: { duration: 0.2, ease: 'easeOut' }
+                                            }}
+                                            onMouseEnter={() => {
+                                                setHoveredButton(button.enabled ? button.key : null);
+                                                setTooltip(button.tooltip, button.icon);
+                                            }}
+                                            onMouseLeave={() => {
+                                                setHoveredButton(null);
+                                                clearTooltip();
+                                            }}
+                                        >
+                                            <Button
+                                                variant="menu"
+                                                onClick={button.enabled ? button.onClick : undefined}
+                                                disabled={!button.enabled}
+                                                style={{
+                                                    width: '100%',
+                                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                                }}
+                                            >
+                                                {button.label}
+                                            </Button>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <Button
+                                variant="menu"
+                                onClick={() => openSection('version')}
+                                style={{
+                                    width: '100%',
+                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                }}
+                            >
+                                Version Notes
+                            </Button>
+                            {expandedSection === 'version' && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
                                     style={{
-                                        width: '100%',
-                                        fontSize: 'clamp(12px, 2.5vw, 16px)',
-                                        padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                        textAlign: 'center',
+                                        marginTop: 'clamp(8px, 1.5vh, 12px)',
+                                        color: 'rgba(185, 210, 227, 0.72)',
+                                        fontSize: 'clamp(10px, 1.5vw, 12px)',
+                                        letterSpacing: '0.04em',
                                     }}
                                 >
-                                    {button.label}
-                                </Button>
-                            </motion.div>
-                        ))}
-                    </div>
+                                    {'v2026.03.19 - Alpha junk; lots going on.'}
+                                </motion.div>
+                            )}
+                        </div>
 
-                    {/* Subtitle/version info */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8, duration: 0.5 }}
-                        style={{
-                            textAlign: 'center',
-                            marginTop: 'clamp(20px, 4vh, 30px)',
-                            color: 'rgba(185, 210, 227, 0.72)',
-                            fontSize: 'clamp(10px, 1.5vw, 12px)',
-                            letterSpacing: '0.04em',
-                        }}
-                    >
-                        {'v2026.03.19 - Alpha junk; lots going on.'}
-                    </motion.div>
+                        <div>
+                            <Button
+                                variant="menu"
+                                onClick={() => openSection('attribution')}
+                                style={{
+                                    width: '100%',
+                                    fontSize: 'clamp(12px, 2.5vw, 16px)',
+                                    padding: 'clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px)',
+                                }}
+                            >
+                                by Miyo.
+                            </Button>
+                            {expandedSection === 'attribution' && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    style={{
+                                        marginTop: 'clamp(8px, 1.5vh, 12px)',
+                                        color: 'rgba(185, 210, 227, 0.72)',
+                                        fontSize: 'clamp(10px, 1.5vw, 12px)',
+                                        lineHeight: 1.5,
+                                    }}
+                                >
+                                    This is a shared setting. Read the setting document at{' '}
+                                    <a
+                                        href="https://mechabunny.com/jam/memoria/"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{ color: 'inherit', textDecoration: 'underline' }}
+                                    >
+                                        mechabunny.com/jam/memoria
+                                    </a>{' '}
+                                    and visit Miyo&apos;s Chub profile at{' '}
+                                    <a
+                                        href="https://chub.ai/users/miyo_rin"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{ color: 'inherit', textDecoration: 'underline' }}
+                                    >
+                                        chub.ai/users/miyo_rin
+                                    </a>
+                                    .
+                                </motion.div>
+                            )}
+                        </div>
+                    </div>
                 </motion.div>
             </Box>
 

@@ -35,6 +35,8 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const gearControls = useAnimationControls();
     const cogControls = useAnimationControls();
     const rackControls = useAnimationControls();
+    const gearIdleControls = useAnimationControls();
+    const rackIdleControls = useAnimationControls();
 
     const centeredRackX = useMemo(() => -(rackWidth - rackViewportWidth) / 2, [rackWidth, rackViewportWidth]);
 
@@ -49,6 +51,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
 
     const toothAngle = 360 / toothCount;
     const toothStep = rackWidth / toothCount;
+    const idleRotation = useMemo(() => toothAngle * 0.18, [toothAngle]);
+    const idleRackTravel = useMemo(() => toothStep * 0.14, [toothStep]);
+    const minToothIndex = 0;
+    const maxToothIndex = toothCount - 1;
     const thresholdIndex = useMemo(
         () => Math.max(0, Math.min(10, Math.floor(loadingPercentage / 10))),
         [loadingPercentage],
@@ -68,6 +74,59 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     useEffect(() => {
         isAnimatingRef.current = isAnimating;
     }, [isAnimating]);
+
+    useEffect(() => {
+        if (disabled || isAnimating) {
+            gearIdleControls.stop();
+            rackIdleControls.stop();
+            void gearIdleControls.start({
+                rotate: 0,
+                transition: {
+                    duration: 0.2,
+                    ease: 'easeOut',
+                },
+            });
+            void rackIdleControls.start({
+                x: 0,
+                transition: {
+                    duration: 0.2,
+                    ease: 'easeOut',
+                },
+            });
+            return;
+        }
+
+        void gearIdleControls.start({
+            rotate: [0, idleRotation, 0, -idleRotation, 0],
+            transition: {
+                duration: 4.8,
+                times: [0, 0.25, 0.5, 0.75, 1],
+                ease: 'easeInOut',
+                repeat: Infinity,
+            },
+        });
+        void rackIdleControls.start({
+            x: [0, -idleRackTravel, 0, idleRackTravel, 0],
+            transition: {
+                duration: 4.8,
+                times: [0, 0.25, 0.5, 0.75, 1],
+                ease: 'easeInOut',
+                repeat: Infinity,
+            },
+        });
+
+        return () => {
+            gearIdleControls.stop();
+            rackIdleControls.stop();
+        };
+    }, [
+        disabled,
+        isAnimating,
+        idleRotation,
+        idleRackTravel,
+        gearIdleControls,
+        rackIdleControls,
+    ]);
 
     useEffect(() => {
         const syncToThreshold = async () => {
@@ -142,6 +201,20 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         Math.abs(candidateRackX - targetRackX) < 0.001
     );
 
+    const clampToothIndex = (value: number) => (
+        Math.max(minToothIndex, Math.min(maxToothIndex, value))
+    );
+
+    const rackXForToothIndex = (toothIndex: number) => (
+        centeredRackX + (toothStep * 5) - (toothIndex * toothStep)
+    );
+
+    const toothIndexForRackX = (candidateRackX: number) => (
+        clampToothIndex(
+            Math.round((centeredRackX + (toothStep * 5) - candidateRackX) / toothStep),
+        )
+    );
+
     const handleTurn = async () => {
         if (disabled || isAnimatingRef.current) {
             return;
@@ -150,11 +223,19 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         const direction: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
         const currentRotation = rotationRef.current;
         const currentRackX = rackXRef.current;
-        const nextRotation = currentRotation + (direction * toothAngle);
-        const nextRackX = currentRackX - (direction * toothStep);
+        const currentToothIndex = toothIndexForRackX(currentRackX);
+        const nextToothIndex = clampToothIndex(currentToothIndex + direction);
 
-        const rotationOvershoot = direction * toothAngle * 0.2;
-        const rackOvershoot = -direction * toothStep * 0.2;
+        if (nextToothIndex === currentToothIndex) {
+            return;
+        }
+
+        const appliedDirection: 1 | -1 = nextToothIndex > currentToothIndex ? 1 : -1;
+        const nextRotation = currentRotation + (appliedDirection * toothAngle);
+        const nextRackX = rackXForToothIndex(nextToothIndex);
+
+        const rotationOvershoot = appliedDirection * toothAngle * 0.2;
+        const rackOvershoot = -appliedDirection * toothStep * 0.2;
 
         setIsAnimating(true);
         await Promise.all([
@@ -190,7 +271,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         rackXRef.current = nextRackX;
         setIsAnimating(false);
         setIsTampered(!isAlignedToThreshold(nextRackX));
-        onStep?.(direction);
+        onStep?.(appliedDirection);
     };
 
     return (
@@ -204,40 +285,44 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             } as CSSProperties}
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
-                <motion.div
-                    className="gear-slider-rack"
-                    style={{
-                        width: `${rackWidth}px`,
-                        maskImage: `url("${slideGearSvg}")`,
-                        WebkitMaskImage: `url("${slideGearSvg}")`,
-                    }}
-                    initial={{ x: centeredRackX }}
-                    animate={rackControls}
-                />
+                <motion.div initial={{ x: 0 }} animate={rackIdleControls}>
+                    <motion.div
+                        className="gear-slider-rack"
+                        style={{
+                            width: `${rackWidth}px`,
+                            maskImage: `url("${slideGearSvg}")`,
+                            WebkitMaskImage: `url("${slideGearSvg}")`,
+                        }}
+                        initial={{ x: centeredRackX }}
+                        animate={rackControls}
+                    />
+                </motion.div>
             </div>
 
-            <motion.button
-                type="button"
-                className="gear-slider-cog-button"
-                onClick={handleTurn}
-                disabled={disabled || isAnimating}
-                whileHover={!disabled ? { scale: 1.03 } : undefined}
-                whileTap={!disabled ? { scale: 0.96 } : undefined}
-                initial={{ rotate: 0 }}
-                animate={gearControls}
-                aria-label="Turn gear"
-                style={{
-                    maskImage: `url("${gearSvg}")`,
-                    WebkitMaskImage: `url("${gearSvg}")`,
-                }}
-            >
-                <motion.span
-                    aria-hidden="true"
-                    className="gear-slider-cog"
+            <motion.div initial={{ rotate: 0 }} animate={gearIdleControls}>
+                <motion.button
+                    type="button"
+                    className="gear-slider-cog-button"
+                    onClick={handleTurn}
+                    disabled={disabled || isAnimating}
+                    whileHover={!disabled ? { scale: 1.03 } : undefined}
+                    whileTap={!disabled ? { scale: 0.96 } : undefined}
                     initial={{ rotate: 0 }}
-                    animate={cogControls}
-                />
-            </motion.button>
+                    animate={gearControls}
+                    aria-label="Turn gear"
+                    style={{
+                        maskImage: `url("${gearSvg}")`,
+                        WebkitMaskImage: `url("${gearSvg}")`,
+                    }}
+                >
+                    <motion.span
+                        aria-hidden="true"
+                        className="gear-slider-cog"
+                        initial={{ rotate: 0 }}
+                        animate={cogControls}
+                    />
+                </motion.button>
+            </motion.div>
 
             <span
                 aria-hidden="true"
