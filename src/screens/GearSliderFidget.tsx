@@ -23,7 +23,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     className,
     style,
     toothCount = 12,
-    gearSize = 84,
+    gearSize = 184,
     rackWidth = 520,
     rackHeight = 34,
     rackViewportWidth = 260,
@@ -92,12 +92,13 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             } as CSSProperties}
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
-                <motion.img
-                    src={slideGearSvg}
-                    alt=""
+                <motion.div
                     className="gear-slider-rack"
-                    draggable={false}
-                    style={{ width: `${rackWidth}px` }}
+                    style={{
+                        width: `${rackWidth}px`,
+                        maskImage: `url("${slideGearSvg}")`,
+                        WebkitMaskImage: `url("${slideGearSvg}")`,
+                    }}
                     initial={{ x: centeredRackX }}
                     animate={rackControls}
                 />
@@ -114,7 +115,14 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 animate={gearControls}
                 aria-label="Turn gear"
             >
-                <img src={gearSvg} alt="Interactive gear" className="gear-slider-cog" draggable={false} />
+                <span
+                    aria-hidden="true"
+                    className="gear-slider-cog"
+                    style={{
+                        maskImage: `url("${gearSvg}")`,
+                        WebkitMaskImage: `url("${gearSvg}")`,
+                    }}
+                />
             </motion.button>
         </div>
     );

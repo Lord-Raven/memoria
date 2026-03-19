@@ -227,8 +227,15 @@ body {
   justify-content: center;
   align-items: flex-start;
   width: var(--gsf-rack-window-width);
-  height: calc(var(--gsf-rack-height) + (var(--gsf-gear-size) * 0.72));
-  padding-top: calc(var(--gsf-gear-size) * 0.44);
+  height: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5));
+  padding-top: calc(var(--gsf-gear-size) - (var(--gsf-rack-height) * 0.5));
+  --gsf-gear-highlight: var(--mem-fog);
+  --gsf-gear-mid: var(--mem-mist);
+  --gsf-gear-shadow: var(--mem-lichen);
+  --gsf-rack-highlight: rgba(185, 210, 227, 0.9);
+  --gsf-rack-mid: rgba(138, 176, 204, 0.84);
+  --gsf-rack-shadow: rgba(95, 127, 155, 0.92);
+  --gsf-rack-accent: rgba(137, 205, 135, 0.6);
   user-select: none;
 }
 
@@ -248,8 +255,16 @@ body {
   top: 0;
   left: 0;
   height: 100%;
-  object-fit: fill;
-  filter: brightness(0.91) sepia(0.14) hue-rotate(157deg) saturate(0.8);
+  background:
+    linear-gradient(180deg, rgba(237, 242, 242, 0.16) 0%, rgba(237, 242, 242, 0) 35%),
+    linear-gradient(90deg, var(--gsf-rack-shadow) 0%, var(--gsf-rack-mid) 42%, var(--gsf-rack-highlight) 76%, var(--gsf-rack-accent) 100%);
+  mask-repeat: repeat-x;
+  -webkit-mask-repeat: repeat-x;
+  mask-position: left center;
+  -webkit-mask-position: left center;
+  mask-size: auto 100%;
+  -webkit-mask-size: auto 100%;
+  box-shadow: 0 0 12px rgba(138, 176, 204, 0.16);
 }
 
 .gear-slider-cog-button {
@@ -274,9 +289,19 @@ body {
 }
 
 .gear-slider-cog {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(2, 8, 18, 0.5)) brightness(0.97) sepia(0.24) hue-rotate(159deg) saturate(0.86);
+  background:
+    radial-gradient(circle at 34% 30%, rgba(237, 242, 242, 0.95) 0%, rgba(237, 242, 242, 0.3) 18%, rgba(237, 242, 242, 0) 28%),
+    radial-gradient(circle at 52% 54%, rgba(137, 205, 135, 0.24) 0%, rgba(137, 205, 135, 0) 44%),
+    linear-gradient(150deg, var(--gsf-gear-highlight) 0%, var(--gsf-gear-mid) 42%, var(--gsf-gear-shadow) 100%);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  filter: drop-shadow(0 4px 10px rgba(2, 8, 18, 0.5));
   pointer-events: none;
 }
