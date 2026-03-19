@@ -55,10 +55,6 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
                 // Render menu screen
                 <MenuScreen stage={stage} setScreenType={setScreenType} />
             )}
-            {/*screenType === ScreenType.LOADING && (
-                // Render loading screen
-                <LoadingScreen stage={stage} setScreenType={setScreenType} />
-            )*/}
             {screenType === ScreenType.SKIT && (
                 // Render studio screen
                 <SkitScreen 
@@ -71,7 +67,10 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
                 <MapScreen stage={stage} setScreenType={setScreenType} />
             )}
             {screenType === ScreenType.LOADING && (
-                <LoadingScreen stage={stage} setScreenType={setScreenType} />
+                <LoadingScreen
+                    stage={stage}
+                    setScreenType={setScreenType}
+                />
             )}
             {/* Unified tooltip bar that renders over all screens */}
             <TooltipBar 

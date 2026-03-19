@@ -16,7 +16,6 @@ interface GearSliderFidgetProps {
     rackWidth?: number;
     rackHeight?: number;
     rackViewportWidth?: number;
-    pitchRadiusRatio?: number;
     disabled?: boolean;
     onStep?: (direction: 1 | -1) => void;
 }
@@ -30,7 +29,6 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     rackWidth = 520,
     rackHeight = 34,
     rackViewportWidth = 260,
-    pitchRadiusRatio = 0.48,
     disabled = false,
     onStep,
 }) => {
@@ -50,14 +48,14 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const isAnimatingRef = useRef(isAnimating);
 
     const toothAngle = 360 / toothCount;
-    const toothStep = rackWidth / toothCount; //(2 * Math.PI * ((gearSize * pitchRadiusRatio) / 2)) / toothCount;
+    const toothStep = rackWidth / toothCount;
     const thresholdIndex = useMemo(
         () => Math.max(0, Math.min(10, Math.floor(loadingPercentage / 10))),
         [loadingPercentage],
     );
 
     const targetRotation = thresholdIndex * toothAngle;
-    const targetRackX = centeredRackX - (thresholdIndex * toothStep);
+    const targetRackX = centeredRackX + (toothStep * 5) - (thresholdIndex * toothStep); // Center, then shift to the starting tooth, then apply offset for current tooth.
 
     useEffect(() => {
         rotationRef.current = rotation;

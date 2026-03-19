@@ -77,6 +77,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     primaryCharacter: Character;
     betaMode: boolean;
     generationPromises: {[key: string]: Promise<string|void>} = {};
+    anticipatedLoadingPromiseCount: number = 5;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -174,6 +175,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             themeFontFamily: 'Georgia, serif',
             voiceId: ''
         };
+
+        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 1;
 
         // Generate a few initial characters.
         this.loadActors();
@@ -309,14 +312,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                 }
                 console.log('Finished loading reserve actors');
-                this.saveGame();
                 delete this.generationPromises['loadActors'];
+                this.saveGame();
             } catch (err) {
                 console.error('Error loading reserve actors', err);
                 delete this.generationPromises['loadActors'];
             }
         });
 
+        console.log('Set promise');
         this.generationPromises['loadActors'] = promise;
         return promise;
     }

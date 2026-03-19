@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
@@ -16,65 +16,54 @@ interface LoadingScreenProps {
     setScreenType: (type: ScreenType) => void;
 }
 
-const LOADING_PHASES = [
-    { message: "Discovering content...", duration: 12000, progress: 35 },
-    { message: "Generating imagery...", duration: 12000, progress: 60 },
-    { message: "Finalizing world...", duration: Infinity, progress: 90 },
-];
-
 export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) => {
-    const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [completedPromiseCount, setCompletedPromiseCount] = useState(0);
+    const [anticipatedPromiseCount, setAnticipatedPromiseCount] = useState(() => Math.max(stage().anticipatedLoadingPromiseCount, 1));
+    const seenPromiseKeysRef = useRef<Set<string>>(new Set());
+    const hasObservedPromiseActivityRef = useRef(false);
 
-    // Poll for completion of loading
     useEffect(() => {
         const interval = setInterval(() => {
-            const loadPromises = stage().generationPromises;
+            const currentStage = stage();
+            const normalizedAnticipatedPromiseCount = Math.max(currentStage.anticipatedLoadingPromiseCount, 1);
+            const loadPromises = currentStage.generationPromises;
+            const currentPromiseKeys = Object.keys(loadPromises || {});
+            const currentPromiseKeySet = new Set(currentPromiseKeys);
 
-            // Temporarily output keys of loadPromises for debugging
-            console.log('Current load promises:', Object.keys(loadPromises).join(', '));
-            
-            // If all load promises have completed (array is empty), transition to studio screen
-            if (!loadPromises || Object.keys(loadPromises).length === 0) {
-                console.log('Done loading');
-                stage().saveGame();
-                setScreenType(ScreenType.MAP);
-            }   
-        }, 100);
-        
-        return () => clearInterval(interval);
-    }, [stage, setScreenType]);
+            setAnticipatedPromiseCount((previousCount) => (
+                previousCount === normalizedAnticipatedPromiseCount ? previousCount : normalizedAnticipatedPromiseCount
+            ));
 
-    // Handle phase transitions and progress animation
-    useEffect(() => {
-        const currentPhase = LOADING_PHASES[currentPhaseIndex];
-        const targetProgress = currentPhase.progress;
-        
-        // Smoothly animate progress to target
-        const progressInterval = setInterval(() => {
-            setProgress(prev => {
-                if (prev < targetProgress) {
-                    return Math.min(prev + 0.5, targetProgress);
-                }
-                return prev;
+            if (currentPromiseKeys.length > 0) {
+                hasObservedPromiseActivityRef.current = true;
+            }
+
+            currentPromiseKeys.forEach((key) => {
+                console.log('New promise key observed:', key);
+                seenPromiseKeysRef.current.add(key);
             });
-        }, 50);
 
-        // Move to next phase after duration (if not the last phase)
-        let phaseTimeout: NodeJS.Timeout | null = null;
-        if (currentPhaseIndex < LOADING_PHASES.length - 1) {
-            phaseTimeout = setTimeout(() => {
-                setCurrentPhaseIndex(prev => Math.min(prev + 1, LOADING_PHASES.length - 1));
-            }, currentPhase.duration);
-        }
+            let nextCompletedPromiseCount = 0;
+            seenPromiseKeysRef.current.forEach((key) => {
+                if (!currentPromiseKeySet.has(key)) {
+                    console.log('Promise key completed:', key);
+                    nextCompletedPromiseCount += 1;
+                }
+            });
 
-        return () => {
-            clearInterval(progressInterval);
-            if (phaseTimeout) clearTimeout(phaseTimeout);
-        };
-    }, [currentPhaseIndex]);
+            setCompletedPromiseCount(nextCompletedPromiseCount);
+            setProgress(Math.min((nextCompletedPromiseCount / normalizedAnticipatedPromiseCount) * 100, 100));
 
-    const currentPhase = LOADING_PHASES[currentPhaseIndex];
+            if (currentPromiseKeys.length === 0 && hasObservedPromiseActivityRef.current) {
+                console.log('Done loading');
+                currentStage.saveGame();
+                setScreenType(ScreenType.MAP);
+            }
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [setScreenType, stage]);
 
     return (
         <Box
@@ -140,7 +129,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                             letterSpacing: '0.01em',
                         }}
                     >
-                        {currentPhase.message}
+                        Completed generation tasks: {Math.min(completedPromiseCount, anticipatedPromiseCount)} / {anticipatedPromiseCount}
                     </Typography>
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
