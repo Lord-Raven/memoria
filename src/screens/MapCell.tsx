@@ -143,10 +143,9 @@ export const MapCell: FC<MapCellProps> = ({
 	return (
 		<g>
 			<motion.foreignObject
-				x={cell.bounds.x}
-				y={cell.bounds.y}
-				width={cell.bounds.width}
-				height={cell.bounds.height}
+				width={frameBounds.width}
+				height={frameBounds.height}
+				initial={{ x: cell.bounds.x, y: cell.bounds.y }}
 				animate={{
 					x: frameBounds.x,
 					y: frameBounds.y,
@@ -220,10 +219,8 @@ export const MapCell: FC<MapCellProps> = ({
 			/>
 			<motion.rect
 				initial={false}
-				x={cell.bounds.x}
-				y={cell.bounds.y}
-				width={cell.bounds.width}
-				height={cell.bounds.height}
+				width={frameBounds.width}
+				height={frameBounds.height}
 				fill={`rgba(10, 26, 39, ${fullscreenShadeOpacity})`}
 				stroke={borderPalette.stroke}
 				strokeWidth={fullscreenOutlineStrokeWidth}
@@ -248,10 +245,8 @@ export const MapCell: FC<MapCellProps> = ({
 			/>
 			<motion.rect
 				initial={false}
-				x={cell.bounds.x}
-				y={cell.bounds.y}
-				width={cell.bounds.width}
-				height={cell.bounds.height}
+				width={frameBounds.width}
+				height={frameBounds.height}
 				fill="rgba(255,255,255,0)"
 				data-cell-id={cell.point.id}
 				animate={{
