@@ -398,12 +398,27 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		};
 	}, []);
 
+	const discoveredLocationSignature = Object.values(stage().getSave().atlas as Record<string, Location>)
+		.map((location) => [
+			location.id,
+			location.discovered ? '1' : '0',
+			location.weight ?? 1,
+			location.center?.x ?? '',
+			location.center?.y ?? '',
+			location.focalPoint?.x ?? '',
+			location.focalPoint?.y ?? '',
+			location.imageUrl ?? '',
+			location.themeColor ?? '',
+		].join(':'))
+		.sort()
+		.join('|');
+
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
 		const atlasEntries = Object.values(save.atlas as Record<string, Location>).filter(
 			(location) => location.discovered,
 		);
-		return atlasEntries.map((location, index) => {
+		return atlasEntries.map((location) => {
 			const weight = Math.max(0.05, location.weight || 1);
 			const focalPoint = normalizeRelativePoint(location.focalPoint, normalizeRelativePoint(location.center));
 
@@ -419,7 +434,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				themeColor: location.themeColor,
 			};
 		});
-	}, [stage]);
+	}, [discoveredLocationSignature, stage]);
 
 	const [animatedPoints, setAnimatedPoints] = useState<VoronoiPoint[]>(targetPoints);
 
@@ -576,13 +591,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		}
 		initializedSkitIdRef.current = skit.id;
 
-		let cancelled = false;
 		const initScript = async () => {
 			console.log("Generating initial skit script...");
 			setIsGeneratingNextSkit(true);
 			try {
 				const nextEntries = await generateSkitScript(skit, stage());
-				if (cancelled || nextEntries.length === 0) {
+				if (nextEntries.length === 0) {
 					return;
 				}
 				skit.script.push(...nextEntries);
@@ -593,13 +607,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				stage().saveGame();
 			} finally {
 				console.log("Finished generating initial skit script.");
-				if (!cancelled) {
-					setIsGeneratingNextSkit(false);
-				}
+				setIsGeneratingNextSkit(false);
 			}
 		};
 		initScript();
-		return () => { cancelled = true; };
 	}, [mapMode, skit, stage]);
 
 	useEffect(() => {
