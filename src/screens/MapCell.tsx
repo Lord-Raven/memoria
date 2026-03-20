@@ -78,7 +78,7 @@ const getLocationBorderPalette = (themeColor: string) => {
 export const MapCell: FC<MapCellProps> = ({
 	cell,
 	targetRadius,
-	backgroundBlurPx = 1,
+	backgroundBlurPx = 0.5,
 	onPointerEnter,
 	onPointerLeave,
 	opacity = 1,

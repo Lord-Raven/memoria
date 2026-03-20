@@ -18,6 +18,7 @@ export class Skit {
     initialActors: string[] = []; // List of Actor IDs present in this skit
     initialLocationId: string = ''; // Initial location for the skit, can be used to set background or context
     summary: string = ''; // Final summary of this skit
+    over: boolean = false; // Whether this skit has concluded. This flag is set upon closing a skit.
     
     constructor(props: any) {
         Object.assign(this, props);

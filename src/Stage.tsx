@@ -213,9 +213,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!save.timeline || save.timeline.length === 0) {
             return null;
         }
-        const lastEntry = save.timeline[save.timeline.length - 1];
-        if (lastEntry.skit && !lastEntry.skit.script.some(line => line.endScene)) {
-            return lastEntry.skit;
+        // Get last entry with a skit that is not marked as over:
+        for (let i = save.timeline.length - 1; i >= 0; i--) {
+            const entry = save.timeline[i];
+            if (entry.skit && !entry.skit.over) {
+                return entry.skit;
+            }
         }
         return null;
     }

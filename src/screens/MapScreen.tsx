@@ -41,6 +41,7 @@ const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
 const MAX_CELL_RADIUS = 300;
+const MIN_RENDERABLE_CELL_AREA = 1;
 const POINT_TRANSITION_MS = 700;
 const HOVER_TRANSITION_MS = 240;
 const PULSE_TICK_MS = 50;
@@ -132,6 +133,21 @@ const getPolygonCentroid = (polygon: number[][]) => {
 		y += point[1];
 	}
 	return [x / polygon.length, y / polygon.length] as number[];
+};
+
+const getPolygonArea = (polygon: number[][]) => {
+	if (polygon.length < 3) {
+		return 0;
+	}
+
+	let doubledArea = 0;
+	for (let i = 0; i < polygon.length; i += 1) {
+		const [x1, y1] = polygon[i];
+		const [x2, y2] = polygon[(i + 1) % polygon.length];
+		doubledArea += x1 * y2 - x2 * y1;
+	}
+
+	return Math.abs(doubledArea) * 0.5;
 };
 
 const getPolygonBounds = (polygon: number[][]) => {
@@ -447,9 +463,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		if (input.trim() === '' && index < skitArg.script.length - 1) {
 			return skitArg;
 		} else if (input.trim() === '' && skitArg.script.length > 0 && skitArg.script[index].endScene) {
+			(skitArg as Skit).over = true;
 			setMapMode('management');
 			setSkitLocationId(null);
 			setSkitCellBounds(null);
+			stage().saveGame();
 			return null;
 		} else {
 			const nextEntries = await generateSkitScript(skitArg as Skit, stage());
@@ -719,13 +737,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				[0, MAP_HEIGHT],
 			]);
 
-		const mapBoundsPolygon = [
-			[0, 0],
-			[MAP_WIDTH, 0],
-			[MAP_WIDTH, MAP_HEIGHT],
-			[0, MAP_HEIGHT],
-		] as number[][];
-
 		const polygons = weightedVoronoi(pulsedPoints) as Array<
 			number[][] & {
 				site?: { originalObject?: VoronoiPoint };
@@ -745,10 +756,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			}
 
 			const radiusPolygon = createCirclePolygon(point.x, point.y, point.radius);
-			let clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
-
-			if (clippedPolygon.length < 3) {
-				clippedPolygon = clipPolygonWithConvex(radiusPolygon, mapBoundsPolygon);
+			const clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
+			if (clippedPolygon.length < 3 || getPolygonArea(clippedPolygon) <= MIN_RENDERABLE_CELL_AREA) {
+				continue;
 			}
 
 			const path = toPolygonPath(clippedPolygon);
