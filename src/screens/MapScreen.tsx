@@ -10,7 +10,7 @@ import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
-import { determineEmotion, generateSkitScript, Skit } from "../content/Skit";
+import { determineEmotion, generateSkitScript, getCurrentLocation, Skit } from "../content/Skit";
 import { Actor, getEmotionImage } from "../content/Actor";
 
 export type MapScreenMode = 'management' | 'skit';
@@ -37,6 +37,19 @@ interface VoronoiCell extends MapCellData {
 	polygon: number[][];
 }
 
+interface SkitIndexTrackerProps {
+	index: number;
+	onIndexChange: (index: number) => void;
+}
+
+const SkitIndexTracker: FC<SkitIndexTrackerProps> = ({ index, onIndexChange }) => {
+	useEffect(() => {
+		onIndexChange(index);
+	}, [index, onIndexChange]);
+
+	return null;
+};
+
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
@@ -46,6 +59,9 @@ const HOVER_TRANSITION_MS = 240;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_RADIUS_INFLUENCE_BOOST = 30;
+const FULLSCREEN_TRANSITION_MS = 520;
+const FULLSCREEN_DIMMED_OPACITY = 0.08;
+const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
 const OUTSIDE_ID = "__outside__";
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 const testImagePool = [
@@ -282,7 +298,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const [skitLocationId, setSkitLocationId] = useState<string | null>(null);
 	const [skitCellBounds, setSkitCellBounds] = useState<{ top: number; right: number; bottom: number; left: number } | null>(null);
 	const [isGeneratingNextSkit, setIsGeneratingNextSkit] = useState(false);
+	const [fullScreenCellId, setFullScreenCellId] = useState<string | null>(null);
+	const [fullScreenTransitionCellId, setFullScreenTransitionCellId] = useState<string | null>(null);
+	const [fullScreenProgress, setFullScreenProgress] = useState(0);
+	const [currentSkitIndex, setCurrentSkitIndex] = useState<number | null>(null);
+	const mapClickTimeoutRef = useRef<number | null>(null);
 	const initializedSkitIdRef = useRef<string | null>(null);
+	const fullScreenProgressRef = useRef(0);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -292,6 +314,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					setMapMode('management');
 					setSkitLocationId(null);
 					setSkitCellBounds(null);
+				} else if (fullScreenCellId || fullScreenTransitionCellId) {
+					setFullScreenCellId(null);
 				} else {
 					setScreenType(ScreenType.MENU);
 				}
@@ -300,7 +324,106 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [mapMode, setScreenType]);
+	}, [fullScreenCellId, fullScreenTransitionCellId, mapMode, setScreenType]);
+
+	useEffect(() => {
+		if (fullScreenCellId) {
+			setFullScreenTransitionCellId(fullScreenCellId);
+		}
+	}, [fullScreenCellId]);
+
+	useEffect(() => {
+		const hasTransition = fullScreenCellId !== null || fullScreenTransitionCellId !== null;
+		if (!hasTransition) {
+			return;
+		}
+
+		const targetProgress = fullScreenCellId ? 1 : 0;
+		const startProgress = fullScreenProgressRef.current;
+		if (Math.abs(startProgress - targetProgress) < 0.001) {
+			if (!fullScreenCellId && targetProgress === 0) {
+				setFullScreenTransitionCellId(null);
+			}
+			return;
+		}
+
+		let frameId = 0;
+		const transitionStart = performance.now();
+
+		const animateTransition = (now: number) => {
+			const progress = clamp((now - transitionStart) / FULLSCREEN_TRANSITION_MS, 0, 1);
+			const easedProgress = 1 - Math.pow(1 - progress, 3);
+			const nextProgress = lerp(startProgress, targetProgress, easedProgress);
+
+			fullScreenProgressRef.current = nextProgress;
+			setFullScreenProgress(nextProgress);
+
+			if (progress < 1) {
+				frameId = window.requestAnimationFrame(animateTransition);
+				return;
+			}
+
+			if (!fullScreenCellId && targetProgress === 0) {
+				setFullScreenTransitionCellId(null);
+			}
+		};
+
+		frameId = window.requestAnimationFrame(animateTransition);
+		return () => window.cancelAnimationFrame(frameId);
+	}, [fullScreenCellId, fullScreenTransitionCellId]);
+
+	useEffect(() => {
+		if (mapMode !== 'skit') {
+			setCurrentSkitIndex(null);
+			setFullScreenCellId(null);
+		}
+	}, [mapMode]);
+
+	useEffect(() => {
+		const currentSkit = stage().getCurrentSkit();
+		if (!currentSkit || mapMode !== 'skit') {
+			setCurrentSkitIndex(null);
+			setFullScreenCellId(null);
+			return;
+		}
+
+		if (currentSkit.script.length === 0) {
+			setCurrentSkitIndex(0);
+			return;
+		}
+
+		setCurrentSkitIndex((value) => {
+			if (value === null) {
+				return 0;
+			}
+			return clamp(value, 0, currentSkit.script.length - 1);
+		});
+	}, [mapMode, stage]);
+
+	useEffect(() => {
+		const currentSkit = stage().getCurrentSkit();
+		if (!currentSkit || mapMode !== 'skit' || currentSkitIndex === null) {
+			setFullScreenCellId(null);
+			return;
+		}
+
+		const locationId = getCurrentLocation(currentSkit, currentSkitIndex);
+		const location = stage().getSave().atlas?.[locationId];
+		if (!locationId || !location?.discovered) {
+			setFullScreenCellId(null);
+			return;
+		}
+
+		setFullScreenCellId(locationId);
+	}, [currentSkitIndex, mapMode, stage]);
+
+	useEffect(() => {
+		return () => {
+			if (mapClickTimeoutRef.current !== null) {
+				window.clearTimeout(mapClickTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
@@ -534,28 +657,43 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;
 		return animatedPoints.map((point) => {
+			const isFullScreenPoint = fullScreenTransitionCellId === point.id;
 			const pulse = getPulseProfile(point.id);
-			const wave = Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase);
-			const secondaryWave = Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase + 1.1);
-			const pulseRadius = clamp(
-				point.radius * (1 + secondaryWave * pulse.amplitude * 0.35),
-				MIN_CELL_RADIUS,
-				MAX_CELL_RADIUS,
-			);
-			const hoverIntensity = clamp(hoverIntensityById[point.id] ?? 0, 0, 1);
+			const wave = isFullScreenPoint
+				? 0
+				: Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase);
+			const secondaryWave = isFullScreenPoint
+				? 0
+				: Math.sin(timeSeconds * pulse.frequency * Math.PI * 2 + pulse.phase + 1.1);
+			const pulseRadius = isFullScreenPoint
+				? point.radius
+				: clamp(
+					point.radius * (1 + secondaryWave * pulse.amplitude * 0.35),
+					MIN_CELL_RADIUS,
+					MAX_CELL_RADIUS,
+				);
+			const hoverIntensity = isFullScreenPoint
+				? 0
+				: clamp(hoverIntensityById[point.id] ?? 0, 0, 1);
 			const influencedRadius = clamp(
 				pulseRadius + HOVER_RADIUS_INFLUENCE_BOOST * hoverIntensity,
 				MIN_CELL_RADIUS,
 				MAX_CELL_RADIUS,
 			);
+			const targetRadius = isFullScreenPoint ? FULLSCREEN_TARGET_RADIUS : influencedRadius;
+			const nextRadius = lerp(influencedRadius, targetRadius, fullScreenProgress);
+			const nextX = isFullScreenPoint ? lerp(point.x, MAP_WIDTH / 2, fullScreenProgress) : point.x;
+			const nextY = isFullScreenPoint ? lerp(point.y, MAP_HEIGHT / 2, fullScreenProgress) : point.y;
 
 			return {
 				...point,
+				x: nextX,
+				y: nextY,
 				weight: Math.max(0.05, point.weight * (1 + wave * pulse.amplitude)),
-				radius: influencedRadius,
+				radius: nextRadius,
 			};
 		});
-	}, [animatedPoints, pulseClock, hoverIntensityById]);
+	}, [animatedPoints, fullScreenProgress, fullScreenTransitionCellId, hoverIntensityById, pulseClock]);
 
 	const voronoiCells = useMemo(() => {
 		if (pulsedPoints.length === 0) {
@@ -629,40 +767,50 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [pulsedPoints]);
 
 	const hasAtlasLocations = targetPoints.length > 0;
+	const hasFullScreenCell = !!(fullScreenCellId || fullScreenTransitionCellId);
 	const targetRadiusById = useMemo(
-		() => Object.fromEntries(targetPoints.map((point) => [point.id, point.radius])),
-		[targetPoints],
+		() => Object.fromEntries(targetPoints.map((point) => {
+			const isFullScreenPoint = fullScreenTransitionCellId === point.id;
+			const radius = isFullScreenPoint
+				? lerp(point.radius, FULLSCREEN_TARGET_RADIUS, fullScreenProgress)
+				: point.radius;
+			return [point.id, radius];
+		})),
+		[fullScreenProgress, fullScreenTransitionCellId, targetPoints],
 	);
 
-	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
-		const rect = event.currentTarget.getBoundingClientRect();
-		const x = ((event.clientX - rect.left) / rect.width) * MAP_WIDTH;
-		const y = ((event.clientY - rect.top) / rect.height) * MAP_HEIGHT;
-
-		let clickedCell: VoronoiCell | null = null;
+	const getCellAtCoordinates = useCallback((x: number, y: number) => {
+		let hitCell: VoronoiCell | null = null;
 
 		for (const cell of voronoiCells) {
 			if (isPointInsidePolygon(x, y, cell.polygon)) {
-				clickedCell = cell;
+				hitCell = cell;
 				break;
 			}
 		}
 
-		if (!clickedCell) {
-			let bestMatch: { cell: VoronoiCell; distanceSq: number } | null = null;
-			for (const cell of voronoiCells) {
-				const dx = x - cell.point.x;
-				const dy = y - cell.point.y;
-				const distanceSq = dx * dx + dy * dy;
-				const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
-				if (distanceSq <= targetRadius * targetRadius) {
-					if (!bestMatch || distanceSq < bestMatch.distanceSq) {
-						bestMatch = { cell, distanceSq };
-					}
+		if (hitCell) {
+			return hitCell;
+		}
+
+		let bestMatch: { cell: VoronoiCell; distanceSq: number } | null = null;
+		for (const cell of voronoiCells) {
+			const dx = x - cell.point.x;
+			const dy = y - cell.point.y;
+			const distanceSq = dx * dx + dy * dy;
+			const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
+			if (distanceSq <= targetRadius * targetRadius) {
+				if (!bestMatch || distanceSq < bestMatch.distanceSq) {
+					bestMatch = { cell, distanceSq };
 				}
 			}
-			clickedCell = bestMatch?.cell ?? null;
 		}
+
+		return bestMatch?.cell ?? null;
+	}, [voronoiCells]);
+
+	const selectMapLocation = useCallback((x: number, y: number) => {
+		const clickedCell = getCellAtCoordinates(x, y);
 
 		if (clickedCell) {
 			const isArdeia = clickedCell.point.id.startsWith("ardeia-");
@@ -673,9 +821,38 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				locationId: clickedCell.point.id,
 				outsideSelected: false,
 			});
-		} else {
-			setPendingLocation({ name: "Outside", isArdeia: false, outsideSelected: true });
+			return;
 		}
+
+		setPendingLocation({ name: "Outside", isArdeia: false, outsideSelected: true });
+	}, [getCellAtCoordinates, targetPoints]);
+
+	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
+		if (hasFullScreenCell) {
+			setFullScreenCellId(null);
+			return;
+		}
+
+		const rect = event.currentTarget.getBoundingClientRect();
+		const x = ((event.clientX - rect.left) / rect.width) * MAP_WIDTH;
+		const y = ((event.clientY - rect.top) / rect.height) * MAP_HEIGHT;
+
+		if (mapClickTimeoutRef.current !== null) {
+			window.clearTimeout(mapClickTimeoutRef.current);
+		}
+
+		mapClickTimeoutRef.current = window.setTimeout(() => {
+			selectMapLocation(x, y);
+			mapClickTimeoutRef.current = null;
+		}, 220);
+	};
+
+	const handleMapDoubleClick = (event: MouseEvent<SVGSVGElement>) => {
+		if (mapClickTimeoutRef.current !== null) {
+			window.clearTimeout(mapClickTimeoutRef.current);
+			mapClickTimeoutRef.current = null;
+		}
+		event.preventDefault();
 	};
 
 	const getMapPointerCoordinates = (event: PointerEvent<SVGSVGElement>) => {
@@ -686,6 +863,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
+		if (hasFullScreenCell && fullScreenTransitionCellId) {
+			setHoveredCellId((current) => (current === fullScreenTransitionCellId ? current : fullScreenTransitionCellId));
+			return;
+		}
+
 		if (!voronoiCells.length) {
 			setHoveredCellId((current) => (current !== OUTSIDE_ID ? OUTSIDE_ID : current));
 			return;
@@ -733,12 +915,25 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	const handleMapPointerLeave = () => {
+		if (hasFullScreenCell && fullScreenTransitionCellId) {
+			setHoveredCellId((current) => (current === fullScreenTransitionCellId ? current : fullScreenTransitionCellId));
+			return;
+		}
+
 		setHoveredCellId((current) => (current ? null : current));
 	};
 
 	const handleCellPointerEnter = (cellId: string) => {
+		if (hasFullScreenCell && fullScreenTransitionCellId && fullScreenTransitionCellId !== cellId) {
+			return;
+		}
+
 		setHoveredCellId((current) => (current === cellId ? current : cellId));
 	};
+
+	const handleSkitIndexChange = useCallback((index: number) => {
+		setCurrentSkitIndex((current) => (current === index ? current : index));
+	}, []);
 
 	return (
 		<BlurredBackground
@@ -756,6 +951,36 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					position: "relative",
 				}}
 			>
+				<IconButton
+					onClick={() => {
+						setFullScreenCellId(null);
+						setCurrentSkitIndex(null);
+					}}
+					onMouseEnter={() => setTooltip("Reset focused cell", LastPage)}
+					onMouseLeave={clearTooltip}
+					aria-label="Reset focused cell"
+					sx={{
+						position: "absolute",
+						top: { xs: 20, md: 28 },
+						left: { xs: 20, md: 28 },
+						width: 54,
+						height: 54,
+						zIndex: 3,
+						color: "rgba(244, 250, 255, 0.9)",
+						background: "radial-gradient(circle at 30% 30%, rgba(151, 195, 221, 0.42), rgba(24, 45, 63, 0.74) 72%)",
+						border: "1px solid rgba(208, 233, 247, 0.36)",
+						backdropFilter: "blur(12px)",
+						opacity: hasFullScreenCell ? 1 : 0,
+						pointerEvents: hasFullScreenCell ? "auto" : "none",
+						transition: "opacity 220ms ease",
+						"&:hover": {
+							background: "radial-gradient(circle at 30% 30%, rgba(171, 214, 238, 0.56), rgba(28, 54, 75, 0.86) 72%)",
+						},
+					}}
+				>
+					<LastPage sx={{ fontSize: 24 }} />
+				</IconButton>
+
 				<IconButton
 					onClick={() => setScreenType(ScreenType.MENU)}
 					onMouseEnter={() => setTooltip("Open menu", MenuRounded)}
@@ -802,6 +1027,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
 						preserveAspectRatio="none"
 						onClick={handleMapClick}
+						onDoubleClick={handleMapDoubleClick}
 						onPointerMove={handleMapPointerMove}
 						onPointerLeave={handleMapPointerLeave}
 						style={{ cursor: "crosshair", display: "block" }}
@@ -812,7 +1038,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							y={0}
 							width={MAP_WIDTH}
 							height={MAP_HEIGHT}
-							preserveAspectRatio="xMidYMid slice"
+							preserveAspectRatio={hasFullScreenCell ? "xMidYMid meet" : "xMidYMid slice"}
 							opacity={0.94}
 						/>
 						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.34)" />
@@ -826,6 +1052,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						</defs>
 
 						{voronoiCells.map((cell) => {
+							const isFullScreenPoint = fullScreenTransitionCellId === cell.point.id;
+							const cellOpacity = hasFullScreenCell
+								? (isFullScreenPoint ? 1 : lerp(1, FULLSCREEN_DIMMED_OPACITY, fullScreenProgress))
+								: 1;
 							return (
 								<MapCell
 									key={cell.point.id}
@@ -833,6 +1063,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
 									onPointerEnter={handleCellPointerEnter}
 									onPointerLeave={handleMapPointerLeave}
+									opacity={cellOpacity}
+									isInteractive={!hasFullScreenCell || isFullScreenPoint}
+									lockBackgroundToTargetRadius={!isFullScreenPoint}
 								/>
 							);
 						})}
@@ -919,6 +1152,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 											return <NamePlate actor={actor as Actor} />;
 										}}
 										getBackgroundImageUrl={(_script, _index) => ''}
+										backgroundElements={(context) => (
+											<SkitIndexTracker index={context.index} onIndexChange={handleSkitIndexChange} />
+										)}
 										setTooltip={setTooltip}
 										isVerticalLayout={isVerticalLayout}
 										actors={stage().getSave().actors}
@@ -1016,6 +1252,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						});
 
 						if (newSkit) {
+							setFullScreenCellId(null);
 							const enteringCell = voronoiCells.find(c => c.point.id === pendingLocation.locationId);
 							if (enteringCell) {
 								const b = enteringCell.bounds;

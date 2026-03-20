@@ -27,6 +27,9 @@ interface MapCellProps {
 	targetRadius: number;
 	onPointerEnter: (cellId: string) => void;
 	onPointerLeave: () => void;
+	opacity?: number;
+	isInteractive?: boolean;
+	lockBackgroundToTargetRadius?: boolean;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -71,7 +74,15 @@ const getLocationBorderPalette = (themeColor: string) => {
 	};
 };
 
-export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, onPointerLeave }) => {
+export const MapCell: FC<MapCellProps> = ({
+	cell,
+	targetRadius,
+	onPointerEnter,
+	onPointerLeave,
+	opacity = 1,
+	isInteractive = true,
+	lockBackgroundToTargetRadius = true,
+}) => {
 	const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 	const outlineStrokeWidth = 5.2 + emphasis * 0.8;
@@ -82,13 +93,17 @@ export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, 
 	const referenceDiameter = Math.max(1, targetRadius * 2);
 	const lockedBackgroundWidth = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
 	const lockedBackgroundHeight = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
-	const backgroundWidth = Math.max(cell.bounds.width, lockedBackgroundWidth);
-	const backgroundHeight = Math.max(cell.bounds.height, lockedBackgroundHeight);
+	const backgroundWidth = lockBackgroundToTargetRadius
+		? Math.max(cell.bounds.width, lockedBackgroundWidth)
+		: cell.bounds.width;
+	const backgroundHeight = lockBackgroundToTargetRadius
+		? Math.max(cell.bounds.height, lockedBackgroundHeight)
+		: cell.bounds.height;
 	const backgroundLeft = (cell.bounds.width - backgroundWidth) * focalX;
 	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
 
 	return (
-		<g>
+		<g style={{ opacity, transition: "opacity 260ms ease" }}>
 			<foreignObject
 				x={cell.bounds.x}
 				y={cell.bounds.y}
@@ -135,7 +150,7 @@ export const MapCell: FC<MapCellProps> = ({ cell, targetRadius, onPointerEnter, 
 			<path
 				d={cell.path}
 				fill="rgba(255,255,255,0)"
-				style={{ pointerEvents: "all" }}
+				style={{ pointerEvents: isInteractive ? "all" : "none" }}
 				data-cell-id={cell.point.id}
 				onPointerEnter={() => onPointerEnter(cell.point.id)}
 				onPointerMove={() => onPointerEnter(cell.point.id)}
