@@ -136,6 +136,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     style={{
                         padding: 'clamp(20px, 5vh, 40px) clamp(20px, 5vw, 40px)',
                         minWidth: '300px',
+                        width: 'min(440px, 90vw)',
                         maxWidth: '90vw',
                         maxHeight: '90vh',
                         overflow: 'auto',
