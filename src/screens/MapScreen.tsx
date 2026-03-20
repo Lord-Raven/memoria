@@ -49,7 +49,8 @@ const HOVER_RADIUS_INFLUENCE_BOOST = 30;
 const FULLSCREEN_TRANSITION_MS = 520;
 const FULLSCREEN_DIMMED_OPACITY = 0.08;
 const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
-const FULLSCREEN_BACKGROUND_BLUR_PX = 3;
+const FULLSCREEN_BACKGROUND_BLUR_PX = 8;
+const FULLSCREEN_CELL_BLUR_PX = 2;
 const OUTSIDE_ID = "__outside__";
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 
@@ -269,6 +270,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
 	const lastMapTooltipRef = useRef<string | null>(null);
+	const activeTooltipMessageRef = useRef<string | null>(activeTooltipMessage);
 	const [hoverIntensityById, setHoverIntensityById] = useState<Record<string, number>>({});
 	const [pendingLocation, setPendingLocation] = useState<{
 		name: string;
@@ -612,8 +614,17 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [mapMode, skit, stage]);
 
 	useEffect(() => {
+		activeTooltipMessageRef.current = activeTooltipMessage;
+	}, [activeTooltipMessage]);
+
+	useEffect(() => {
 		return () => {
-			clearTooltip();
+			if (
+				lastMapTooltipRef.current &&
+				activeTooltipMessageRef.current === lastMapTooltipRef.current
+			) {
+				clearTooltip();
+			}
 		};
 	}, [clearTooltip]);
 
@@ -621,7 +632,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		if (!hoveredCellId) {
 			if (
 				lastMapTooltipRef.current &&
-				activeTooltipMessage === lastMapTooltipRef.current
+				activeTooltipMessageRef.current === lastMapTooltipRef.current
 			) {
 				clearTooltip();
 			}
@@ -644,7 +655,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		setTooltip(hoveredPoint.name);
 		lastMapTooltipRef.current = hoveredPoint.name;
-	}, [hoveredCellId, targetPoints, activeTooltipMessage, setTooltip, clearTooltip]);
+	}, [hoveredCellId, targetPoints, setTooltip, clearTooltip]);
 
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;
@@ -760,7 +771,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 	const hasAtlasLocations = targetPoints.length > 0;
 	const hasFullScreenCell = !!(fullScreenCellId || fullScreenTransitionCellId);
-	const backgroundBlur = lerp(0, FULLSCREEN_BACKGROUND_BLUR_PX, fullScreenProgress);
+	const backgroundBlur = lerp(0, 1, fullScreenProgress);
 	const targetRadiusById = useMemo(
 		() => Object.fromEntries(targetPoints.map((point) => {
 			const isFullScreenPoint = fullScreenTransitionCellId === point.id;
@@ -992,7 +1003,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						onPointerLeave={handleMapPointerLeave}
 						style={{ cursor: "crosshair", display: "block" }}
 					>
-							<g style={{ filter: `blur(${backgroundBlur}px)` }}>
+							<g style={{ filter: `blur(${backgroundBlur * FULLSCREEN_BACKGROUND_BLUR_PX}px)` }}>
 								<image
 									href={MAP_BACKGROUND_IMAGE}
 									x={0}
@@ -1023,6 +1034,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									key={cell.point.id}
 									cell={cell}
 									targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
+									backgroundBlurPx={isFullScreenPoint ? backgroundBlur * FULLSCREEN_CELL_BLUR_PX : 1}
 									onPointerEnter={handleCellPointerEnter}
 									onPointerLeave={handleMapPointerLeave}
 									opacity={cellOpacity}

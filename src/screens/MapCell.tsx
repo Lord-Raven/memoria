@@ -25,6 +25,7 @@ export interface MapCellData {
 interface MapCellProps {
 	cell: MapCellData;
 	targetRadius: number;
+	backgroundBlurPx?: number;
 	onPointerEnter: (cellId: string) => void;
 	onPointerLeave: () => void;
 	opacity?: number;
@@ -34,28 +35,6 @@ interface MapCellProps {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const BACKGROUND_LOCKED_ZOOM = 1.5;
-
-const getDevicePixelRatio = () => {
-	if (typeof window === "undefined") {
-		return 1;
-	}
-	return Math.max(1, window.devicePixelRatio || 1);
-};
-
-const snapRectToDevicePixels = (x: number, y: number, width: number, height: number) => {
-	const pixelRatio = getDevicePixelRatio();
-	const left = Math.floor(x * pixelRatio) / pixelRatio;
-	const topEdge = Math.floor(y * pixelRatio) / pixelRatio;
-	const right = Math.ceil((x + width) * pixelRatio) / pixelRatio;
-	const bottomEdge = Math.ceil((y + height) * pixelRatio) / pixelRatio;
-
-	return {
-		x: left,
-		y: topEdge,
-		width: Math.max(1 / pixelRatio, right - left),
-		height: Math.max(1 / pixelRatio, bottomEdge - topEdge),
-	};
-};
 
 const asHexColor = (value: string) => {
 	const normalized = (value ?? "fff").trim();
@@ -99,6 +78,7 @@ const getLocationBorderPalette = (themeColor: string) => {
 export const MapCell: FC<MapCellProps> = ({
 	cell,
 	targetRadius,
+	backgroundBlurPx = 1,
 	onPointerEnter,
 	onPointerLeave,
 	opacity = 1,
@@ -123,16 +103,14 @@ export const MapCell: FC<MapCellProps> = ({
 		: cell.bounds.height;
 	const backgroundLeft = (cell.bounds.width - backgroundWidth) * focalX;
 	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
-	const snappedBounds = snapRectToDevicePixels(cell.bounds.x, cell.bounds.y, cell.bounds.width, cell.bounds.height);
-	const snappedBackground = snapRectToDevicePixels(backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight);
 
 	return (
 		<g style={{ opacity, transition: "opacity 260ms ease" }}>
 			<foreignObject
-				x={snappedBounds.x}
-				y={snappedBounds.y}
-				width={snappedBounds.width}
-				height={snappedBounds.height}
+				x={cell.bounds.x}
+				y={cell.bounds.y}
+				width={cell.bounds.width}
+				height={cell.bounds.height}
 				clipPath={`url(#${cell.clipPathId})`}
 				style={{ pointerEvents: "none" }}
 			>
@@ -148,15 +126,16 @@ export const MapCell: FC<MapCellProps> = ({
 					<div
 						style={{
 							position: "absolute",
-							left: snappedBackground.x,
-							top: snappedBackground.y,
-							width: snappedBackground.width,
-							height: snappedBackground.height,
+							left: backgroundLeft,
+							top: backgroundTop,
+							width: backgroundWidth,
+							height: backgroundHeight,
 							backgroundImage: `url(${cell.point.imageUrl})`,
 							backgroundPosition,
 							backgroundRepeat: "no-repeat",
 							backgroundSize: "cover",
-							transition: "opacity 180ms ease",
+							filter: `blur(${backgroundBlurPx}px)`,
+							transition: "filter 260ms ease, opacity 180ms ease",
 						}}
 					/>
 				</div>
