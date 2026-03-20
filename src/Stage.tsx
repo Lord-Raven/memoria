@@ -216,12 +216,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return locationId.startsWith('ardeia-');
     }
 
-    private pickRandomLocation(locations: Location[]): Location | null {
-        if (!locations.length) {
+    private pickRandom<T>(items: T[]): T | null {
+        if (!items.length) {
             return null;
         }
-        const index = Math.floor(Math.random() * locations.length);
-        return locations[index] || null;
+        const index = Math.floor(Math.random() * items.length);
+        return items[index] || null;
     }
 
     private buildTravelTimelineDescription(location: Location, skitType: SkitType): string {
@@ -246,7 +246,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const nonArdeiaLocations = atlasLocations.filter(location => !this.isArdeiaLocationId(location.id));
             const outsideFallbackPool = nonArdeiaLocations.length > 0 ? nonArdeiaLocations : atlasLocations;
 
-            selectedLocation = this.pickRandomLocation(
+            selectedLocation = this.pickRandom(
                 undiscoveredLocations.length > 0 ? undiscoveredLocations : outsideFallbackPool,
             ) || undefined;
         } else if (selection.selectedLocationId) {
@@ -270,11 +270,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             ? SkitType.SOCIAL
             : (isFirstVisitOutsideLocation ? SkitType.DISCOVERY : SkitType.ADVENTURE);
 
+        // Initial actor should be a random non-warden, non-player. Filter player and warden (if not Ardeia), then pick randomly from the remaining actors as the initial actor for the skit:
+        const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && (isArdeia || actor.type !== 'WARDEN'));
+        const initialActor = this.pickRandom(potentialInitialActors) || undefined;
         const skit = new Skit({
             skitType,
             initialLocationId: selectedLocation.id,
             script: [],
-            initialActors: [this.getPlayerActor().id],
+            initialActors: [initialActor?.id].filter(Boolean),
             summary: '',
         });
 

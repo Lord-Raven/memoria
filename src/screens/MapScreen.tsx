@@ -62,6 +62,7 @@ const HOVER_RADIUS_INFLUENCE_BOOST = 30;
 const FULLSCREEN_TRANSITION_MS = 520;
 const FULLSCREEN_DIMMED_OPACITY = 0.08;
 const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
+const FULLSCREEN_BACKGROUND_BLUR_PX = 1.5;
 const OUTSIDE_ID = "__outside__";
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 const testImagePool = [
@@ -310,15 +311,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const onKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
 				event.preventDefault();
-				if (mapMode === 'skit') {
-					setMapMode('management');
-					setSkitLocationId(null);
-					setSkitCellBounds(null);
-				} else if (fullScreenCellId || fullScreenTransitionCellId) {
-					setFullScreenCellId(null);
-				} else {
-					setScreenType(ScreenType.MENU);
-				}
+				setScreenType(ScreenType.MENU);
 			}
 		};
 
@@ -605,6 +598,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		let cancelled = false;
 		const initScript = async () => {
+			console.log("Generating initial skit script...");
 			setIsGeneratingNextSkit(true);
 			try {
 				const nextEntries = await generateSkitScript(skit, stage());
@@ -618,6 +612,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				}
 				stage().saveGame();
 			} finally {
+				console.log("Finished generating initial skit script.");
 				if (!cancelled) {
 					setIsGeneratingNextSkit(false);
 				}
@@ -768,6 +763,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 	const hasAtlasLocations = targetPoints.length > 0;
 	const hasFullScreenCell = !!(fullScreenCellId || fullScreenTransitionCellId);
+	const backgroundBlur = lerp(0, FULLSCREEN_BACKGROUND_BLUR_PX, fullScreenProgress);
 	const targetRadiusById = useMemo(
 		() => Object.fromEntries(targetPoints.map((point) => {
 			const isFullScreenPoint = fullScreenTransitionCellId === point.id;
@@ -1032,16 +1028,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						onPointerLeave={handleMapPointerLeave}
 						style={{ cursor: "crosshair", display: "block" }}
 					>
-						<image
-							href={MAP_BACKGROUND_IMAGE}
-							x={0}
-							y={0}
-							width={MAP_WIDTH}
-							height={MAP_HEIGHT}
-							preserveAspectRatio={hasFullScreenCell ? "xMidYMid meet" : "xMidYMid slice"}
-							opacity={0.94}
-						/>
-						<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.34)" />
+							<g style={{ filter: `blur(${backgroundBlur}px)` }}>
+								<image
+									href={MAP_BACKGROUND_IMAGE}
+									x={0}
+									y={0}
+									width={MAP_WIDTH}
+									height={MAP_HEIGHT}
+									preserveAspectRatio={hasFullScreenCell ? "xMidYMid meet" : "xMidYMid slice"}
+									opacity={0.94}
+								/>
+								<rect x={0} y={0} width={MAP_WIDTH} height={MAP_HEIGHT} fill="rgba(2,10,18,0.34)" />
+							</g>
 
 						<defs>
 								{voronoiCells.map((cell) => (

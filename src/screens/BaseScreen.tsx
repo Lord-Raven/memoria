@@ -16,7 +16,6 @@ import { LoadingScreen } from './LoadingScreen';
 export enum ScreenType {
     MENU = 'menu',
     LOADING = 'loading',
-    SKIT = 'skit',
     MAP = 'map',
 }
 
@@ -54,14 +53,6 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
             {screenType === ScreenType.MENU && (
                 // Render menu screen
                 <MenuScreen stage={stage} setScreenType={setScreenType} />
-            )}
-            {screenType === ScreenType.SKIT && (
-                // Render studio screen
-                <SkitScreen 
-                    stage={stage} 
-                    setScreenType={setScreenType} 
-                    isVerticalLayout={isVerticalLayout}
-                />
             )}
             {screenType === ScreenType.MAP && (
                 <MapScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
