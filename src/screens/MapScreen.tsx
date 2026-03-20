@@ -37,19 +37,6 @@ interface VoronoiCell extends MapCellData {
 	polygon: number[][];
 }
 
-interface SkitIndexTrackerProps {
-	index: number;
-	onIndexChange: (index: number) => void;
-}
-
-const SkitIndexTracker: FC<SkitIndexTrackerProps> = ({ index, onIndexChange }) => {
-	useEffect(() => {
-		onIndexChange(index);
-	}, [index, onIndexChange]);
-
-	return null;
-};
-
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
 const MIN_CELL_RADIUS = 40;
@@ -65,13 +52,6 @@ const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
 const FULLSCREEN_BACKGROUND_BLUR_PX = 1.5;
 const OUTSIDE_ID = "__outside__";
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
-const testImagePool = [
-	"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
-	"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
-	"https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?auto=format&fit=crop&w=1200&q=80",
-	"https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1200&q=80",
-	"https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80",
-];
 
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -434,7 +414,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				y: normalizeCoordinate(location.center?.y ?? 0.5, MAP_HEIGHT),
 				weight,
 				radius: getRadiusFromWeight(weight),
-				imageUrl: location.imageUrl || testImagePool[index % testImagePool.length],
+				imageUrl: location.imageUrl || '',
 				focalPoint,
 				themeColor: location.themeColor,
 			};
@@ -927,10 +907,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		setHoveredCellId((current) => (current === cellId ? current : cellId));
 	};
 
-	const handleSkitIndexChange = useCallback((index: number) => {
-		setCurrentSkitIndex((current) => (current === index ? current : index));
-	}, []);
-
 	return (
 		<BlurredBackground
 			imageUrl={MAP_BACKGROUND_IMAGE}
@@ -947,35 +923,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					position: "relative",
 				}}
 			>
-				<IconButton
-					onClick={() => {
-						setFullScreenCellId(null);
-						setCurrentSkitIndex(null);
-					}}
-					onMouseEnter={() => setTooltip("Reset focused cell", LastPage)}
-					onMouseLeave={clearTooltip}
-					aria-label="Reset focused cell"
-					sx={{
-						position: "absolute",
-						top: { xs: 20, md: 28 },
-						left: { xs: 20, md: 28 },
-						width: 54,
-						height: 54,
-						zIndex: 3,
-						color: "rgba(244, 250, 255, 0.9)",
-						background: "radial-gradient(circle at 30% 30%, rgba(151, 195, 221, 0.42), rgba(24, 45, 63, 0.74) 72%)",
-						border: "1px solid rgba(208, 233, 247, 0.36)",
-						backdropFilter: "blur(12px)",
-						opacity: hasFullScreenCell ? 1 : 0,
-						pointerEvents: hasFullScreenCell ? "auto" : "none",
-						transition: "opacity 220ms ease",
-						"&:hover": {
-							background: "radial-gradient(circle at 30% 30%, rgba(171, 214, 238, 0.56), rgba(28, 54, 75, 0.86) 72%)",
-						},
-					}}
-				>
-					<LastPage sx={{ fontSize: 24 }} />
-				</IconButton>
 
 				<IconButton
 					onClick={() => setScreenType(ScreenType.MENU)}
@@ -1145,14 +1092,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								{skit.script && (
 									<NovelVisualizer
 										script={skit}
+										loading={isGeneratingNextSkit}
 										renderNameplate={(actor: any) => {
 											if (!actor || !actor.name) return null;
 											return <NamePlate actor={actor as Actor} />;
 										}}
-										getBackgroundImageUrl={(_script, _index) => ''}
-										backgroundElements={(context) => (
-											<SkitIndexTracker index={context.index} onIndexChange={handleSkitIndexChange} />
-										)}
 										setTooltip={setTooltip}
 										isVerticalLayout={isVerticalLayout}
 										actors={stage().getSave().actors}
@@ -1238,7 +1182,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					}
 					message=""
 					confirmText={pendingLocation?.isArdeia ? "Visit" : "Journey"}
-					cancelText="Stay"
+					cancelText="Cancel"
 					onConfirm={() => {
 						if (!pendingLocation) {
 							return;

@@ -151,6 +151,7 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
             
             {(skit && skit.script) ? <NovelVisualizer
             script={skit}
+            
             renderNameplate={(actor: any) => {
                 if (!actor || !actor.name) return null;
                 const typedActor = actor as Actor;
