@@ -1,19 +1,24 @@
-import { FC, MouseEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FC, MouseEvent, PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
-import { BlurredBackground } from "@lord-raven/novel-visualizer";
-import { Box, IconButton } from "@mui/material";
-import { MenuRounded } from "@mui/icons-material";
-import { motion } from "framer-motion";
-import { ConfirmDialog } from "./UiComponents";
+import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
+import { Box, IconButton, Typography } from "@mui/material";
+import { LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
+import { AnimatePresence, motion } from "framer-motion";
+import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
+import { determineEmotion, generateSkitScript, Skit } from "../content/Skit";
+import { Actor, getEmotionImage } from "../content/Actor";
+
+export type MapScreenMode = 'management' | 'skit';
 
 interface MapScreenProps {
 	stage: () => Stage;
 	setScreenType: (type: ScreenType) => void;
+	isVerticalLayout: boolean;
 }
 
 interface VoronoiPoint {
@@ -260,7 +265,7 @@ const getPowerWeight = (point: VoronoiPoint) => {
 	return radius * radius;
 };
 
-export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
+export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
 	const { setTooltip, clearTooltip } = useTooltip();
@@ -273,18 +278,29 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		locationId?: string;
 		outsideSelected: boolean;
 	} | null>(null);
+	const [mapMode, setMapMode] = useState<MapScreenMode>('management');
+	const [skitLocationId, setSkitLocationId] = useState<string | null>(null);
+	const [skitCellBounds, setSkitCellBounds] = useState<{ top: number; right: number; bottom: number; left: number } | null>(null);
+	const [isGeneratingNextSkit, setIsGeneratingNextSkit] = useState(false);
+	const initializedSkitIdRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
 				event.preventDefault();
-				setScreenType(ScreenType.MENU);
+				if (mapMode === 'skit') {
+					setMapMode('management');
+					setSkitLocationId(null);
+					setSkitCellBounds(null);
+				} else {
+					setScreenType(ScreenType.MENU);
+				}
 			}
 		};
 
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [setScreenType]);
+	}, [mapMode, setScreenType]);
 
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
@@ -310,6 +326,28 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 	}, [stage]);
 
 	const [animatedPoints, setAnimatedPoints] = useState<VoronoiPoint[]>(targetPoints);
+
+	const skit = stage().getCurrentSkit();
+
+	const handleSkitSubmit = useCallback(async (input: string, skitArg: any, index: number) => {
+		if (input.trim() === '' && index < skitArg.script.length - 1) {
+			return skitArg;
+		} else if (input.trim() === '' && skitArg.script.length > 0 && skitArg.script[index].endScene) {
+			setMapMode('management');
+			setSkitLocationId(null);
+			setSkitCellBounds(null);
+			return null;
+		} else {
+			const nextEntries = await generateSkitScript(skitArg as Skit, stage());
+			(skitArg as Skit).script.push(...nextEntries);
+			const currentTimelineEvent = stage().getSave().timeline?.find(e => e.skit?.id === skitArg.id);
+			if (currentTimelineEvent) {
+				currentTimelineEvent.skit = skitArg as Skit;
+				stage().saveGame();
+			}
+			return skitArg;
+		}
+	}, [stage]);
 
 	useEffect(() => {
 		animatedPointsRef.current = animatedPoints;
@@ -432,6 +470,39 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 		frameId = window.requestAnimationFrame(animateHoverTransition);
 		return () => window.cancelAnimationFrame(frameId);
 	}, [hoveredCellId, targetPoints]);
+
+	useEffect(() => {
+		if (mapMode !== 'skit' || !skit || skit.script.length > 0) {
+			return;
+		}
+		if (initializedSkitIdRef.current === skit.id) {
+			return;
+		}
+		initializedSkitIdRef.current = skit.id;
+
+		let cancelled = false;
+		const initScript = async () => {
+			setIsGeneratingNextSkit(true);
+			try {
+				const nextEntries = await generateSkitScript(skit, stage());
+				if (cancelled || nextEntries.length === 0) {
+					return;
+				}
+				skit.script.push(...nextEntries);
+				const currentTimelineEvent = stage().getSave().timeline?.find(e => e.skit?.id === skit.id);
+				if (currentTimelineEvent) {
+					currentTimelineEvent.skit = skit;
+				}
+				stage().saveGame();
+			} finally {
+				if (!cancelled) {
+					setIsGeneratingNextSkit(false);
+				}
+			}
+		};
+		initScript();
+		return () => { cancelled = true; };
+	}, [mapMode, skit, stage]);
 
 	useEffect(() => {
 		return () => {
@@ -717,6 +788,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 					style={{
 						flex: 1,
 						minHeight: 0,
+						position: "relative",
 						borderRadius: 18,
 						overflow: "hidden",
 						border: "1px solid rgba(255,255,255,0.15)",
@@ -790,6 +862,135 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 						)}
 					</svg>
 					</motion.div>
+				<AnimatePresence>
+					{mapMode === 'skit' && skit && (
+						<motion.div
+							key="skit-overlay"
+							initial={{
+								clipPath: skitCellBounds
+									? `inset(${skitCellBounds.top.toFixed(1)}% ${skitCellBounds.right.toFixed(1)}% ${skitCellBounds.bottom.toFixed(1)}% ${skitCellBounds.left.toFixed(1)}% round 24px)`
+									: 'inset(40% 40% 40% 40% round 24px)',
+							}}
+							animate={{ clipPath: 'inset(0% 0% 0% 0% round 0px)' }}
+							exit={{
+								clipPath: skitCellBounds
+									? `inset(${skitCellBounds.top.toFixed(1)}% ${skitCellBounds.right.toFixed(1)}% ${skitCellBounds.bottom.toFixed(1)}% ${skitCellBounds.left.toFixed(1)}% round 24px)`
+									: 'inset(40% 40% 40% 40% round 24px)',
+							}}
+							transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+							style={{ position: 'absolute', inset: 0, zIndex: 10 }}
+						>
+							<Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+								<Box
+									sx={{
+										position: 'absolute',
+										top: 16,
+										left: 16,
+										zIndex: 1000,
+										backgroundColor: 'rgba(22, 28, 44, 0.76)',
+										backdropFilter: 'blur(6px)',
+										padding: '8px 24px',
+										borderRadius: '20px',
+										border: '1px solid rgba(138, 176, 204, 0.48)',
+										boxShadow: '0 4px 18px rgba(10, 16, 29, 0.55), 0 0 16px rgba(138, 176, 204, 0.2)',
+									}}
+								>
+									<Typography
+										variant="h6"
+										sx={{
+											color: '#edf2f2',
+											fontWeight: 'bold',
+											fontSize: '1.1rem',
+											letterSpacing: '0.08em',
+											textTransform: 'uppercase',
+											textShadow: '0 2px 6px rgba(0, 0, 0, 0.6), 0 0 10px rgba(138, 176, 204, 0.24)',
+										}}
+									>
+										{skit.initialLocationId
+											? (stage().getSave().atlas[skit.initialLocationId]?.name || skit.initialLocationId)
+											: 'Memoria'}
+									</Typography>
+								</Box>
+								{skit.script && (
+									<NovelVisualizer
+										script={skit}
+										renderNameplate={(actor: any) => {
+											if (!actor || !actor.name) return null;
+											return <NamePlate actor={actor as Actor} />;
+										}}
+										getBackgroundImageUrl={(_script, _index) => ''}
+										setTooltip={setTooltip}
+										isVerticalLayout={isVerticalLayout}
+										actors={stage().getSave().actors}
+										playerActorId={stage().getPlayerActor().id}
+										getPresentActors={(_script, _index) =>
+											skit.initialActors?.map((id) => stage().getSave().actors[id]).filter(Boolean) || []
+										}
+										getActorImageUrl={(actor, _script, index) => {
+											const emotion = determineEmotion(actor.id, skit, index);
+											return (
+												getEmotionImage(actor as Actor, emotion, stage(), (actor as Actor).appearanceId) ||
+												getEmotionImage(actor as Actor, 'neutral', stage(), (actor as Actor).appearanceId) ||
+												''
+											);
+										}}
+										onSubmitInput={handleSkitSubmit}
+										getSubmitButtonConfig={(_script, index, inputText) => {
+											const endScene = index >= 0 ? (skit.script[index]?.endScene || false) : false;
+											return {
+												label: inputText.trim().length > 0 ? 'Send' : (endScene ? 'Next Round' : 'Continue'),
+												enabled: true,
+												colorScheme: inputText.trim().length > 0 ? 'primary' : (endScene ? 'error' : 'primary'),
+												icon: inputText.trim().length > 0 ? <Send /> : (endScene ? <LastPage /> : <PlayArrow />),
+											};
+										}}
+										enableAudio={!stage().getSave().textToSpeech}
+										enableGhostSpeakers={true}
+										enableTalkingAnimation={true}
+										renderActorHoverInfo={(actor) => {
+											if (!actor || actor.id === stage().getPlayerActor().id) return null;
+											const typedActor = actor as Actor;
+											const authorName = typedActor.fullPath?.split('/').filter(Boolean)[0] || '';
+											return (
+												<Box
+													sx={{
+														padding: 2,
+														backgroundColor: 'rgba(21, 27, 41, 0.9)',
+														borderRadius: 2,
+														border: `1px solid ${typedActor.themeColor || '#8ab0cc'}`,
+														maxWidth: 300,
+														boxShadow: '0 12px 28px rgba(0, 0, 0, 0.55)',
+													}}
+												>
+													<Box sx={{ marginBottom: 1 }}>
+														<NamePlate actor={typedActor} />
+													</Box>
+													{authorName && (
+														<Typography
+															variant="caption"
+															sx={{
+																display: 'block',
+																marginBottom: 1,
+																color: 'rgba(185, 210, 227, 0.84)',
+																fontStyle: 'italic',
+																fontFamily: '"Lora", Georgia, serif',
+															}}
+														>
+															by {authorName}
+														</Typography>
+													)}
+													<Box sx={{ color: '#edf2f2', fontSize: '0.9rem', lineHeight: 1.4 }}>
+														{typedActor.profile}
+													</Box>
+												</Box>
+											);
+										}}
+									/>
+								)}
+							</Box>
+						</motion.div>
+					)}
+				</AnimatePresence>
 				</Box>
 
 				<ConfirmDialog
@@ -809,15 +1010,28 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType }) => {
 							return;
 						}
 
-						const skit = stage().startTravelSkit({
+						const newSkit = stage().startTravelSkit({
 							selectedLocationId: pendingLocation.locationId,
 							outsideSelected: pendingLocation.outsideSelected,
 						});
 
-						setPendingLocation(null);
-						if (skit) {
-							setScreenType(ScreenType.SKIT);
+						if (newSkit) {
+							const enteringCell = voronoiCells.find(c => c.point.id === pendingLocation.locationId);
+							if (enteringCell) {
+								const b = enteringCell.bounds;
+								setSkitCellBounds({
+									top: (b.y / MAP_HEIGHT) * 100,
+									right: ((MAP_WIDTH - b.x - b.width) / MAP_WIDTH) * 100,
+									bottom: ((MAP_HEIGHT - b.y - b.height) / MAP_HEIGHT) * 100,
+									left: (b.x / MAP_WIDTH) * 100,
+								});
+							} else {
+								setSkitCellBounds(null);
+							}
+							setSkitLocationId(pendingLocation.locationId ?? null);
+							setMapMode('skit');
 						}
+						setPendingLocation(null);
 					}}
 					onCancel={() => setPendingLocation(null)}
 				/>

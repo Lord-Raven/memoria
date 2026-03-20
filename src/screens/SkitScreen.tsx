@@ -160,7 +160,13 @@ export const SkitScreen: FC<SkitScreenProps> = ({ stage, setScreenType, isVertic
                     />
                 );
             }}
-            getBackgroundImageUrl={(script, index: number) => {return stage().getSave().atlas[getCurrentLocation(script, index) || '']?.imageUrl || ''}}
+            getBackgroundImageUrl={(script, index: number) => {return `https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png`}}
+            backgroundElements={(context: {script: Skit, index: number, presentActors: Actor[]}) => {
+                return <div>
+
+                    </div>
+            }}
+
             setTooltip={setTooltip}
             isVerticalLayout={isVerticalLayout}
             actors={stage().getSave().actors}

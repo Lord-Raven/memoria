@@ -64,7 +64,7 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
                 />
             )}
             {screenType === ScreenType.MAP && (
-                <MapScreen stage={stage} setScreenType={setScreenType} />
+                <MapScreen stage={stage} setScreenType={setScreenType} isVerticalLayout={isVerticalLayout} />
             )}
             {screenType === ScreenType.LOADING && (
                 <LoadingScreen

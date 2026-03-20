@@ -285,7 +285,14 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             } as CSSProperties}
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
-                <motion.div initial={{ x: 0 }} animate={rackIdleControls}>
+                <motion.div
+                    initial={{ x: 0 }}
+                    animate={rackIdleControls}
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                    }}
+                >
                     <motion.div
                         className="gear-slider-rack"
                         style={{
@@ -299,7 +306,19 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 </motion.div>
             </div>
 
-            <motion.div initial={{ rotate: 0 }} animate={gearIdleControls}>
+            <motion.div
+                initial={{ rotate: 0 }}
+                animate={gearIdleControls}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: `calc(50% - (${gearSize}px / 2))`,
+                    width: `${gearSize}px`,
+                    height: `${gearSize}px`,
+                    pointerEvents: 'none',
+                    transformOrigin: '50% 50%',
+                }}
+            >
                 <motion.button
                     type="button"
                     className="gear-slider-cog-button"
@@ -311,6 +330,12 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                     animate={gearControls}
                     aria-label="Turn gear"
                     style={{
+                        position: 'relative',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'auto',
                         maskImage: `url("${gearSvg}")`,
                         WebkitMaskImage: `url("${gearSvg}")`,
                     }}
