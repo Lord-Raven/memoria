@@ -294,7 +294,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                     padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
-                                by Miyo.
+                                By Miyo
                             </Button>
                             <AnimatePresence mode="wait">
                                 {expandedSection === 'attribution' && (

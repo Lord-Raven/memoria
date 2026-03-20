@@ -65,7 +65,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     readonly INITIAL_ACTORS = 3;
 
     saveData: ChatStateType;
-    currentSkit: Skit | null = null;
     primaryUser: User;
     primaryCharacter: Character;
     betaMode: boolean;
@@ -209,7 +208,16 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     getCurrentSkit(): Skit | null {
-        return this.currentSkit;
+        // Returns the most recent skit with no ending from the timeline, or null if there is no such skit.
+        const save = this.getSave();
+        if (!save.timeline || save.timeline.length === 0) {
+            return null;
+        }
+        const lastEntry = save.timeline[save.timeline.length - 1];
+        if (lastEntry.skit && !lastEntry.skit.script.some(line => line.endScene)) {
+            return lastEntry.skit;
+        }
+        return null;
     }
 
     private isArdeiaLocationId(locationId: string): boolean {
@@ -281,7 +289,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             summary: '',
         });
 
-        this.currentSkit = skit;
         save.turn += 1;
         if (!save.timeline) {
             save.timeline = [];
