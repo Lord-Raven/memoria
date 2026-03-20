@@ -44,6 +44,7 @@ interface MapCellProps {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const BACKGROUND_LOCKED_ZOOM = 1.5;
+const BACKGROUND_FULLSCREEN_ZOOM = 1.0;
 const CELL_TRANSITION = { duration: 0.62, ease: [0.22, 1, 0.36, 1] as const };
 
 const asHexColor = (value: string) => {
@@ -101,14 +102,9 @@ const getPolygonClipPath = (polygon: number[][], bounds: MapCellData["bounds"]) 
 	return `polygon(${points.join(", ")})`;
 };
 
-const getFullscreenSquareBounds = (mapBounds: MapBounds) => {
-	const size = Math.min(mapBounds.width, mapBounds.height);
-	return {
-		x: (mapBounds.width - size) / 2,
-		y: (mapBounds.height - size) / 2,
-		width: size,
-		height: size,
-	};
+const getFullscreenExpansionRadius = (mapBounds: MapBounds) => {
+	const diagonal = Math.sqrt(mapBounds.width * mapBounds.width + mapBounds.height * mapBounds.height);
+	return diagonal / 2;
 };
 
 export const MapCell: FC<MapCellProps> = ({
@@ -121,84 +117,83 @@ export const MapCell: FC<MapCellProps> = ({
 }) => {
 	const isFullscreen = presentationState?.isFullscreen ?? false;
 	const borderPalette = getLocationBorderPalette(cell.point.themeColor);
+	
+	// Circle radius: normal state uses targetRadius, fullscreen expands to diagonal
+	const fullscreenRadius = getFullscreenExpansionRadius(mapBounds);
+	const displayRadius = isFullscreen ? fullscreenRadius : targetRadius;
+	
+	// Emphasis and styling
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 	const outlineStrokeWidth = 5.2 + emphasis * 0.8;
 	const fullscreenOutlineStrokeWidth = 6;
 	const shadeOpacity = 0.28 - emphasis * 0.06;
 	const fullscreenShadeOpacity = 0.22;
+	
+	// Background image sizing and positioning
 	const focalX = clamp(cell.point.focalPoint.x, 0, 1);
 	const focalY = clamp(cell.point.focalPoint.y, 0, 1);
-	const backgroundPosition = `${focalX * 100}% ${focalY * 100}%`;
-	const polygonClipPath = getPolygonClipPath(cell.polygon, cell.bounds);
-	const fullscreenBounds = getFullscreenSquareBounds(mapBounds);
-	const frameBounds = isFullscreen ? fullscreenBounds : cell.bounds;
-	const referenceDiameter = Math.max(1, targetRadius * 2);
-	const lockedBackgroundWidth = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
-	const lockedBackgroundHeight = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
-	const backgroundWidth = Math.max(frameBounds.width, lockedBackgroundWidth);
-	const backgroundHeight = Math.max(frameBounds.height, lockedBackgroundHeight);
-	const backgroundLeft = (frameBounds.width - backgroundWidth) * focalX;
-	const backgroundTop = (frameBounds.height - backgroundHeight) * focalY;
+	const referenceDiameter = Math.max(1, displayRadius * 2);
+	const backgroundZoom = isFullscreen ? BACKGROUND_FULLSCREEN_ZOOM : BACKGROUND_LOCKED_ZOOM;
+	const backgroundWidth = referenceDiameter * backgroundZoom;
+	const backgroundHeight = referenceDiameter * backgroundZoom;
+	const backgroundX = cell.point.x - (backgroundWidth / 2) + (backgroundWidth / 2) * (focalX - 0.5) * 2;
+	const backgroundY = cell.point.y - (backgroundHeight / 2) + (backgroundHeight / 2) * (focalY - 0.5) * 2;
 
 	return (
 		<g>
-			<motion.foreignObject
-				width={frameBounds.width}
-				height={frameBounds.height}
-				initial={{ x: cell.bounds.x, y: cell.bounds.y }}
+			{/* Background image as SVG image element */}
+			<motion.image
+				href={cell.point.imageUrl}
+				x={backgroundX}
+				y={backgroundY}
+				width={backgroundWidth}
+				height={backgroundHeight}
+				preserveAspectRatio="xMidYMid slice"
+				clipPath={`url(#${cell.clipPathId})`}
 				animate={{
-					x: frameBounds.x,
-					y: frameBounds.y,
-					width: frameBounds.width,
-					height: frameBounds.height,
+					filter: isFullscreen ? "blur(6px)" : "blur(0px)",
+					opacity: isFullscreen ? 0.72 : 1,
 				}}
 				transition={CELL_TRANSITION}
-				style={{ pointerEvents: "none", overflow: "visible" }}
-			>
-				<motion.div
-					animate={{
-						clipPath: isFullscreen ? "inset(0% 0% 0% 0%)" : polygonClipPath,
-						borderRadius: isFullscreen ? "0px" : "18px",
-					}}
-					transition={CELL_TRANSITION}
-					style={{
-						width: "100%",
-						height: "100%",
-						position: "relative",
-						overflow: "hidden",
-						backgroundColor: "rgba(14, 30, 43, 0.92)",
-					}}
-				>
-					<motion.div
-						animate={{
-							filter: isFullscreen ? "blur(6px)" : "blur(0px)",
-							opacity: isFullscreen ? 0.72 : 1,
-						}}
-						transition={CELL_TRANSITION}
-						style={{
-							position: "absolute",
-							left: backgroundLeft,
-							top: backgroundTop,
-							width: backgroundWidth,
-							height: backgroundHeight,
-							backgroundImage: `url(${cell.point.imageUrl})`,
-							backgroundPosition,
-							backgroundRepeat: "no-repeat",
-							backgroundSize: "cover",
-						}}
-					/>
-					<motion.div
-						animate={{ opacity: isFullscreen ? 1 : 0 }}
-						transition={CELL_TRANSITION}
-						style={{
-							position: "absolute",
-							inset: 0,
-							background: "linear-gradient(180deg, rgba(4, 12, 22, 0.38) 0%, rgba(4, 12, 22, 0.55) 100%)",
-							pointerEvents: "none",
-						}}
-					/>
-				</motion.div>
-			</motion.foreignObject>
+				style={{ pointerEvents: "none" }}
+			/>
+			
+			{/* Background fill/shade */}
+			<motion.circle
+				cx={cell.point.x}
+				cy={cell.point.y}
+				r={displayRadius}
+				fill={`rgba(10, 26, 39, ${isFullscreen ? fullscreenShadeOpacity : shadeOpacity})`}
+				animate={{ opacity: isFullscreen ? 1 : 1 }}
+				transition={CELL_TRANSITION}
+				style={{ pointerEvents: "none" }}
+			/>
+			
+			{/* Gradient overlay for fullscreen - rendered as SVG element */}
+			<motion.circle
+				cx={cell.point.x}
+				cy={cell.point.y}
+				r={displayRadius}
+				fill="url(#fullscreen-gradient)"
+				animate={{ opacity: isFullscreen ? 1 : 0 }}
+				transition={CELL_TRANSITION}
+				style={{ pointerEvents: "none" }}
+			/>
+			
+			{/* Border outline */}
+			<motion.circle
+				cx={cell.point.x}
+				cy={cell.point.y}
+				r={displayRadius}
+				fill="none"
+				stroke={borderPalette.stroke}
+				strokeWidth={isFullscreen ? fullscreenOutlineStrokeWidth : outlineStrokeWidth}
+				animate={{ opacity: isFullscreen ? 1 : 1 }}
+				transition={CELL_TRANSITION}
+				style={{ pointerEvents: "none" }}
+			/>
+			
+			{/* Regular polygon rendering for non-fullscreen */}
 			<motion.path
 				d={cell.path}
 				fill={`rgba(10, 26, 39, ${shadeOpacity})`}
@@ -217,23 +212,8 @@ export const MapCell: FC<MapCellProps> = ({
 				transition={CELL_TRANSITION}
 				style={{ pointerEvents: "none" }}
 			/>
-			<motion.rect
-				initial={false}
-				width={frameBounds.width}
-				height={frameBounds.height}
-				fill={`rgba(10, 26, 39, ${fullscreenShadeOpacity})`}
-				stroke={borderPalette.stroke}
-				strokeWidth={fullscreenOutlineStrokeWidth}
-				animate={{
-					x: frameBounds.x,
-					y: frameBounds.y,
-					width: frameBounds.width,
-					height: frameBounds.height,
-					opacity: isFullscreen ? 1 : 0,
-				}}
-				transition={CELL_TRANSITION}
-				style={{ pointerEvents: "none" }}
-			/>
+			
+			{/* Hit target for polygon */}
 			<path
 				d={cell.path}
 				fill="rgba(255,255,255,0)"
@@ -243,19 +223,15 @@ export const MapCell: FC<MapCellProps> = ({
 				onPointerMove={() => onPointerEnter(cell.point.id)}
 				onPointerLeave={onPointerLeave}
 			/>
-			<motion.rect
-				initial={false}
-				width={frameBounds.width}
-				height={frameBounds.height}
+			
+			{/* Hit target for fullscreen circle */}
+			<motion.circle
+				cx={cell.point.x}
+				cy={cell.point.y}
+				r={displayRadius}
 				fill="rgba(255,255,255,0)"
 				data-cell-id={cell.point.id}
-				animate={{
-					x: frameBounds.x,
-					y: frameBounds.y,
-					width: frameBounds.width,
-					height: frameBounds.height,
-					opacity: isFullscreen ? 1 : 0,
-				}}
+				animate={{ opacity: isFullscreen ? 1 : 0 }}
 				transition={CELL_TRANSITION}
 				style={{ pointerEvents: isFullscreen ? "all" : "none" }}
 				onPointerEnter={() => onPointerEnter(cell.point.id)}

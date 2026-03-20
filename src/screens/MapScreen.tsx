@@ -853,21 +853,30 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										<path d={cell.path} />
 									</clipPath>
 								))}
+								<linearGradient id="fullscreen-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+									<stop offset="0%" stopColor="rgba(4, 12, 22, 0.38)" />
+									<stop offset="100%" stopColor="rgba(4, 12, 22, 0.55)" />
+								</linearGradient>
 						</defs>
 
-						{regularVoronoiCells.map((cell) => {
-							return (
-								<MapCell
-									key={cell.point.id}
-									cell={cell}
-									targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
-									mapBounds={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-									presentationState={{ isFullscreen: false }}
-									onPointerEnter={handleCellPointerEnter}
-									onPointerLeave={handleMapPointerLeave}
-								/>
-							);
-						})}
+						<motion.g
+							animate={{ opacity: fullscreenCellId ? 0.2 : 1 }}
+							transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+						>
+							{regularVoronoiCells.map((cell) => {
+								return (
+									<MapCell
+										key={cell.point.id}
+										cell={cell}
+										targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
+										mapBounds={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
+										presentationState={{ isFullscreen: false }}
+										onPointerEnter={handleCellPointerEnter}
+										onPointerLeave={handleMapPointerLeave}
+									/>
+								);
+							})}
+						</motion.g>
 
 						{fullscreenVoronoiCell && (
 							<MapCell
