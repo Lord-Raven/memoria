@@ -1,6 +1,5 @@
 import React, { FC } from 'react';
 import { Stage } from '../Stage';
-import { SkitScreen } from './SkitScreen';
 import { ThemeProvider } from '@mui/material';
 import { TooltipProvider, useTooltip } from './TooltipContext';
 import { MenuScreen } from './MenuScreen';
