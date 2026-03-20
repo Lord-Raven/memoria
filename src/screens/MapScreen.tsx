@@ -265,9 +265,10 @@ const getPowerWeight = (point: VoronoiPoint) => {
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
-	const { setTooltip, clearTooltip } = useTooltip();
+	const { message: activeTooltipMessage, setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
+	const lastMapTooltipRef = useRef<string | null>(null);
 	const [hoverIntensityById, setHoverIntensityById] = useState<Record<string, number>>({});
 	const [pendingLocation, setPendingLocation] = useState<{
 		name: string;
@@ -618,24 +619,32 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 	useEffect(() => {
 		if (!hoveredCellId) {
-			clearTooltip();
+			if (
+				lastMapTooltipRef.current &&
+				activeTooltipMessage === lastMapTooltipRef.current
+			) {
+				clearTooltip();
+			}
+			lastMapTooltipRef.current = null;
 			return;
 		}
 
 		if (hoveredCellId === OUTSIDE_ID) {
-			setTooltip("Outside");
+			const tooltipMessage = "Outside";
+			setTooltip(tooltipMessage);
+			lastMapTooltipRef.current = tooltipMessage;
 			return;
 		}
 
 		const hoveredPoint = targetPoints.find((point) => point.id === hoveredCellId);
 		if (!hoveredPoint) {
 			setHoveredCellId(null);
-			clearTooltip();
 			return;
 		}
 
 		setTooltip(hoveredPoint.name);
-	}, [hoveredCellId, targetPoints, setTooltip, clearTooltip]);
+		lastMapTooltipRef.current = hoveredPoint.name;
+	}, [hoveredCellId, targetPoints, activeTooltipMessage, setTooltip, clearTooltip]);
 
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;

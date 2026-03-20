@@ -35,6 +35,28 @@ interface MapCellProps {
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const BACKGROUND_LOCKED_ZOOM = 1.5;
 
+const getDevicePixelRatio = () => {
+	if (typeof window === "undefined") {
+		return 1;
+	}
+	return Math.max(1, window.devicePixelRatio || 1);
+};
+
+const snapRectToDevicePixels = (x: number, y: number, width: number, height: number) => {
+	const pixelRatio = getDevicePixelRatio();
+	const left = Math.floor(x * pixelRatio) / pixelRatio;
+	const topEdge = Math.floor(y * pixelRatio) / pixelRatio;
+	const right = Math.ceil((x + width) * pixelRatio) / pixelRatio;
+	const bottomEdge = Math.ceil((y + height) * pixelRatio) / pixelRatio;
+
+	return {
+		x: left,
+		y: topEdge,
+		width: Math.max(1 / pixelRatio, right - left),
+		height: Math.max(1 / pixelRatio, bottomEdge - topEdge),
+	};
+};
+
 const asHexColor = (value: string) => {
 	const normalized = (value ?? "fff").trim();
 	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
@@ -101,14 +123,16 @@ export const MapCell: FC<MapCellProps> = ({
 		: cell.bounds.height;
 	const backgroundLeft = (cell.bounds.width - backgroundWidth) * focalX;
 	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
+	const snappedBounds = snapRectToDevicePixels(cell.bounds.x, cell.bounds.y, cell.bounds.width, cell.bounds.height);
+	const snappedBackground = snapRectToDevicePixels(backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight);
 
 	return (
 		<g style={{ opacity, transition: "opacity 260ms ease" }}>
 			<foreignObject
-				x={cell.bounds.x}
-				y={cell.bounds.y}
-				width={cell.bounds.width}
-				height={cell.bounds.height}
+				x={snappedBounds.x}
+				y={snappedBounds.y}
+				width={snappedBounds.width}
+				height={snappedBounds.height}
 				clipPath={`url(#${cell.clipPathId})`}
 				style={{ pointerEvents: "none" }}
 			>
@@ -124,10 +148,10 @@ export const MapCell: FC<MapCellProps> = ({
 					<div
 						style={{
 							position: "absolute",
-							left: backgroundLeft,
-							top: backgroundTop,
-							width: backgroundWidth,
-							height: backgroundHeight,
+							left: snappedBackground.x,
+							top: snappedBackground.y,
+							width: snappedBackground.width,
+							height: snappedBackground.height,
 							backgroundImage: `url(${cell.point.imageUrl})`,
 							backgroundPosition,
 							backgroundRepeat: "no-repeat",
