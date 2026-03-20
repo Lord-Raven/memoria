@@ -10,7 +10,7 @@ import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
-import { determineEmotion, generateSkitScript, getCurrentLocation, Skit } from "../content/Skit";
+import { determineEmotion, generateSkitScript, Skit } from "../content/Skit";
 import { Actor, getEmotionImage } from "../content/Actor";
 
 export type MapScreenMode = 'management' | 'skit';
@@ -265,24 +265,9 @@ const getPowerWeight = (point: VoronoiPoint) => {
 	return radius * radius;
 };
 
-interface SkitLocationSyncProps {
-	skit: Skit;
-	index: number;
-	onLocationChange: (locationId: string | null) => void;
-}
-
-const SkitLocationSync: FC<SkitLocationSyncProps> = ({ skit, index, onLocationChange }) => {
-	useEffect(() => {
-		onLocationChange(getCurrentLocation(skit, index) || null);
-	}, [index, onLocationChange, skit]);
-
-	return null;
-};
-
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
-	const [fullscreenCellId, setFullscreenCellId] = useState<string | null>(null);
 	const { setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
@@ -520,15 +505,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [mapMode, skit, stage]);
 
 	useEffect(() => {
-		if (mapMode !== 'skit') {
-			setFullscreenCellId(null);
-			return;
-		}
-
-		setFullscreenCellId(skit?.initialLocationId || null);
-	}, [mapMode, skit]);
-
-	useEffect(() => {
 		return () => {
 			clearTooltip();
 		};
@@ -657,12 +633,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		() => Object.fromEntries(targetPoints.map((point) => [point.id, point.radius])),
 		[targetPoints],
 	);
-	const regularVoronoiCells = fullscreenCellId
-		? voronoiCells.filter((cell) => cell.point.id !== fullscreenCellId)
-		: voronoiCells;
-	const fullscreenVoronoiCell = fullscreenCellId
-		? voronoiCells.find((cell) => cell.point.id === fullscreenCellId) ?? null
-		: null;
 
 	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
 		const rect = event.currentTarget.getBoundingClientRect();
@@ -853,42 +823,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										<path d={cell.path} />
 									</clipPath>
 								))}
-								<linearGradient id="fullscreen-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-									<stop offset="0%" stopColor="rgba(4, 12, 22, 0.38)" />
-									<stop offset="100%" stopColor="rgba(4, 12, 22, 0.55)" />
-								</linearGradient>
 						</defs>
 
-						<motion.g
-							animate={{ opacity: fullscreenCellId ? 0.2 : 1 }}
-							transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
-						>
-							{regularVoronoiCells.map((cell) => {
-								return (
-									<MapCell
-										key={cell.point.id}
-										cell={cell}
-										targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
-										mapBounds={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-										presentationState={{ isFullscreen: false }}
-										onPointerEnter={handleCellPointerEnter}
-										onPointerLeave={handleMapPointerLeave}
-									/>
-								);
-							})}
-						</motion.g>
-
-						{fullscreenVoronoiCell && (
-							<MapCell
-								key={fullscreenVoronoiCell.point.id}
-								cell={fullscreenVoronoiCell}
-								targetRadius={targetRadiusById[fullscreenVoronoiCell.point.id] ?? fullscreenVoronoiCell.point.radius}
-								mapBounds={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-								presentationState={{ isFullscreen: true }}
-								onPointerEnter={handleCellPointerEnter}
-								onPointerLeave={handleMapPointerLeave}
-							/>
-						)}
+						{voronoiCells.map((cell) => {
+							return (
+								<MapCell
+									key={cell.point.id}
+									cell={cell}
+									targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
+									onPointerEnter={handleCellPointerEnter}
+									onPointerLeave={handleMapPointerLeave}
+								/>
+							);
+						})}
 
 						{!hasAtlasLocations && (
 							<text
@@ -959,8 +906,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 											textShadow: '0 2px 6px rgba(0, 0, 0, 0.6), 0 0 10px rgba(138, 176, 204, 0.24)',
 										}}
 									>
-										{fullscreenCellId
-											? (stage().getSave().atlas[fullscreenCellId]?.name || fullscreenCellId)
+										{skit.initialLocationId
+											? (stage().getSave().atlas[skit.initialLocationId]?.name || skit.initialLocationId)
 											: 'Memoria'}
 									</Typography>
 								</Box>
@@ -972,13 +919,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 											return <NamePlate actor={actor as Actor} />;
 										}}
 										getBackgroundImageUrl={(_script, _index) => ''}
-										backgroundElements={({ script, index }) => (
-											<SkitLocationSync
-												skit={script as Skit}
-												index={index}
-												onLocationChange={setFullscreenCellId}
-											/>
-										)}
 										setTooltip={setTooltip}
 										isVerticalLayout={isVerticalLayout}
 										actors={stage().getSave().actors}
