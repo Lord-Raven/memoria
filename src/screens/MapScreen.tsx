@@ -49,7 +49,7 @@ const HOVER_RADIUS_INFLUENCE_BOOST = 30;
 const FULLSCREEN_TRANSITION_MS = 520;
 const FULLSCREEN_DIMMED_OPACITY = 0.08;
 const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
-const FULLSCREEN_BACKGROUND_BLUR_PX = 1.5;
+const FULLSCREEN_BACKGROUND_BLUR_PX = 3;
 const OUTSIDE_ID = "__outside__";
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 
@@ -600,10 +600,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					return;
 				}
 				skit.script.push(...nextEntries);
-				const currentTimelineEvent = stage().getSave().timeline?.find(e => e.skit?.id === skit.id);
-				if (currentTimelineEvent) {
-					currentTimelineEvent.skit = {...skit};
-				}
 				
 				stage().saveGame();
 			} finally {
