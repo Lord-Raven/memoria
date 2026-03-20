@@ -939,18 +939,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					aria-label="Open menu"
 					sx={{
 						position: "absolute",
-						top: { xs: 20, md: 28 },
-						right: { xs: 20, md: 28 },
-						width: 58,
-						height: 58,
-						zIndex: 3,
+						top: 16,
+						right: 16,
+						zIndex: 11,
 						color: "rgba(244, 250, 255, 0.94)",
-						background: "radial-gradient(circle at 30% 30%, rgba(151, 195, 221, 0.55), rgba(24, 45, 63, 0.82) 72%)",
-						border: "1px solid rgba(208, 233, 247, 0.42)",
-						backdropFilter: "blur(14px)",
-						boxShadow: "0 14px 28px rgba(0, 0, 0, 0.34), 0 0 22px rgba(138, 176, 204, 0.22)",
+						backgroundColor: "rgba(22, 28, 44, 0.76)",
+						backdropFilter: "blur(6px)",
+						padding: "8px 16px",
+						borderRadius: "20px",
+						border: "1px solid rgba(138, 176, 204, 0.48)",
+						boxShadow: "0 4px 18px rgba(10, 16, 29, 0.55), 0 0 16px rgba(138, 176, 204, 0.2)",
 						"&:hover": {
-							background: "radial-gradient(circle at 30% 30%, rgba(171, 214, 238, 0.72), rgba(28, 54, 75, 0.9) 72%)",
+							backgroundColor: "rgba(32, 42, 64, 0.86)",
 						},
 					}}
 				>
