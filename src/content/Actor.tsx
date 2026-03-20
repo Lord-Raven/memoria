@@ -234,7 +234,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         // Replace name quotation marks with single-quotes to avoid issues where nicknames are highlighted as dialogue:
         name: (parsedData['name'] || data.name).replace(/["“”]/g, "'"),
         fullPath: data.fullPath || '',
-        avatar: data.avatar || '',
+        avatarImageUrl: data.avatar || '',
         profile: parsedData['profile'] || '',
         characterArc: parsedData['motive'] || '',
         voiceId: data.voiceId || parsedData['voice'] || '',
@@ -357,7 +357,7 @@ export async function generateBaseActorImage(
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `Illustrate this character in a artful, messy, anime concept-art style: ` +
+                prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
                     `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
@@ -367,9 +367,9 @@ export async function generateBaseActorImage(
         // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: baseSourceImage,
-            prompt: `Illustrate this character in a artful, messy, anime concept-art style: ` +
-                `Create a waist-up portrait of this character to match this updated description: ${getAppearanceById(actor, targetAppearanceId).description}\nGive them a neutral expression and pose and place them on a light gray background. ` +
-                `Regardless of the description, zoom and crop the image at their waist, but maintain a margin of negative space over their head/hair.`,
+            prompt: `Illustrate this character in a artful, messy, anime concept-art style. ` +
+                `Make it a waist-up portrait on a light gray background. ` +
+                `If necessary, adjust their appearance to match this description: ${getAppearanceById(actor, targetAppearanceId).description}. `,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
