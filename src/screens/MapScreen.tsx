@@ -602,8 +602,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				skit.script.push(...nextEntries);
 				const currentTimelineEvent = stage().getSave().timeline?.find(e => e.skit?.id === skit.id);
 				if (currentTimelineEvent) {
-					currentTimelineEvent.skit = skit;
+					currentTimelineEvent.skit = {...skit};
 				}
+				
 				stage().saveGame();
 			} finally {
 				console.log("Finished generating initial skit script.");
