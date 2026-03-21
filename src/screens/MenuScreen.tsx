@@ -180,7 +180,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                     padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
-                                Menu
+                                <span className="menu-section-header-label">Menu</span>
                             </Button>
                             <AnimatePresence mode="wait">
                                 {expandedSection === 'menu' && (
@@ -249,7 +249,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                     padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
-                                Version Notes
+                                <span className="menu-section-header-label">Version Notes</span>
                             </Button>
                             <AnimatePresence mode="wait">
                                 {expandedSection === 'version' && (
@@ -294,7 +294,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                     padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
-                                By Miyo
+                                <span className="menu-section-header-label">By Miyo</span>
                             </Button>
                             <AnimatePresence mode="wait">
                                 {expandedSection === 'attribution' && (
