@@ -75,6 +75,43 @@ const getPulseProfile = (id: string) => {
 	return { phase, frequency, amplitude };
 };
 
+const asHexColor = (value: string) => {
+	const normalized = (value ?? "fff").trim();
+	return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(normalized) ? normalized : "";
+};
+
+const hexToRgb = (hexColor: string) => {
+	const hex = asHexColor(hexColor).replace("#", "");
+	if (!hex) {
+		return null;
+	}
+
+	const expandedHex = hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
+	const parsed = Number.parseInt(expandedHex, 16);
+	if (!Number.isFinite(parsed)) {
+		return null;
+	}
+
+	return {
+		r: (parsed >> 16) & 255,
+		g: (parsed >> 8) & 255,
+		b: parsed & 255,
+	};
+};
+
+const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
+	const rgb = hexToRgb(hexColor);
+	if (!rgb) {
+		return fallback;
+	}
+	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp(alpha, 0, 1)})`;
+};
+
+const getLocationBorderStroke = (themeColor: string) => {
+	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
+	return colorWithAlpha(normalizedThemeColor, 0.86, "rgba(215, 190, 122, 0.86)");
+};
+
 const getRadiusFromWeight = (weight: number) => {
 	const normalizedWeight = clamp(weight, 0.05, 4);
 	const derivedRadius = 70 + Math.pow(normalizedWeight, 0.9) * 48;
@@ -427,6 +464,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			location.imageUrl ?? '',
 			location.themeColor ?? '',
 		].join(':'))
+		.sort()
+		.join('|');
+	const expeditionChoiceSignature = (stage().getSave().expeditionChoices || [])
+		.map((choice: { locationId: string; partnerActorId: string }) => `${choice.locationId}:${choice.partnerActorId}`)
 		.sort()
 		.join('|');
 
@@ -813,6 +854,70 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		return bestMatch?.cell ?? null;
 	}, [voronoiCells]);
 
+	const expeditionPortraitMarkers = useMemo(() => {
+		if (mapMode !== 'management') {
+			return [] as Array<{
+				key: string;
+				imageUrl: string;
+				cx: number;
+				cy: number;
+				radius: number;
+				stroke: string;
+				strokeWidth: number;
+				clipPathId: string;
+			}>;
+		}
+
+		const save = stage().getSave();
+		const choices = (save.expeditionChoices || []) as Array<{
+			locationId: string;
+			partnerActorId: string;
+		}>;
+
+		return choices.flatMap((choice) => {
+			const cell = voronoiCells.find((candidate) => candidate.point.id === choice.locationId);
+			if (!cell) {
+				return [];
+			}
+
+			const partnerActor = save.actors?.[choice.partnerActorId];
+			if (!partnerActor) {
+				return [];
+			}
+
+			const imageUrl =
+				getEmotionImage(partnerActor, 'neutral', stage(), partnerActor.appearanceId) ||
+				partnerActor.avatarImageUrl ||
+				'';
+			if (!imageUrl) {
+				return [];
+			}
+
+			const targetRadius = targetRadiusById[cell.point.id] ?? cell.point.radius;
+			const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
+			const strokeWidth = 1.8 + emphasis * 0.4;
+			const stroke = getLocationBorderStroke(cell.point.themeColor);
+			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.13, 14, 28);
+			const alignsToLeftEdge = cell.point.x >= MAP_WIDTH / 2;
+			const preferredX = alignsToLeftEdge
+				? cell.bounds.x + radius + strokeWidth + 2
+				: cell.bounds.x + cell.bounds.width - radius - strokeWidth - 2;
+			const cx = clamp(preferredX, radius + 1, MAP_WIDTH - radius - 1);
+			const cy = clamp(cell.bounds.y + radius + 5, radius + 1, MAP_HEIGHT - radius - 1);
+
+			return [{
+				key: `${choice.locationId}-${choice.partnerActorId}`,
+				imageUrl,
+				cx,
+				cy,
+				radius,
+				stroke,
+				strokeWidth,
+				clipPathId: `expedition-choice-portrait-${choice.locationId.replace(/[^a-zA-Z0-9_-]/g, "")}-${choice.partnerActorId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+			}];
+		});
+	}, [expeditionChoiceSignature, mapMode, stage, targetRadiusById, voronoiCells]);
+
 	const selectMapLocation = useCallback((x: number, y: number) => {
 		const clickedCell = getCellAtCoordinates(x, y);
 
@@ -1018,6 +1123,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										<path d={cell.path} />
 									</clipPath>
 								))}
+								{expeditionPortraitMarkers.map((portrait) => (
+									<clipPath key={portrait.clipPathId} id={portrait.clipPathId} clipPathUnits="userSpaceOnUse">
+										<circle cx={portrait.cx} cy={portrait.cy} r={portrait.radius} />
+									</clipPath>
+								))}
 						</defs>
 
 						{voronoiCells.map((cell) => {
@@ -1039,6 +1149,34 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								/>
 							);
 						})}
+
+						{mapMode === 'management' && expeditionPortraitMarkers.map((portrait) => (
+							<g key={portrait.key} style={{ pointerEvents: 'none' }}>
+								<circle
+									cx={portrait.cx}
+									cy={portrait.cy}
+									r={portrait.radius}
+									fill="rgba(8, 12, 18, 0.95)"
+								/>
+								<image
+									href={portrait.imageUrl}
+									x={portrait.cx - portrait.radius}
+									y={portrait.cy - portrait.radius}
+									width={portrait.radius * 2}
+									height={portrait.radius * 2}
+									preserveAspectRatio="xMidYMin slice"
+									clipPath={`url(#${portrait.clipPathId})`}
+								/>
+								<circle
+									cx={portrait.cx}
+									cy={portrait.cy}
+									r={portrait.radius}
+									fill="none"
+									stroke={portrait.stroke}
+									strokeWidth={portrait.strokeWidth}
+								/>
+							</g>
+						))}
 
 						{!hasAtlasLocations && (
 							<text
