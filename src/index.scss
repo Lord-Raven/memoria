@@ -365,6 +365,11 @@ body {
 }
 
 .gear-slider-loading-icon svg {
+  width: 62%;
+  height: 62%;
+  transition: transform 260ms ease;
+}
+
 .gear-slider-loading-pct {
   font-size: calc(var(--gsf-gear-size) * 0.18);
   font-weight: 700;
