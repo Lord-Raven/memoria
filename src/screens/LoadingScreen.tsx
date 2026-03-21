@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { ScreenType } from './BaseScreen';
 import { Stage } from '../Stage';
 import { GridOverlay, GlassPanel, Title } from './UiComponents';
@@ -18,8 +18,6 @@ interface LoadingScreenProps {
 
 export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) => {
     const [progress, setProgress] = useState(0);
-    const [completedPromiseCount, setCompletedPromiseCount] = useState(0);
-    const [anticipatedPromiseCount, setAnticipatedPromiseCount] = useState(() => Math.max(stage().anticipatedLoadingPromiseCount, 1));
     const seenPromiseKeysRef = useRef<Set<string>>(new Set());
     const hasObservedPromiseActivityRef = useRef(false);
 
@@ -30,10 +28,6 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
             const loadPromises = currentStage.generationPromises;
             const currentPromiseKeys = Object.keys(loadPromises || {});
             const currentPromiseKeySet = new Set(currentPromiseKeys);
-
-            setAnticipatedPromiseCount((previousCount) => (
-                previousCount === normalizedAnticipatedPromiseCount ? previousCount : normalizedAnticipatedPromiseCount
-            ));
 
             if (currentPromiseKeys.length > 0) {
                 hasObservedPromiseActivityRef.current = true;
@@ -50,7 +44,6 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                 }
             });
 
-            setCompletedPromiseCount(nextCompletedPromiseCount);
             setProgress(Math.min((nextCompletedPromiseCount / normalizedAnticipatedPromiseCount) * 100, 100));
 
             if (currentPromiseKeys.length === 0 && hasObservedPromiseActivityRef.current) {
@@ -104,31 +97,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                         <Title variant="glow" style={{ margin: 0, fontSize: 'clamp(1.2rem, 2.7vw, 1.65rem)' }}>
                             Initializing Atlas
                         </Title>
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                color: 'var(--mem-text-secondary)',
-                                letterSpacing: '0.08em',
-                                textTransform: 'uppercase',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {Math.round(progress)}%
-                        </Typography>
                     </Box>
-
-                    <Typography
-                        variant="body1"
-                        sx={{
-                            color: 'var(--mem-text-secondary)',
-                            fontWeight: 500,
-                            textAlign: 'left',
-                            minHeight: '24px',
-                            letterSpacing: '0.01em',
-                        }}
-                    >
-                        Completed generation tasks: {Math.min(completedPromiseCount, anticipatedPromiseCount)} / {anticipatedPromiseCount}
-                    </Typography>
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
                         <GearSliderFidget

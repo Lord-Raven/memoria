@@ -1,6 +1,5 @@
 import { FC, CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
-import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded';
 import gearSvgRaw from '../assets/gear.svg?raw';
 import slideGearSvgRaw from '../assets/slide-gear.svg?raw';
 
@@ -353,7 +352,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 aria-hidden="true"
                 className={`gear-slider-loading-icon ${isTampered ? 'is-tampered' : ''}`.trim()}
             >
-                <HourglassEmptyRoundedIcon />
+                <span className="gear-slider-loading-pct">{loadingPercentage}%</span>
             </span>
         </div>
     );

@@ -365,9 +365,12 @@ body {
 }
 
 .gear-slider-loading-icon svg {
-  width: 62%;
-  height: 62%;
-  transition: transform 260ms ease;
+.gear-slider-loading-pct {
+  font-size: calc(var(--gsf-gear-size) * 0.18);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition: transform 260ms ease, color 260ms ease;
 }
 
 .gear-slider-loading-icon.is-tampered {
@@ -375,6 +378,6 @@ body {
   box-shadow: 0 6px 14px rgba(2, 8, 18, 0.45), inset 0 1px 0 rgba(249, 145, 112, 0.35), 0 0 12px rgba(213, 98, 63, 0.3);
 }
 
-.gear-slider-loading-icon.is-tampered svg {
+.gear-slider-loading-icon.is-tampered .gear-slider-loading-pct {
   transform: scale(1.06);
 }
