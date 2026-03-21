@@ -141,12 +141,12 @@ export function buildPremise(playerName: string): string {
             `These expeditions discover all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. `;
 }
 
-function generateSkitContext(skit: Skit, stage: Stage, historyLength: number): string {
+export function generateContext(skit: Skit|undefined, stage: Stage, historyLength: number): string {
     const playerName = stage.getPlayerActor()?.name || 'The Prisoner';
     const save = stage.getSave();
-    const location = save.atlas[skit.initialLocationId];
+    const location = skit ? save.atlas[skit.initialLocationId] : undefined;
     const pastEvents = (save.timeline ? save.timeline.slice(-historyLength) : []).filter(e => e.skit !== skit);
-    const currentActors = getCurrentActors(skit, skit.script.length - 1).map(actorId => save.actors?.[actorId]).filter(actor => actor !== undefined && actor !== stage.getPlayerActor()) as Actor[];
+    const currentActors = skit ? getCurrentActors(skit, skit.script.length - 1).map(actorId => save.actors?.[actorId]).filter(actor => actor !== undefined && actor !== stage.getPlayerActor()) as Actor[] : [];
     
     const coreContext = `{{messages}}\nPremise: ${buildPremise(playerName)}\n` +
         ((historyLength > 0 && pastEvents.length) ? 
@@ -163,17 +163,17 @@ function generateSkitContext(skit: Skit, stage: Stage, historyLength: number): s
                     return `\n\n  Action ${stage.getSave().turn - v.turn} days ago: ${v.description || ''}`;
                 }
             }).join('') : '') +
-        `\n\nCurrent scene summary: ${skit.summary || '(No summary yet)'}` +
+        (skit ? `\n\nCurrent scene summary: ${skit.summary || '(No summary yet)'}` : '') +
         (location ? (`\n\nCurrent Location:\n  The following scene is set in ` +
             `${location.name || 'Unknown Location'}. ${location.description || 'No description available.'}\n`) : '') +
 
         `\n\nPlayer Profile for ${playerName}:\n  ${stage.getPlayerActor()?.profile || 'No profile available.'}\n` +
-        `\n\nCharacters in this Scene:\n${currentActors.map(actor => {
+        (skit && currentActors.length > 0 ? `\n\nCharacters in this Scene:\n${currentActors.map(actor => {
             const currentApperance = actor.appearances.find(a => a.id === determineAppearance(actor.id, skit, skit.script.length - 1)) ?? actor.appearances[0];
             const otherAppearances = actor.appearances.filter(o => o.id !== currentApperance?.id && o.emotionPack['neutral']);
             return `  ${actor.name}\n    Current Appearance (${currentApperance.name}): ${currentApperance.description}\n` +
                 (otherAppearances.length > 0 ? `    Other Appearances: ${otherAppearances.map(o => o.name).join(', ')}\n` : '') +
-                `    Profile: ${actor.profile}\n    Character Arc: ${actor.characterArc}`}).join('\n')}`;
+                `    Profile: ${actor.profile}\n    Character Arc: ${actor.characterArc}`}).join('\n')}` : '');
     return coreContext;
 }
 
@@ -224,7 +224,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
     while (retry < 3) {
         const response = await stage.generator.textGen({
                 // Reduce history size with successive retries.
-                prompt: `${generateSkitContext(skit, stage, 7 - retry * 2)}\n\n${mainPrompt}`,
+                prompt: `${generateContext(skit, stage, 7 - retry * 2)}\n\n${mainPrompt}`,
                 min_tokens: 10,
                 max_tokens: 600,
                 include_history: true,
@@ -506,7 +506,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             // If this response contains an endScene, we will analyze the script for stat changes or other game mechanics to be applied. Add this to the ttsPromises to run in parallel.
             console.log('Perform additional analysis.');
             ttsPromises.push((async () => {
-                const endPrompt = generateSkitContext(skit, stage, 0) +
+                const endPrompt = generateContext(skit, stage, 0) +
                     `\n\nScene Script for Analysis:\n${buildScriptLog(skit, scriptEntries, stage)}` +
                     `\n\nInstruction:\nAnalyze the preceding scene script and determine whether the final moments make for a suitable ending to the scene. ` +
                     `If the scene feels complete or has reached a good suspended moment, output "[END SCENE]" followed by a "[SUMMARY: ...]" tag with a brief summary of the entire scene's key events or outcomes. ` +

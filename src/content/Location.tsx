@@ -76,7 +76,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         focalPoint: { x: 0.7, y: 0.8 },
 		lightColor: "#74919f",
         themeColor: "#7ecfbe",
-        discovered: false,
+        discovered: true,
     },
     {
         id: "bleached-earth",
@@ -88,7 +88,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#eeeeee",
         themeColor: "#e8e4d1",
-        discovered: false,
+        discovered: true,
     },
     {
         id: 'the-loom',
@@ -100,7 +100,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#d7c091",
         themeColor: '#d17ed8',
-        discovered: false,
+        discovered: true,
     }
 ];
 

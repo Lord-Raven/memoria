@@ -52,7 +52,6 @@ const FULLSCREEN_DIMMED_OPACITY = 0.08;
 const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
 const FULLSCREEN_BACKGROUND_BLUR_PX = 8;
 const FULLSCREEN_CELL_BLUR_PX = 1;
-const OUTSIDE_ID = "__outside__";
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 
 
@@ -291,8 +290,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const [pendingLocation, setPendingLocation] = useState<{
 		name: string;
 		isArdeia: boolean;
-		locationId?: string;
-		outsideSelected: boolean;
+		locationId: string;
 	} | null>(null);
 	const [mapMode, setMapMode] = useState<MapScreenMode>(stage().getCurrentSkit() ? 'skit' : 'management');
 	const [skitLocationId, setSkitLocationId] = useState<string | null>(null);
@@ -463,11 +461,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		if (input.trim() === '' && index < skitArg.script.length - 1) {
 			return skitArg;
 		} else if (input.trim() === '' && skitArg.script.length > 0 && skitArg.script[index].endScene) {
-			(skitArg as Skit).over = true;
+			stage().endSkit();
 			setMapMode('management');
 			setSkitLocationId(null);
 			setSkitCellBounds(null);
-			stage().saveGame();
 			return null;
 		} else {
 			const nextEntries = await generateSkitScript(skitArg as Skit, stage());
@@ -658,13 +655,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			return;
 		}
 
-		if (hoveredCellId === OUTSIDE_ID) {
-			const tooltipMessage = "Outside";
-			setTooltip(tooltipMessage);
-			lastMapTooltipRef.current = tooltipMessage;
-			return;
-		}
-
 		const hoveredPoint = targetPoints.find((point) => point.id === hoveredCellId);
 		if (!hoveredPoint) {
 			setHoveredCellId(null);
@@ -833,12 +823,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				name: locationName,
 				isArdeia,
 				locationId: clickedCell.point.id,
-				outsideSelected: false,
 			});
-			return;
 		}
-
-		setPendingLocation({ name: "Outside", isArdeia: false, outsideSelected: true });
 	}, [getCellAtCoordinates, targetPoints]);
 
 	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
@@ -883,7 +869,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		}
 
 		if (!voronoiCells.length) {
-			setHoveredCellId((current) => (current !== OUTSIDE_ID ? OUTSIDE_ID : current));
+			setHoveredCellId((current) => (current ? null : current));
 			return;
 		}
 
@@ -919,7 +905,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				}
 			}
 
-			const nextHoveredCellId = bestMatch?.id ?? OUTSIDE_ID;
+			const nextHoveredCellId = bestMatch?.id ?? null;
 			setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
 			return;
 		}
@@ -1231,10 +1217,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							return;
 						}
 
-						const newSkit = stage().startTravelSkit({
-							selectedLocationId: pendingLocation.locationId,
-							outsideSelected: pendingLocation.outsideSelected,
-						});
+						const newSkit = stage().startTravelSkit(pendingLocation.locationId);
 
 						if (newSkit) {
 							setFullScreenCellId(null);
@@ -1250,7 +1233,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							} else {
 								setSkitCellBounds(null);
 							}
-							setSkitLocationId(pendingLocation.locationId ?? null);
+							setSkitLocationId(pendingLocation.locationId);
 							setMapMode('skit');
 						}
 						setPendingLocation(null);

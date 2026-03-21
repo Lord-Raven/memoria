@@ -3,9 +3,10 @@ import {StageBase, StageResponse, InitialData, Message, User, Character} from "@
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
 import { Actor, ActorType, loadReserveActorFromFullPath, WHITELISTED_FULLPATHS } from "./content/Actor";
 import { Item } from "./content/Item";
-import { generateSkitScript, Skit, SkitType } from "./content/Skit";
+import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
+import { v4 as generateUuid } from 'uuid';
 
 type MessageStateType = any;
 
@@ -29,6 +30,14 @@ type SaveType = {
     textToSpeech?: boolean;
     language?: string;
     lorebook?: LorebookEntry[]
+    expeditionChoices?: ExpeditionChoice[]
+}
+
+type ExpeditionChoice = {
+    id: string;
+    locationId: string;
+    description: string;
+    partnerActorId: string;
 }
 
 type LorebookEntry = {
@@ -190,7 +199,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.saveData.lastSaveSlot = saveSlotIndex;
 
         // Generate a few initial characters.
-        this.loadActors();
+        this.loadActors().finally(() => {
+            this.rebuildExpeditionChoices(newSave);
+            this.saveGame();
+        });
         
         this.saveGame();
     }
@@ -243,51 +255,99 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         return items[index] || null;
     }
 
-    private buildTravelTimelineDescription(location: Location, skitType: SkitType): string {
-        if (skitType === SkitType.DISCOVERY) {
-            return `Discovered ${location.name}.`;
+    private takeRandomDistinct<T>(items: T[], count: number): T[] {
+        const pool = [...items];
+        const selections: T[] = [];
+
+        while (pool.length > 0 && selections.length < count) {
+            const index = Math.floor(Math.random() * pool.length);
+            const [item] = pool.splice(index, 1);
+            if (item !== undefined) {
+                selections.push(item);
+            }
         }
+
+        return selections;
+    }
+
+    private getDiscoveredOutsideLocations(save: SaveType): Location[] {
+        return Object.values(save.atlas || {}).filter(
+            location => location.discovered && !this.isArdeiaLocationId(location.id),
+        );
+    }
+
+    private getPrisonerActorsFromSave(save: SaveType): Actor[] {
+        return Object.values(save.actors || {}).filter(actor => actor.type === ActorType.PRISONER);
+    }
+
+    private rebuildExpeditionChoices(save: SaveType = this.getSave()): ExpeditionChoice[] {
+        
+        const discoveredOutsideLocations = this.getDiscoveredOutsideLocations(save);
+        const prisonerActors = this.getPrisonerActorsFromSave(save);
+
+        if (discoveredOutsideLocations.length === 0 || prisonerActors.length === 0) {
+            save.expeditionChoices = [];
+            return save.expeditionChoices;
+        }
+
+        const selectedLocations = this.takeRandomDistinct(
+            discoveredOutsideLocations,
+            Math.min(3, discoveredOutsideLocations.length),
+        );
+
+        save.expeditionChoices = selectedLocations.map((location, index) => ({
+            id: generateUuid(),
+            locationId: location.id,
+            description: `Expedition to ${location.name}`,
+            partnerActorId: this.pickRandom(prisonerActors)?.id || '',
+        }));
+
+        this.saveGame(); // Save the rough expedition options.
+
+        // Generate distinctive descriptions for each expedition, using context and the LLM:
+        this.generator.textGen({
+            prompt: generateContext(undefined, this, 5) +
+                `\n\nRepeat each of the following three expedition descriptions, but with revised, vivid and compelling one-line descriptions that briefly relate to ongoing plotlines or hint at an intriguing new angle:\n\n` +
+                save.expeditionChoices.map(choice => `${choice.id} - ${save.atlas[choice.locationId]?.name || 'unknown location'}: ${choice.description}`).join('\n'),
+            min_tokens: 10,
+            max_tokens: 500,
+            include_history: true
+        }).then(response => {
+            if (response?.result) {
+                const descriptions = response.result.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                const currentSave = this.getSave(); // Get the most recent save to ensure we're updating the current one
+                for (const choice of currentSave.expeditionChoices || []) {
+                    const matchingDescription = descriptions.find(desc => desc.toLowerCase().startsWith(choice.id.toLowerCase()));
+                    if (matchingDescription) {
+                        choice.description = matchingDescription.substring(choice.id.length).trim();
+                    }
+                }
+            }
+        }).catch(err => {
+            console.warn('Error generating expedition descriptions', err);
+        });
+
+        return save.expeditionChoices;
+    }
+
+    private buildTravelTimelineDescription(location: Location): string {
         if (this.isArdeiaLocationId(location.id)) {
             return `Visited ${location.name}.`;
         }
         return `Journeyed to ${location.name}.`;
     }
 
-    startTravelSkit(selection: { selectedLocationId?: string; outsideSelected: boolean }): Skit | null {
+    startTravelSkit(selectedLocationId: string): Skit | null {
         const save = this.getSave();
-        const atlasLocations = Object.values(save.atlas || {});
-
-        let selectedLocation: Location | undefined;
-        let isFirstVisitOutsideLocation = false;
-
-        if (selection.outsideSelected) {
-            const undiscoveredLocations = atlasLocations.filter(location => !location.discovered);
-            const nonArdeiaLocations = atlasLocations.filter(location => !this.isArdeiaLocationId(location.id));
-            const outsideFallbackPool = nonArdeiaLocations.length > 0 ? nonArdeiaLocations : atlasLocations;
-
-            selectedLocation = this.pickRandom(
-                undiscoveredLocations.length > 0 ? undiscoveredLocations : outsideFallbackPool,
-            ) || undefined;
-        } else if (selection.selectedLocationId) {
-            selectedLocation = save.atlas[selection.selectedLocationId];
-        }
+        const selectedLocation = save.atlas[selectedLocationId];
 
         if (!selectedLocation) {
             return null;
         }
 
         const isArdeia = this.isArdeiaLocationId(selectedLocation.id);
-        if (!isArdeia && !selectedLocation.discovered) {
-            isFirstVisitOutsideLocation = true;
-        }
 
-        if (!selectedLocation.discovered) {
-            selectedLocation.discovered = true;
-        }
-
-        const skitType = isArdeia
-            ? SkitType.SOCIAL
-            : (isFirstVisitOutsideLocation ? SkitType.DISCOVERY : SkitType.ADVENTURE);
+        const skitType = isArdeia ? SkitType.SOCIAL : SkitType.ADVENTURE;
 
         // Initial actor should be a random non-warden, non-player. Filter player and warden (if not Ardeia), then pick randomly from the remaining actors as the initial actor for the skit:
         const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && (isArdeia || actor.type !== 'WARDEN'));
@@ -306,11 +366,26 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
         save.timeline.push({
             turn: save.turn,
-            description: this.buildTravelTimelineDescription(selectedLocation, skitType),
+            description: this.buildTravelTimelineDescription(selectedLocation),
             skit,
         });
 
         return skit;
+    }
+
+    endSkit() {
+        const save = this.getSave();
+        const currentSkit = this.getCurrentSkit();
+        if (currentSkit) {
+            currentSkit.over = true;
+            save.turn += 1;
+        }
+
+        // This is where various outcomes of the skit would be processed and applied to the save state
+
+        this.rebuildExpeditionChoices(save);
+
+        this.saveGame();
     }
 
     // Callback to show priority messages in the tooltip bar
