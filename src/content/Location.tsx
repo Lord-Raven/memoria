@@ -13,6 +13,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/65f8275a-a798-4c0e-b5ea-22b7779c7b52/52c92a1a-e727-4419-af67-40e9cc5635e9.png',
 		center: { x: 0.3, y: 0.4 },
 		focalPoint: { x: 0.3, y: 0.2 },
+		lightColor: "#d8d1ba",
 		themeColor: "#5aa3d8",
 		discovered: true,
 	},
@@ -24,6 +25,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/959a3d92-2cff-48c9-bb6a-0d5dd9cef2e5/d66d42be-516d-4fb4-91b0-b3aae9ee1a2a.png',
 		center: { x: 0.25, y: 0.375 },
 		focalPoint: { x: 0.2, y: 0.4 },
+		lightColor: "#e8a860",
 		themeColor: "#d8a45a",
 		discovered: true,
 
@@ -36,6 +38,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/382bbbd6-5080-4c72-9c28-641efcbc87c0/84066e0e-9e62-4001-aaa1-a78c144fddef.png',
 		center: { x: 0.257, y: 0.45 },
 		focalPoint: { x: 0.4, y: 0.5 },
+		lightColor: "#f4cc73",
 		themeColor: "#d86f5a",
 		discovered: true,
 	},
@@ -47,6 +50,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1b1d80c6-08e6-42a6-9a94-3e643304b152/81a86b0f-4f6e-445c-afdb-db019e37ab0c.png',
 		center: { x: 0.35, y: 0.425 },
 		focalPoint: { x: 0.6, y: 0.4 },
+		lightColor: "#b8e6cf",
 		themeColor: '#39d78e',
 		discovered: true,
 	},
@@ -58,6 +62,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/0d9d311c-9f3b-42b2-854b-894f4534c24c/f645dd78-90f7-4813-a4b1-566599446aaf.png',
 		center: { x: 0.325, y: 0.35 },
 		focalPoint: { x: 0.2, y: 0.4 },
+		lightColor: "#eeeeee",
 		themeColor: '#d8c659',
 		discovered: true,
 	},
@@ -69,6 +74,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/65176d74-9ec4-4f9c-936f-14d01c35a3c2/acbbed2a-c864-4a11-82e0-ba9329064dfd.png',
         center: { x: 0.3, y: 0.8 }, // southwest
         focalPoint: { x: 0.7, y: 0.8 },
+		lightColor: "#74919f",
         themeColor: "#7ecfbe",
         discovered: false,
     },
@@ -80,7 +86,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/192952d5-8305-4be3-b2ec-4c0373196d2f/48c61323-4000-4bf9-8337-766e324f130e.png',
         center: { x: 0.7, y: 0.9 }, // southeast
         focalPoint: { x: 0.5, y: 0.5 },
-        // off-white, in theme:
+		lightColor: "#eeeeee",
         themeColor: "#e8e4d1",
         discovered: false,
     },
@@ -92,6 +98,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1d270bb4-97d0-44b4-92ea-a053997deac0/53b90fd3-1c3f-4227-bd7d-3566045a3c7f.png',
         center: { x: 0.8, y: 0.3 }, // northeast
         focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#d7c091",
         themeColor: '#d17ed8',
         discovered: false,
     }
@@ -114,6 +121,7 @@ export class Location {
     imageUrl: string = ''; // URL for an image representing this location, used as background in skits or location displays.
     center: { x: number, y: number } = { x: 0, y: 0 }; // Relative center point for positioning this location on the map
     focalPoint?: { x: number, y: number } = { x: 0.5, y: 0.5 }; // Relative image focus used when cropping this location into map cells.
+	lightColor: string = ''; // This is the lighting color for the location, used to tint character images in skits. If not set, default to white (#ffffff).
     themeColor: string = ''; // A color associated with this location, used for UI theming.
     discovered: boolean = false; // Whether the player has discovered this location; don't display undiscovered locations on the map.
 

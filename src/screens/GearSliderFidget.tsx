@@ -82,14 +82,14 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             void gearIdleControls.start({
                 rotate: 0,
                 transition: {
-                    duration: 0.5,
+                    duration: 1,
                     ease: 'easeOut',
                 },
             });
             void rackIdleControls.start({
                 x: 0,
                 transition: {
-                    duration: 0.5,
+                    duration: 1,
                     ease: 'easeOut',
                 },
             });
@@ -97,19 +97,19 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         }
 
         void gearIdleControls.start({
-            rotate: [0, idleRotation, -idleRotation, 0],
+            rotate: [idleRotation, -idleRotation],
             transition: {
                 duration: 4.8,
-                times: [0, 0.25, 0.75, 1],
+                times: [0, 1],
                 ease: 'easeInOut',
                 repeat: Infinity,
             },
         });
         void rackIdleControls.start({
-            x: [0, -idleRackTravel, idleRackTravel, 0],
+            x: [-idleRackTravel, idleRackTravel],
             transition: {
                 duration: 4.8,
-                times: [0, 0.25, 0.75, 1],
+                times: [0, 1],
                 ease: 'easeInOut',
                 repeat: Infinity,
             },

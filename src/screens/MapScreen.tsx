@@ -1151,6 +1151,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 												''
 											);
 										}}
+										getActorThemeColor={(actor) => {
+											// Actually based on location highlight and not on actor at all.
+											return stage().getSave().atlas?.[skit.initialLocationId || '']?.themeColor || (actor as Actor).themeColor || '#eeeeee';
+										}}
 										onSubmitInput={handleSkitSubmit}
 										getSubmitButtonConfig={(_script, index, inputText) => {
 											const endScene = index >= 0 ? (skit.script[index]?.endScene || false) : false;

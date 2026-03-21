@@ -28,6 +28,14 @@ type SaveType = {
     timestamp: number; // Time of last save
     textToSpeech?: boolean;
     language?: string;
+    lorebook?: LorebookEntry[]
+}
+
+type LorebookEntry = {
+    id: string;
+    title: string;
+    content: string;
+    triggers: string[];
 }
 
 type TimelineEntry = {
