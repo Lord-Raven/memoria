@@ -162,6 +162,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     startNewGame(playerData: {name: string, personality: string}) {
+        // Insert a dummy promise into generationPromises to ensure the loading screen shows until we manually clear it after the initial actors are loaded.
+        this.generationPromises['newGame'] = new Promise(() => {});
+
         // Get empty save slot or replace the oldest save if all slots are full
         const emptySlotIndex = this.saveData.saves.findIndex(save => save === undefined);
         const saveSlotIndex = emptySlotIndex !== -1 ? emptySlotIndex : (this.saveData.lastSaveSlot + 1) % this.SAVE_SLOT_COUNT;
@@ -201,10 +204,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Generate a few initial characters.
         this.loadActors().finally(() => {
             this.rebuildExpeditionChoices(newSave);
+            delete this.generationPromises['newGame']; // Clear the dummy promise to allow the loading screen to finish.
             this.saveGame();
         });
-        
-        this.saveGame();
     }
 
     saveGame() {

@@ -52,6 +52,8 @@ const FULLSCREEN_DIMMED_OPACITY = 0.08;
 const FULLSCREEN_TARGET_RADIUS = Math.hypot(MAP_WIDTH, MAP_HEIGHT);
 const FULLSCREEN_BACKGROUND_BLUR_PX = 8;
 const FULLSCREEN_CELL_BLUR_PX = 1;
+const EXPEDITION_TOOLTIP_LIFESPAN_MS = 10000;
+const UNAVAILABLE_EXPEDITION_DIM_OPACITY = 0.18;
 const MAP_BACKGROUND_IMAGE = "https://avatars.charhub.io/avatars/uploads/images/gallery/file/5c990a43-3e56-455f-ba19-ba487eec4972/1a9f6a36-676f-4dc1-85ae-29bf7a97e538.png";
 
 
@@ -467,9 +469,24 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		.sort()
 		.join('|');
 	const expeditionChoiceSignature = (stage().getSave().expeditionChoices || [])
-		.map((choice: { locationId: string; partnerActorId: string }) => `${choice.locationId}:${choice.partnerActorId}`)
+		.map((choice: { id: string; locationId: string; partnerActorId: string; description: string }) => [
+			choice.id,
+			choice.locationId,
+			choice.partnerActorId,
+			choice.description ?? '',
+		].join(':'))
 		.sort()
 		.join('|');
+
+	const expeditionChoiceByLocationId = useMemo(() => {
+		const choices = (stage().getSave().expeditionChoices || []) as Array<{
+			id: string;
+			locationId: string;
+			description: string;
+			partnerActorId: string;
+		}>;
+		return new Map(choices.map((choice) => [choice.locationId, choice]));
+	}, [expeditionChoiceSignature, stage]);
 
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
@@ -702,9 +719,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			return;
 		}
 
-		setTooltip(hoveredPoint.name);
-		lastMapTooltipRef.current = hoveredPoint.name;
-	}, [hoveredCellId, targetPoints, setTooltip, clearTooltip]);
+		const expeditionChoice = expeditionChoiceByLocationId.get(hoveredPoint.id);
+		const tooltipMessage = expeditionChoice?.description?.trim() || hoveredPoint.name;
+		const tooltipExpiryMs = expeditionChoice ? EXPEDITION_TOOLTIP_LIFESPAN_MS : undefined;
+
+		setTooltip(tooltipMessage, undefined, tooltipExpiryMs);
+		lastMapTooltipRef.current = tooltipMessage;
+	}, [hoveredCellId, targetPoints, expeditionChoiceByLocationId, setTooltip, clearTooltip]);
 
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;
@@ -1132,6 +1153,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 						{voronoiCells.map((cell) => {
 							const isFullScreenPoint = fullScreenTransitionCellId === cell.point.id;
+							const isOutsideArdeia = !cell.point.id.startsWith("ardeia-");
+							const isExpeditionOption = expeditionChoiceByLocationId.has(cell.point.id);
+							const backgroundDimOpacity = mapMode === 'management' && isOutsideArdeia && !isExpeditionOption
+								? UNAVAILABLE_EXPEDITION_DIM_OPACITY
+								: 0;
 							const cellOpacity = hasFullScreenCell
 								? (isFullScreenPoint ? 1 : lerp(1, FULLSCREEN_DIMMED_OPACITY, fullScreenProgress))
 								: 1;
@@ -1141,6 +1167,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									cell={cell}
 									targetRadius={targetRadiusById[cell.point.id] ?? cell.point.radius}
 									backgroundBlurPx={0.5 + (isFullScreenPoint ? backgroundBlur * FULLSCREEN_CELL_BLUR_PX : 0)}
+									backgroundDimOpacity={backgroundDimOpacity}
 									onPointerEnter={handleCellPointerEnter}
 									onPointerLeave={handleMapPointerLeave}
 									opacity={cellOpacity}
@@ -1283,7 +1310,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										getSubmitButtonConfig={(_script, index, inputText) => {
 											const endScene = index >= 0 ? (skit.script[index]?.endScene || false) : false;
 											return {
-												label: inputText.trim().length > 0 ? 'Send' : (endScene ? 'Next Round' : 'Continue'),
+												label: inputText.trim().length > 0 ? 'Send' : (endScene ? 'End' : 'Continue'),
 												enabled: true,
 												colorScheme: inputText.trim().length > 0 ? 'primary' : (endScene ? 'error' : 'primary'),
 												icon: inputText.trim().length > 0 ? <Send /> : (endScene ? <LastPage /> : <PlayArrow />),

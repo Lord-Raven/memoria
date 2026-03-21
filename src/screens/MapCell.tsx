@@ -26,6 +26,7 @@ interface MapCellProps {
 	cell: MapCellData;
 	targetRadius: number;
 	backgroundBlurPx?: number;
+	backgroundDimOpacity?: number;
 	onPointerEnter: (cellId: string) => void;
 	onPointerLeave: () => void;
 	opacity?: number;
@@ -79,6 +80,7 @@ export const MapCell: FC<MapCellProps> = ({
 	cell,
 	targetRadius,
 	backgroundBlurPx = 0.5,
+	backgroundDimOpacity = 0,
 	onPointerEnter,
 	onPointerLeave,
 	opacity = 1,
@@ -136,6 +138,14 @@ export const MapCell: FC<MapCellProps> = ({
 							backgroundSize: "cover",
 							filter: `blur(${backgroundBlurPx}px)`,
 							transition: "filter 260ms ease, opacity 180ms ease",
+						}}
+					/>
+					<div
+						style={{
+							position: "absolute",
+							inset: 0,
+							backgroundColor: `rgba(4, 10, 16, ${clamp(backgroundDimOpacity, 0, 0.7)})`,
+							transition: "background-color 260ms ease",
 						}}
 					/>
 				</div>
