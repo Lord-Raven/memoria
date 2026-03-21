@@ -1151,9 +1151,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 												''
 											);
 										}}
-										getActorThemeColor={(actor) => {
+										getActorImageColorMultiplier={(actor: Actor, script: Skit, index: number) => {
 											// Actually based on location highlight and not on actor at all.
-											return stage().getSave().atlas?.[skit.initialLocationId || '']?.themeColor || (actor as Actor).themeColor || '#eeeeee';
+											return stage().getSave().atlas?.[getCurrentLocation(skit, index) || '']?.lightColor || '#eeeeee';
 										}}
 										onSubmitInput={handleSkitSubmit}
 										getSubmitButtonConfig={(_script, index, inputText) => {
