@@ -203,6 +203,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Generate a few initial characters.
         this.loadActors().finally(() => {
+            console.log('Finished loading initial actors for new game');
             this.rebuildExpeditionChoices(newSave);
             delete this.generationPromises['newGame']; // Clear the dummy promise to allow the loading screen to finish.
             this.saveGame();
