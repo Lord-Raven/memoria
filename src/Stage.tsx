@@ -450,7 +450,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             return this.generationPromises['loadActors'];
         }
 
-        const promise = new Promise<string>(async () => {
+        const promise = new Promise<string>(async (resolve, reject) => {
             try {
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 console.log(this.getSave().actors);
@@ -496,9 +496,11 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log('Finished loading reserve actors');
                 delete this.generationPromises['loadActors'];
                 this.saveGame();
+                resolve('');
             } catch (err) {
                 console.error('Error loading reserve actors', err);
                 delete this.generationPromises['loadActors'];
+                reject(err);
             }
         });
 
