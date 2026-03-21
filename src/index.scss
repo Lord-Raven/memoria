@@ -171,13 +171,12 @@ body {
   display: block;
   width: 100%;
   text-align: right;
-  transform: translateX(8px);
-  transition: transform 260ms ease, text-align 260ms ease;
+  transition: text-align 260ms ease;
+  will-change: transform;
 }
 
 .menu-section-header.is-active .menu-section-header-label {
   text-align: left;
-  transform: translateX(0);
 }
 
 .btn-menu.menu-section-header:hover,

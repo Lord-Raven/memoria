@@ -195,7 +195,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             voiceId: ''
         };
 
-        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 1;
+        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 2;
 
         // Save the new game
         this.saveData.saves[saveSlotIndex] = newSave;
