@@ -1,5 +1,5 @@
 import { FC, CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useAnimationControls } from 'framer-motion';
+import { motion, useAnimationControls, useMotionValue, useTransform } from 'framer-motion';
 import gearSvgRaw from '../assets/gear.svg?raw';
 import slideGearSvgRaw from '../assets/slide-gear.svg?raw';
 
@@ -63,6 +63,16 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const [rackX, setRackX] = useState(() => targetRackX);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isTampered, setIsTampered] = useState(false);
+
+    const rackMotionX = useMotionValue(rackX);
+    const rackIdleMotionX = useMotionValue(0);
+    const lockedRackBackgroundPosition = useTransform(
+        [rackMotionX, rackIdleMotionX],
+        (values) => {
+            const [currentRackX, currentIdleX] = values as number[];
+            return `${-(currentRackX + currentIdleX)}px center`;
+        },
+    );
 
     const rotationRef = useRef(rotation);
     const rackXRef = useRef(rackX);
@@ -309,12 +319,15 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                         bottom: 0,
                         height: `${rackHeight}px`,
                         zIndex: 1,
+                        x: rackIdleMotionX,
                     }}
                 >
                     <motion.div
                         className="gear-slider-rack"
                         style={{
                             width: `${rackWidth}px`,
+                            x: rackMotionX,
+                            backgroundPosition: lockedRackBackgroundPosition,
                             maskImage: `url("${slideGearSvg}")`,
                             WebkitMaskImage: `url("${slideGearSvg}")`,
                         }}

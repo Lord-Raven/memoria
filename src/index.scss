@@ -284,10 +284,10 @@ body {
   --gsf-gear-highlight: var(--mem-fog);
   --gsf-gear-mid: var(--mem-mist);
   --gsf-gear-shadow: var(--mem-lichen);
-  --gsf-rack-highlight: rgba(185, 210, 227, 0.9);
-  --gsf-rack-mid: rgba(138, 176, 204, 0.84);
-  --gsf-rack-shadow: rgba(95, 127, 155, 0.92);
-  --gsf-rack-accent: rgba(137, 205, 135, 0.6);
+  --gsf-rack-highlight: var(--mem-fog);
+  --gsf-rack-mid: var(--mem-text-secondary);
+  --gsf-rack-shadow: var(--mem-mist);
+  --gsf-rack-accent: var(--mem-verdant);
   --gsf-liquid-start: var(--mem-ember);
   --gsf-liquid-mid: var(--mem-verdant);
   --gsf-liquid-end: var(--mem-fog);
@@ -388,6 +388,7 @@ body {
   top: 0;
   left: 0;
   height: 100%;
+  opacity: 1;
   background:
     linear-gradient(180deg, rgba(237, 242, 242, 0.16) 0%, rgba(237, 242, 242, 0) 35%),
     linear-gradient(90deg, var(--gsf-rack-shadow) 0%, var(--gsf-rack-mid) 42%, var(--gsf-rack-highlight) 76%, var(--gsf-rack-accent) 100%);
@@ -431,6 +432,7 @@ body {
   display: block;
   width: 100%;
   height: 100%;
+  opacity: 1;
   background:
     radial-gradient(circle at 34% 30%, rgba(237, 242, 242, 0.95) 0%, rgba(237, 242, 242, 0.3) 18%, rgba(237, 242, 242, 0) 28%),
     radial-gradient(circle at 52% 54%, rgba(137, 205, 135, 0.24) 0%, rgba(137, 205, 135, 0) 44%),

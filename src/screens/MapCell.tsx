@@ -145,7 +145,7 @@ export const MapCell: FC<MapCellProps> = ({
 							backgroundRepeat: "no-repeat",
 							backgroundSize: "cover",
 							transform: `scale(${compensationX}, ${compensationY})`,
-							transformOrigin: `${focalX * 100}% ${focalY * 100}%`,
+							transformOrigin: "0 0",
 							filter: `blur(${backgroundBlurPx}px)`,
 							transition: "filter 260ms ease, opacity 180ms ease",
 						}}
