@@ -297,6 +297,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         style={{
                                             overflow: 'visible',
                                             overflowY: 'hidden',
+                                            overflowX: 'visible',
                                             width: '100%',
                                             boxSizing: 'border-box',
                                         }}
