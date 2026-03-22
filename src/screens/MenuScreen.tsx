@@ -301,14 +301,11 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                             boxSizing: 'border-box',
                                         }}
                                     >
-                                        <div style={{ marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                                        <div style={{ overflow: 'visible', marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
                                             {menuButtons.map((button, index) => (
                                                 <motion.div
                                                     key={button.key}
                                                     initial={{ opacity: 0, x: -30 }}
-                                                    style={{
-                                                        overflow: 'visible',
-                                                    }}
                                                     animate={{
                                                         opacity: 1,
                                                         x: hoveredButton === button.key && button.enabled ? 10 : 0
