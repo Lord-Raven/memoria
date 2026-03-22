@@ -121,6 +121,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     justifyContent: 'center',
                     height: '100vh', 
                     width: '100%',
+                    overflowX: 'visible',
                     position: 'relative',
                 }}
             >
