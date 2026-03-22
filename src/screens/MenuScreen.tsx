@@ -293,15 +293,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        transition={{ duration: 0.2, ease: 'easeInOut' }}
                                         style={{
-                                            overflowY: 'hidden',
-                                            overflowX: 'visible',
+                                            overflow: 'visible',
                                             width: '100%',
                                             boxSizing: 'border-box',
                                         }}
                                     >
-                                        <div style={{ overflow: 'visible', marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                                        <div style={{ marginTop: 'clamp(8px, 1.5vh, 12px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
                                             {menuButtons.map((button, index) => (
                                                 <motion.div
                                                     key={button.key}

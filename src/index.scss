@@ -288,6 +288,9 @@ body {
   --gsf-rack-mid: rgba(138, 176, 204, 0.84);
   --gsf-rack-shadow: rgba(95, 127, 155, 0.92);
   --gsf-rack-accent: rgba(137, 205, 135, 0.6);
+  --gsf-liquid-start: var(--mem-ember);
+  --gsf-liquid-mid: var(--mem-verdant);
+  --gsf-liquid-end: var(--mem-fog);
   user-select: none;
 }
 
@@ -300,6 +303,43 @@ body {
   border: 1px solid rgba(138, 176, 204, 0.4);
   background: linear-gradient(180deg, rgba(14, 19, 30, 0.84), rgba(14, 19, 30, 0.5));
   box-shadow: inset 0 1px 0 rgba(237, 242, 242, 0.08), inset 0 -3px 7px rgba(0, 0, 0, 0.35);
+}
+
+.gear-slider-rack-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(237, 242, 242, 0.2) 0%, rgba(237, 242, 242, 0) 42%),
+    linear-gradient(90deg, var(--gsf-liquid-start) 0%, var(--gsf-liquid-mid) 54%, var(--gsf-liquid-end) 100%);
+  box-shadow: inset 0 0 10px rgba(2, 8, 18, 0.22), 0 0 10px rgba(137, 205, 135, 0.2);
+}
+
+.gear-slider-rack-progress::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(237, 242, 242, 0) 14%, rgba(237, 242, 242, 0.26) 50%, rgba(237, 242, 242, 0) 84%);
+  background-size: 180% 100%;
+  animation: gsfLiquidSheen 4.8s ease-in-out infinite;
+}
+
+.gear-slider-rack-progress-bubbles {
+  position: absolute;
+  inset: 0;
+  opacity: 0.33;
+  background-image:
+    radial-gradient(circle at 14% 32%, rgba(237, 242, 242, 0.42) 0 2px, rgba(237, 242, 242, 0) 3px),
+    radial-gradient(circle at 38% 66%, rgba(237, 242, 242, 0.28) 0 2px, rgba(237, 242, 242, 0) 3px),
+    radial-gradient(circle at 62% 28%, rgba(237, 242, 242, 0.35) 0 2px, rgba(237, 242, 242, 0) 3px),
+    radial-gradient(circle at 84% 62%, rgba(237, 242, 242, 0.24) 0 2px, rgba(237, 242, 242, 0) 3px);
+  background-size: 150px 100%, 200px 100%, 180px 100%, 230px 100%;
+  animation: gsfBubbleRun 7.2s linear infinite;
 }
 
 .gear-slider-rack-window::after {
@@ -317,6 +357,30 @@ body {
       rgba(7, 11, 18, 0.34) 90%,
       rgba(7, 11, 18, 0.68) 100%
     );
+}
+
+@keyframes gsfLiquidSheen {
+  0% {
+    transform: translateX(-26%);
+    opacity: 0.36;
+  }
+  50% {
+    transform: translateX(6%);
+    opacity: 0.52;
+  }
+  100% {
+    transform: translateX(26%);
+    opacity: 0.36;
+  }
+}
+
+@keyframes gsfBubbleRun {
+  0% {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 150px 0, 200px 0, 180px 0, 230px 0;
+  }
 }
 
 .gear-slider-rack {

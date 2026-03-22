@@ -105,7 +105,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                             gearSize={226.46}
                             rackWidth={640}
                             rackHeight={41.85}
-                            rackViewportWidth={240}
+                            rackViewportWidth={320}
                         />
                     </Box>
                 </GlassPanel>

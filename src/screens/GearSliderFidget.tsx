@@ -43,6 +43,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     const centerToothIndex = useMemo(() => Math.floor((toothCount - 1) / 2), [toothCount]);
     const toothAngle = 360 / toothCount;
     const toothStep = rackWidth / toothCount;
+    const clampedLoadingPercentage = useMemo(
+        () => Math.max(0, Math.min(100, loadingPercentage)),
+        [loadingPercentage],
+    );
     const idleRotation = useMemo(() => toothAngle * 0.18, [toothAngle]);
     const idleRackTravel = useMemo(() => toothStep * 0.14, [toothStep]);
     const thresholdIndex = useMemo(
@@ -285,11 +289,20 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
                 <motion.div
+                    className="gear-slider-rack-progress"
+                    initial={false}
+                    animate={{ width: `${clampedLoadingPercentage}%` }}
+                    transition={{ duration: 0.56, ease: 'easeOut' }}
+                >
+                    <span className="gear-slider-rack-progress-bubbles" />
+                </motion.div>
+                <motion.div
                     initial={{ x: 0 }}
                     animate={rackIdleControls}
                     style={{
                         position: 'absolute',
                         inset: 0,
+                        zIndex: 1,
                     }}
                 >
                     <motion.div
