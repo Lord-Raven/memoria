@@ -293,8 +293,10 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         exit={{ opacity: 0, height: 0 }}
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                         style={{
-                                            overflow: 'hidden',
-                                            width: '100%',
+                                            overflowY: 'hidden',
+                                            overflowX: 'visible',
+                                            width: 'calc(100% + 10px)',
+                                            marginRight: '-10px',
                                             boxSizing: 'border-box',
                                         }}
                                     >

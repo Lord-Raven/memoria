@@ -45,8 +45,12 @@ interface VoronoiCell extends MapCellData {
 
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
-const MIN_CELL_RADIUS = 40;
-const MAX_CELL_RADIUS = 300;
+const MAP_MIN_DIMENSION = Math.min(MAP_WIDTH, MAP_HEIGHT);
+const MAP_VMIN_IN_MAP_UNITS = MAP_MIN_DIMENSION / 100;
+const MIN_LOCATION_RADIUS_VMIN = 0.2;
+const MAX_LOCATION_RADIUS_VMIN = 60;
+const MIN_CELL_RADIUS = MIN_LOCATION_RADIUS_VMIN * MAP_VMIN_IN_MAP_UNITS;
+const MAX_CELL_RADIUS = MAX_LOCATION_RADIUS_VMIN * MAP_VMIN_IN_MAP_UNITS;
 const MIN_RENDERABLE_CELL_AREA = 1;
 const POINT_TRANSITION_MS = 700;
 const HOVER_TRANSITION_MS = 240;
@@ -120,9 +124,9 @@ const getLocationBorderStroke = (themeColor: string) => {
 	return colorWithAlpha(normalizedThemeColor, 0.86, "rgba(215, 190, 122, 0.86)");
 };
 
-const getRadiusFromWeight = (weight: number) => {
-	const normalizedWeight = clamp(weight, 0.05, 4);
-	const derivedRadius = 70 + Math.pow(normalizedWeight, 0.9) * 48;
+const getRadiusFromWeight = (baseRadiusVmin: number) => {
+	const normalizedBaseRadiusVmin = clamp(baseRadiusVmin, MIN_LOCATION_RADIUS_VMIN, MAX_LOCATION_RADIUS_VMIN);
+	const derivedRadius = normalizedBaseRadiusVmin * MAP_VMIN_IN_MAP_UNITS;
 	return clamp(derivedRadius, MIN_CELL_RADIUS, MAX_CELL_RADIUS);
 };
 
@@ -532,7 +536,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			(location) => location.discovered,
 		);
 		return atlasEntries.map((location) => {
-			const weight = Math.max(0.05, location.weight || 1);
+			const weight = Math.max(MIN_LOCATION_RADIUS_VMIN, location.weight || 1);
 			const focalPoint = normalizeRelativePoint(location.focalPoint, normalizeRelativePoint(location.center));
 
 			return {
@@ -606,7 +610,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			}
 			return {
 				...targetPoint,
-				weight: Math.max(0.05, targetPoint.weight * 0.4),
+				weight: Math.max(MIN_LOCATION_RADIUS_VMIN, targetPoint.weight * 0.4),
 				radius: clamp(targetPoint.radius * 0.45, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
 			};
 		});
@@ -624,7 +628,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					...targetPoint,
 					x: lerp(startPoint.x, targetPoint.x, easedProgress),
 					y: lerp(startPoint.y, targetPoint.y, easedProgress),
-					weight: Math.max(0.05, lerp(startPoint.weight, targetPoint.weight, easedProgress)),
+					weight: Math.max(MIN_LOCATION_RADIUS_VMIN, lerp(startPoint.weight, targetPoint.weight, easedProgress)),
 					radius: clamp(
 						lerp(startPoint.radius, targetPoint.radius, easedProgress),
 						MIN_CELL_RADIUS,
@@ -800,7 +804,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				...point,
 				x: nextX,
 				y: nextY,
-				weight: Math.max(0.05, point.weight * (1 + wave * pulse.amplitude)),
+				weight: Math.max(MIN_LOCATION_RADIUS_VMIN, point.weight * (1 + wave * pulse.amplitude)),
 				radius: nextRadius,
 			};
 		});
@@ -936,11 +940,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				cx: number;
 				cy: number;
 				radius: number;
+				radiusX: number;
+				radiusY: number;
 				stroke: string;
 				strokeWidth: number;
 				clipPathId: string;
 			}>;
 		}
+
+		const viewportScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
+		const viewportScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
+		const uniformPortraitScale = Math.min(viewportScaleX, viewportScaleY);
+		const portraitScaleCompensationX = uniformPortraitScale / viewportScaleX;
+		const portraitScaleCompensationY = uniformPortraitScale / viewportScaleY;
 
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
@@ -972,12 +984,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const strokeWidth = 1.8 + emphasis * 0.4;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
 			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.13, 14, 28);
+			const radiusX = radius * portraitScaleCompensationX;
+			const radiusY = radius * portraitScaleCompensationY;
 			const alignsToLeftEdge = cell.point.x >= MAP_WIDTH / 2;
 			const preferredX = alignsToLeftEdge
-				? cell.bounds.x + radius + strokeWidth + 2
-				: cell.bounds.x + cell.bounds.width - radius - strokeWidth - 2;
-			const cx = clamp(preferredX, radius + 1, MAP_WIDTH - radius - 1);
-			const cy = clamp(cell.bounds.y + radius + 5, radius + 1, MAP_HEIGHT - radius - 1);
+				? cell.bounds.x + radiusX + strokeWidth + 2
+				: cell.bounds.x + cell.bounds.width - radiusX - strokeWidth - 2;
+			const cx = clamp(preferredX, radiusX + 1, MAP_WIDTH - radiusX - 1);
+			const cy = clamp(cell.bounds.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1);
 
 			return [{
 				key: `${choice.locationId}-${choice.partnerActorId}`,
@@ -985,12 +999,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				cx,
 				cy,
 				radius,
+				radiusX,
+				radiusY,
 				stroke,
 				strokeWidth,
 				clipPathId: `expedition-choice-portrait-${choice.locationId.replace(/[^a-zA-Z0-9_-]/g, "")}-${choice.partnerActorId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			}];
 		});
-	}, [expeditionChoiceSignature, mapMode, stage, targetRadiusById, voronoiCells]);
+	}, [expeditionChoiceSignature, mapMode, mapViewportSize.height, mapViewportSize.width, stage, targetRadiusById, voronoiCells]);
 
 	const selectMapLocation = useCallback((x: number, y: number) => {
 		const clickedCell = getCellAtCoordinates(x, y);
@@ -1200,7 +1216,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								))}
 								{expeditionPortraitMarkers.map((portrait) => (
 									<clipPath key={portrait.clipPathId} id={portrait.clipPathId} clipPathUnits="userSpaceOnUse">
-										<circle cx={portrait.cx} cy={portrait.cy} r={portrait.radius} />
+										<ellipse cx={portrait.cx} cy={portrait.cy} rx={portrait.radiusX} ry={portrait.radiusY} />
 									</clipPath>
 								))}
 						</defs>
@@ -1233,28 +1249,31 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 						{mapMode === 'management' && expeditionPortraitMarkers.map((portrait) => (
 							<g key={portrait.key} style={{ pointerEvents: 'none' }}>
-								<circle
+								<ellipse
 									cx={portrait.cx}
 									cy={portrait.cy}
-									r={portrait.radius}
+									rx={portrait.radiusX}
+									ry={portrait.radiusY}
 									fill="rgba(8, 12, 18, 0.95)"
 								/>
 								<image
 									href={portrait.imageUrl}
-									x={portrait.cx - portrait.radius}
-									y={portrait.cy - portrait.radius}
-									width={portrait.radius * 2}
-									height={portrait.radius * 2}
+									x={portrait.cx - portrait.radiusX}
+									y={portrait.cy - portrait.radiusY}
+									width={portrait.radiusX * 2}
+									height={portrait.radiusY * 2}
 									preserveAspectRatio="xMidYMin slice"
 									clipPath={`url(#${portrait.clipPathId})`}
 								/>
-								<circle
+								<ellipse
 									cx={portrait.cx}
 									cy={portrait.cy}
-									r={portrait.radius}
+									rx={portrait.radiusX}
+									ry={portrait.radiusY}
 									fill="none"
 									stroke={portrait.stroke}
 									strokeWidth={portrait.strokeWidth}
+									vectorEffect="non-scaling-stroke"
 								/>
 							</g>
 						))}

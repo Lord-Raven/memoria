@@ -21,7 +21,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-streets",
 		name: "The Streets of Ardeia",
 		description: "",
-		weight: 0.5,
+		weight: 3,
 		imageUrl: getLocationImage('ardeia/streets.png'),
 		center: { x: 0.2, y: 0.3 },
 		focalPoint: { x: 0.3, y: 0.2 },
@@ -33,7 +33,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-library",
 		name: "The Library",
 		description: "",
-		weight: 0.3,
+		weight: 2,
 		imageUrl: getLocationImage('ardeia/library.png'),
 		center: { x: 0.15, y: 0.275 },
 		focalPoint: { x: 0.2, y: 0.4 },
@@ -46,7 +46,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-temple",
 		name: "The Temple",
 		description: "",
-		weight: 0.3,
+		weight: 2,
 		imageUrl: getLocationImage('ardeia/temple.png'),
 		center: { x: 0.175, y: 0.35 },
 		focalPoint: { x: 0.4, y: 0.5 },
@@ -58,7 +58,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-gardens",
 		name: "The Gardens",
 		description: "",
-		weight: 0.3,
+		weight: 2,
 		imageUrl: getLocationImage('ardeia/gardens.png'),
 		center: { x: 0.25, y: 0.325 },
 		focalPoint: { x: 0.6, y: 0.4 },
@@ -70,7 +70,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-plaza",
 		name: "The Plaza",
 		description: "",
-		weight: 0.3,
+		weight: 2,
 		imageUrl: getLocationImage('ardeia/plaza.png'),
 		center: { x: 0.225, y: 0.25 },
 		focalPoint: { x: 0.2, y: 0.4 },
@@ -82,7 +82,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         id: "slumbering-orchard",
         name: "Slumbering Orchard",
         description: "",
-        weight: 0.4,
+        weight: 3,
 		imageUrl: getLocationImage('outside/slumbering_orchard.png'),
         center: { x: 0.2, y: 0.6 }, // southwest
         focalPoint: { x: 0.7, y: 0.8 },
@@ -94,7 +94,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         id: "bleached-earth",
         name: "Bleached Earth",
         description: "",
-        weight: 0.7,
+        weight: 5,
 		imageUrl: getLocationImage('outside/bleached_earth.png'),
         center: { x: 0.7, y: 0.8 }, // southeast
         focalPoint: { x: 0.5, y: 0.5 },
@@ -106,7 +106,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         id: 'the-loom',
         name: 'The Loom',
         description: '',
-        weight: 0.3,
+        weight: 2,
 		imageUrl: getLocationImage('outside/loom.png'),
         center: { x: 0.5, y: 0.2 }, // northeast
         focalPoint: { x: 0.5, y: 0.5 },
@@ -129,7 +129,7 @@ export class Location {
     id: string = '';
     name: string = '';
     description: string = '';
-    weight: number = 1; // A relative scale factor for the display size of this location.
+	weight: number = 1; // Base cell radius in map-vmin units (1 = 1% of min map dimension, 2 = double radius).
     imageUrl: string = ''; // URL for an image representing this location, used as background in skits or location displays.
     center: { x: number, y: number } = { x: 0, y: 0 }; // Relative center point for positioning this location on the map
     focalPoint?: { x: number, y: number } = { x: 0.5, y: 0.5 }; // Relative image focus used when cropping this location into map cells.
