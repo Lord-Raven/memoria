@@ -25,6 +25,8 @@ export interface MapCellData {
 interface MapCellProps {
 	cell: MapCellData;
 	targetRadius: number;
+	backgroundAspectCompensationX?: number;
+	backgroundAspectCompensationY?: number;
 	backgroundBlurPx?: number;
 	backgroundDimOpacity?: number;
 	onPointerEnter: (cellId: string) => void;
@@ -79,6 +81,8 @@ const getLocationBorderPalette = (themeColor: string) => {
 export const MapCell: FC<MapCellProps> = ({
 	cell,
 	targetRadius,
+	backgroundAspectCompensationX = 1,
+	backgroundAspectCompensationY = 1,
 	backgroundBlurPx = 0.5,
 	backgroundDimOpacity = 0,
 	onPointerEnter,
@@ -93,6 +97,8 @@ export const MapCell: FC<MapCellProps> = ({
 	const shadeOpacity = 0.28 - emphasis * 0.06;
 	const focalX = clamp(cell.point.focalPoint.x, 0, 1);
 	const focalY = clamp(cell.point.focalPoint.y, 0, 1);
+	const compensationX = clamp(backgroundAspectCompensationX, 1e-3, 1000);
+	const compensationY = clamp(backgroundAspectCompensationY, 1e-3, 1000);
 	const backgroundPosition = `${focalX * 100}% ${focalY * 100}%`;
 	const referenceDiameter = Math.max(1, targetRadius * 2);
 	const lockedBackgroundWidth = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
@@ -105,6 +111,8 @@ export const MapCell: FC<MapCellProps> = ({
 		: cell.bounds.height;
 	const backgroundLeft = (cell.bounds.width - backgroundWidth) * focalX;
 	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
+	const backgroundRenderWidth = backgroundWidth / compensationX;
+	const backgroundRenderHeight = backgroundHeight / compensationY;
 
 	return (
 		<g style={{ opacity, transition: "opacity 260ms ease" }}>
@@ -130,12 +138,14 @@ export const MapCell: FC<MapCellProps> = ({
 							position: "absolute",
 							left: backgroundLeft,
 							top: backgroundTop,
-							width: backgroundWidth,
-							height: backgroundHeight,
+							width: backgroundRenderWidth,
+							height: backgroundRenderHeight,
 							backgroundImage: `url(${cell.point.imageUrl})`,
 							backgroundPosition,
 							backgroundRepeat: "no-repeat",
 							backgroundSize: "cover",
+							transform: `scale(${compensationX}, ${compensationY})`,
+							transformOrigin: `${focalX * 100}% ${focalY * 100}%`,
 							filter: `blur(${backgroundBlurPx}px)`,
 							transition: "filter 260ms ease, opacity 180ms ease",
 						}}

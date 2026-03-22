@@ -280,7 +280,7 @@ body {
   align-items: flex-start;
   width: var(--gsf-rack-window-width);
   height: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5));
-  padding-top: calc(var(--gsf-gear-size) - (var(--gsf-rack-height) * 0.5));
+  padding-top: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5) - var(--gsf-rack-window-height));
   --gsf-gear-highlight: var(--mem-fog);
   --gsf-gear-mid: var(--mem-mist);
   --gsf-gear-shadow: var(--mem-lichen);
@@ -297,7 +297,7 @@ body {
 .gear-slider-rack-window {
   position: relative;
   width: var(--gsf-rack-window-width);
-  height: var(--gsf-rack-height);
+  height: var(--gsf-rack-window-height);
   overflow: hidden;
   border-radius: 7px;
   border: 1px solid rgba(138, 176, 204, 0.4);

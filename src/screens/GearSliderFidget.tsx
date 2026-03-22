@@ -14,6 +14,7 @@ interface GearSliderFidgetProps {
     gearSize?: number;
     rackWidth?: number;
     rackHeight?: number;
+    rackWindowHeight?: number;
     rackViewportWidth?: number;
     disabled?: boolean;
     onStep?: (direction: 1 | -1) => void;
@@ -27,6 +28,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
     gearSize = 184,
     rackWidth = 520,
     rackHeight = 34,
+    rackWindowHeight = rackHeight + 8,
     rackViewportWidth = 260,
     disabled = false,
     onStep,
@@ -284,6 +286,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 ...style,
                 '--gsf-gear-size': `${gearSize}px`,
                 '--gsf-rack-height': `${rackHeight}px`,
+                '--gsf-rack-window-height': `${rackWindowHeight}px`,
                 '--gsf-rack-window-width': `${rackViewportWidth}px`,
             } as CSSProperties}
         >
@@ -301,7 +304,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                     animate={rackIdleControls}
                     style={{
                         position: 'absolute',
-                        inset: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: `${rackHeight}px`,
                         zIndex: 1,
                     }}
                 >
