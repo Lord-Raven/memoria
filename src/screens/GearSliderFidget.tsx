@@ -49,6 +49,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         () => Math.max(0, Math.min(100, loadingPercentage)),
         [loadingPercentage],
     );
+    const rackGradientContactOffset = useMemo(
+        () => (gearSize - rackWidth) / 2,
+        [gearSize, rackWidth],
+    );
     const idleRotation = useMemo(() => toothAngle * 0.18, [toothAngle]);
     const idleRackTravel = useMemo(() => toothStep * 0.14, [toothStep]);
     const thresholdIndex = useMemo(
@@ -70,7 +74,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         [rackMotionX, rackIdleMotionX],
         (values) => {
             const [currentRackX, currentIdleX] = values as number[];
-            return `${-(currentRackX + currentIdleX)}px center`;
+            return `${-(currentRackX + currentIdleX) + rackGradientContactOffset}px center`;
         },
     );
 

@@ -112,6 +112,41 @@ export const VOICE_MAP: {[key: string]: string} = {
     'animated_male_20s': 'masculine - hip and lively',
 };
 
+const BASE_IMAGE_WIDTH = 880;
+const BASE_IMAGE_HEIGHT = 1176;
+
+async function normalizeBaseSourceImage(imageUrl: string): Promise<string> {
+    if (!imageUrl) {
+        return imageUrl;
+    }
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const loadedImage = new Image();
+        loadedImage.crossOrigin = 'anonymous';
+        loadedImage.onload = () => resolve(loadedImage);
+        loadedImage.onerror = () => reject(new Error(`Failed to load base source image: ${imageUrl}`));
+        loadedImage.src = imageUrl;
+    });
+
+    const contextCanvas = document.createElement('canvas');
+    contextCanvas.width = BASE_IMAGE_WIDTH;
+    contextCanvas.height = BASE_IMAGE_HEIGHT;
+
+    const context = contextCanvas.getContext('2d');
+    if (!context) {
+        return imageUrl;
+    }
+
+    const scale = BASE_IMAGE_HEIGHT / image.naturalHeight;
+    const scaledWidth = image.naturalWidth * scale;
+    const offsetX = (BASE_IMAGE_WIDTH - scaledWidth) / 2;
+
+    context.clearRect(0, 0, BASE_IMAGE_WIDTH, BASE_IMAGE_HEIGHT);
+    context.drawImage(image, offsetX, 0, scaledWidth, BASE_IMAGE_HEIGHT);
+
+    return contextCanvas.toDataURL('image/png');
+}
+
 export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|null> {
     console.log('Loading reserve actor:', data.name);
     console.log(data);
@@ -362,17 +397,24 @@ export async function generateBaseActorImage(
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
             baseSourceImage = imageUrl || '';
-        }
+        } else {
+            // Need to adjust the base image to the right size/aspect ratio, then send that to the generator (880x1176).
+            try {
+                baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
+            } catch (error) {
+                console.warn('Failed to normalize base source image, using original source image instead.', error);
+            }
 
-        // Use stage.makeImageFromImage to create a base image.
-        imageUrl = await stage.makeImageFromImage({
-            image: baseSourceImage,
-            prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
-                `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                `The image should be a waist-up portrait on a light gray background. `,
-            remove_background: true,
-            transfer_type: 'canny'
-        }, '');
+            // Use stage.makeImageFromImage to create a base image.
+            imageUrl = await stage.makeImageFromImage({
+                image: baseSourceImage,
+                prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
+                    `${getAppearanceById(actor, targetAppearanceId).description}\n` +
+                    `The image should be a waist-up portrait on a light gray background. `,
+                remove_background: true,
+                transfer_type: 'canny'
+            }, '');
+        }
         
         console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
         
