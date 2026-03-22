@@ -367,11 +367,11 @@ export async function generateBaseActorImage(
         // Use stage.makeImageFromImage to create a base image.
         imageUrl = await stage.makeImageFromImage({
             image: baseSourceImage,
-            prompt: `Illustrate this character in a artful, messy, anime concept-art style. ` +
-                `Make it a waist-up portrait on a light gray background. ` +
-                `If necessary, adjust their appearance to match this description: ${getAppearanceById(actor, targetAppearanceId).description}. `,
+            prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
+                `${getAppearanceById(actor, targetAppearanceId).description}\n` +
+                `The image should be a waist-up portrait on a light gray background. `,
             remove_background: true,
-            transfer_type: 'edit'
+            transfer_type: 'canny'
         }, '');
         
         console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
