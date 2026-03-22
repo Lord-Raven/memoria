@@ -171,7 +171,9 @@ body {
   display: flex;
   width: 100%;
   justify-content: flex-end;
-  overflow: hidden;
+  overflow: visible;
+  box-sizing: border-box;
+  padding-inline: 0.2em;
 }
 
 .menu-section-header.is-active .menu-section-header-track {
