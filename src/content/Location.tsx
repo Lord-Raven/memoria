@@ -1,5 +1,17 @@
 import { v4 as generateUuid } from 'uuid';
 
+const LOCATION_IMAGE_URLS = import.meta.glob('../assets/locations/**/*.{png,jpg,jpeg,webp,avif}', {
+	eager: true,
+	import: 'default',
+}) as Record<string, string>;
+
+const getLocationImage = (relativePath: string): string => {
+	const imageUrl = LOCATION_IMAGE_URLS[`../assets/locations/${relativePath}`];
+	if (!imageUrl) {
+		throw new Error(`Missing location image: ${relativePath}`);
+	}
+	return imageUrl;
+};
 
 // Customize this list to define which locations are restored when the map is cleared.
 // Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.
@@ -10,7 +22,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		name: "The Streets of Ardeia",
 		description: "",
 		weight: 0.5,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/65f8275a-a798-4c0e-b5ea-22b7779c7b52/52c92a1a-e727-4419-af67-40e9cc5635e9.png',
+		imageUrl: getLocationImage('ardeia/streets.png'),
 		center: { x: 0.2, y: 0.3 },
 		focalPoint: { x: 0.3, y: 0.2 },
 		lightColor: "#d8d1ba",
@@ -22,7 +34,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		name: "The Library",
 		description: "",
 		weight: 0.3,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/959a3d92-2cff-48c9-bb6a-0d5dd9cef2e5/d66d42be-516d-4fb4-91b0-b3aae9ee1a2a.png',
+		imageUrl: getLocationImage('ardeia/library.png'),
 		center: { x: 0.15, y: 0.275 },
 		focalPoint: { x: 0.2, y: 0.4 },
 		lightColor: "#e8a860",
@@ -35,7 +47,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		name: "The Temple",
 		description: "",
 		weight: 0.3,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/382bbbd6-5080-4c72-9c28-641efcbc87c0/84066e0e-9e62-4001-aaa1-a78c144fddef.png',
+		imageUrl: getLocationImage('ardeia/temple.png'),
 		center: { x: 0.175, y: 0.35 },
 		focalPoint: { x: 0.4, y: 0.5 },
 		lightColor: "#f4cc73",
@@ -47,7 +59,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		name: "The Gardens",
 		description: "",
 		weight: 0.3,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1b1d80c6-08e6-42a6-9a94-3e643304b152/81a86b0f-4f6e-445c-afdb-db019e37ab0c.png',
+		imageUrl: getLocationImage('ardeia/gardens.png'),
 		center: { x: 0.25, y: 0.325 },
 		focalPoint: { x: 0.6, y: 0.4 },
 		lightColor: "#b8e6cf",
@@ -59,7 +71,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		name: "The Plaza",
 		description: "",
 		weight: 0.3,
-		imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/0d9d311c-9f3b-42b2-854b-894f4534c24c/f645dd78-90f7-4813-a4b1-566599446aaf.png',
+		imageUrl: getLocationImage('ardeia/plaza.png'),
 		center: { x: 0.225, y: 0.25 },
 		focalPoint: { x: 0.2, y: 0.4 },
 		lightColor: "#eeeeee",
@@ -71,7 +83,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         name: "Slumbering Orchard",
         description: "",
         weight: 0.4,
-        imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/65176d74-9ec4-4f9c-936f-14d01c35a3c2/acbbed2a-c864-4a11-82e0-ba9329064dfd.png',
+		imageUrl: getLocationImage('outside/slumbering_orchard.png'),
         center: { x: 0.2, y: 0.6 }, // southwest
         focalPoint: { x: 0.7, y: 0.8 },
 		lightColor: "#74919f",
@@ -83,7 +95,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         name: "Bleached Earth",
         description: "",
         weight: 0.7,
-        imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/192952d5-8305-4be3-b2ec-4c0373196d2f/48c61323-4000-4bf9-8337-766e324f130e.png',
+		imageUrl: getLocationImage('outside/bleached_earth.png'),
         center: { x: 0.7, y: 0.8 }, // southeast
         focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#eeeeee",
@@ -95,7 +107,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         name: 'The Loom',
         description: '',
         weight: 0.3,
-        imageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1d270bb4-97d0-44b4-92ea-a053997deac0/53b90fd3-1c3f-4227-bd7d-3566045a3c7f.png',
+		imageUrl: getLocationImage('outside/loom.png'),
         center: { x: 0.5, y: 0.2 }, // northeast
         focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#d7c091",

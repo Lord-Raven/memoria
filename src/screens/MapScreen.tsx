@@ -516,7 +516,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const skit = stage().getCurrentSkit();
 
 	const handleSkitSubmit = useCallback(async (input: string, skitArg: any, index: number) => {
-		if ((input.trim() === '' && index < skitArg.script.length - 1) || index < 0) {
+		if ((input.trim() === '' && index < skitArg.script.length - 1) || index < 0 || index >= skitArg.script.length) {
 			return skitArg;
 		} else if (input.trim() === '' && skitArg.script.length > 0 && skitArg.script[index].endScene) {
 			stage().endSkit();
