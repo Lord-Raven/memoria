@@ -450,7 +450,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
         const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
         stage.generationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
-            image: getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
+            image: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c7e00bb8-9977-4e1c-bffd-c361e9a07ca3/97950f92-e1a7-4cfe-b211-6ce10712f0dc.png',//getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
             prompt: `${emotionPrompt}\nMaintain the existing art style.`,
             remove_background: true,
             transfer_type: 'edit'
