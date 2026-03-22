@@ -169,6 +169,93 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
 
                     {/* Menu sections */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                            <div>
+                                <Button
+                                    variant="menu"
+                                    onClick={() => openSection('attribution')}
+                                    className={getSectionHeaderClass('attribution')}
+                                style={{
+                                    width: '100%',
+                                    fontSize: 'clamp(11px, 2.2vw, 14px)',
+                                    padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
+                                }}
+                            >
+                                <span className="menu-section-header-track">
+                                    <motion.span
+                                        layout="position"
+                                        className="menu-section-header-label-shell"
+                                        transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                                    >
+                                        <motion.span
+                                            className="menu-section-header-label"
+                                            initial={false}
+                                            animate={{ x: expandedSection === 'attribution' ? -14 : 14 }}
+                                            transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                                        >
+                                            By Miyo
+                                        </motion.span>
+                                    </motion.span>
+                                </span>
+                            </Button>
+                            <AnimatePresence mode="wait">
+                                {expandedSection === 'attribution' && (
+                                    <motion.div
+                                        key="attribution-content"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        style={{
+                                            overflow: 'hidden',
+                                            width: '100%',
+                                            boxSizing: 'border-box',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                marginTop: 'clamp(8px, 1.5vh, 12px)',
+                                                color: 'rgba(185, 210, 227, 0.72)',
+                                                fontSize: 'clamp(10px, 1.5vw, 12px)',
+                                                lineHeight: 1.5,
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                                wordBreak: 'break-word',
+                                                overflowWrap: 'break-word',
+                                            }}
+                                        >
+                                            This is a shared setting. Read the setting document at{' '}
+                                            <a
+                                                href="https://mechabunny.com/jam/memoria/"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                style={{ 
+                                                    color: 'inherit', 
+                                                    textDecoration: 'underline',
+                                                    wordBreak: 'break-all',
+                                                }}
+                                            >
+                                                mechabunny.com/jam/memoria
+                                            </a>{' '}
+                                            and visit Miyo&apos;s Chub profile at{' '}
+                                            <a
+                                                href="https://chub.ai/users/miyo_rin"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                style={{ 
+                                                    color: 'inherit', 
+                                                    textDecoration: 'underline',
+                                                    wordBreak: 'break-all',
+                                                }}
+                                            >
+                                                chub.ai/users/miyo_rin
+                                            </a>
+                                            .
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
                         <div>
                             <Button
                                 variant="menu"
@@ -180,14 +267,22 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                     padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
-                                <motion.span
-                                    className="menu-section-header-label"
-                                    initial={false}
-                                    animate={{ x: expandedSection === 'menu' ? -14 : 14 }}
-                                    transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
-                                >
-                                    Menu
-                                </motion.span>
+                                <span className="menu-section-header-track">
+                                    <motion.span
+                                        layout="position"
+                                        className="menu-section-header-label-shell"
+                                        transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                                    >
+                                        <motion.span
+                                            className="menu-section-header-label"
+                                            initial={false}
+                                            animate={{ x: expandedSection === 'menu' ? -14 : 14 }}
+                                            transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                                        >
+                                            Menu
+                                        </motion.span>
+                                    </motion.span>
+                                </span>
                             </Button>
                             <AnimatePresence mode="wait">
                                 {expandedSection === 'menu' && (
@@ -256,14 +351,22 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                     padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
                                 }}
                             >
-                                <motion.span
-                                    className="menu-section-header-label"
-                                    initial={false}
-                                    animate={{ x: expandedSection === 'version' ? -14 : 14 }}
-                                    transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
-                                >
-                                    Version Notes
-                                </motion.span>
+                                <span className="menu-section-header-track">
+                                    <motion.span
+                                        layout="position"
+                                        className="menu-section-header-label-shell"
+                                        transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                                    >
+                                        <motion.span
+                                            className="menu-section-header-label"
+                                            initial={false}
+                                            animate={{ x: expandedSection === 'version' ? -14 : 14 }}
+                                            transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
+                                        >
+                                            Version Notes
+                                        </motion.span>
+                                    </motion.span>
+                                </span>
                             </Button>
                             <AnimatePresence mode="wait">
                                 {expandedSection === 'version' && (
@@ -291,85 +394,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                             }}
                                         >
                                             {'v2026.03.19 - Alpha junk; lots going on.'}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        <div>
-                            <Button
-                                variant="menu"
-                                onClick={() => openSection('attribution')}
-                                className={getSectionHeaderClass('attribution')}
-                                style={{
-                                    width: '100%',
-                                    fontSize: 'clamp(11px, 2.2vw, 14px)',
-                                    padding: 'clamp(6px, 1.2vh, 10px) clamp(12px, 2.6vw, 18px)',
-                                }}
-                            >
-                                <motion.span
-                                    className="menu-section-header-label"
-                                    initial={false}
-                                    animate={{ x: expandedSection === 'attribution' ? -14 : 14 }}
-                                    transition={{ type: 'spring', stiffness: 320, damping: 28, mass: 0.8 }}
-                                >
-                                    By Miyo
-                                </motion.span>
-                            </Button>
-                            <AnimatePresence mode="wait">
-                                {expandedSection === 'attribution' && (
-                                    <motion.div
-                                        key="attribution-content"
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                                        style={{
-                                            overflow: 'hidden',
-                                            width: '100%',
-                                            boxSizing: 'border-box',
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                marginTop: 'clamp(8px, 1.5vh, 12px)',
-                                                color: 'rgba(185, 210, 227, 0.72)',
-                                                fontSize: 'clamp(10px, 1.5vw, 12px)',
-                                                lineHeight: 1.5,
-                                                width: '100%',
-                                                boxSizing: 'border-box',
-                                                wordBreak: 'break-word',
-                                                overflowWrap: 'break-word',
-                                            }}
-                                        >
-                                            This is a shared setting. Read the setting document at{' '}
-                                            <a
-                                                href="https://mechabunny.com/jam/memoria/"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                style={{ 
-                                                    color: 'inherit', 
-                                                    textDecoration: 'underline',
-                                                    wordBreak: 'break-all',
-                                                }}
-                                            >
-                                                mechabunny.com/jam/memoria
-                                            </a>{' '}
-                                            and visit Miyo&apos;s Chub profile at{' '}
-                                            <a
-                                                href="https://chub.ai/users/miyo_rin"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                style={{ 
-                                                    color: 'inherit', 
-                                                    textDecoration: 'underline',
-                                                    wordBreak: 'break-all',
-                                                }}
-                                            >
-                                                chub.ai/users/miyo_rin
-                                            </a>
-                                            .
                                         </div>
                                     </motion.div>
                                 )}

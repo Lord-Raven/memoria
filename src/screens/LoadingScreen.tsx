@@ -95,17 +95,17 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                 >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 2 }}>
                         <Title variant="glow" style={{ margin: 0, fontSize: 'clamp(1.2rem, 2.7vw, 1.65rem)' }}>
-                            Initializing Atlas
+                            Generating and Loading Content...
                         </Title>
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
                         <GearSliderFidget
                             loadingPercentage={progress}
-                            gearSize={184}
-                            rackWidth={520}
-                            rackHeight={34}
-                            rackViewportWidth={270}
+                            gearSize={226}
+                            rackWidth={640}
+                            rackHeight={40}
+                            rackViewportWidth={240}
                         />
                     </Box>
                 </GlassPanel>

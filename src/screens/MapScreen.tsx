@@ -33,6 +33,12 @@ interface VoronoiPoint {
 	themeColor: string;
 }
 
+interface GeometryVoronoiPoint extends VoronoiPoint {
+	geometryX: number;
+	geometryY: number;
+	geometryRadius: number;
+}
+
 interface VoronoiCell extends MapCellData {
 	polygon: number[][];
 }
@@ -311,13 +317,8 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 	return points;
 };
 
-const getPowerWeight = (point: VoronoiPoint) => {
-	const radius = Math.max(1, point.radius);
-	// Power-diagram weights are radius-squared; this moves borders toward smaller cells.
-	return radius * radius;
-};
-
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
+	const mapSvgRef = useRef<SVGSVGElement | null>(null);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
 	const { message: activeTooltipMessage, setTooltip, clearTooltip } = useTooltip();
@@ -339,9 +340,46 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const [fullScreenTransitionCellId, setFullScreenTransitionCellId] = useState<string | null>(null);
 	const [fullScreenProgress, setFullScreenProgress] = useState(0);
 	const [currentSkitIndex, setCurrentSkitIndex] = useState<number | null>(null);
+	const [mapViewportSize, setMapViewportSize] = useState<{ width: number; height: number }>({
+		width: MAP_WIDTH,
+		height: MAP_HEIGHT,
+	});
 	const mapClickTimeoutRef = useRef<number | null>(null);
 	const initializedSkitIdRef = useRef<string | null>(null);
 	const fullScreenProgressRef = useRef(0);
+
+	useEffect(() => {
+		const svgElement = mapSvgRef.current;
+		if (!svgElement) {
+			return;
+		}
+
+		const updateSize = () => {
+			const rect = svgElement.getBoundingClientRect();
+			const width = Math.max(1, rect.width);
+			const height = Math.max(1, rect.height);
+
+			setMapViewportSize((current) => {
+				if (Math.abs(current.width - width) < 0.1 && Math.abs(current.height - height) < 0.1) {
+					return current;
+				}
+				return { width, height };
+			});
+		};
+
+		updateSize();
+
+		if (typeof ResizeObserver === "undefined") {
+			return;
+		}
+
+		const observer = new ResizeObserver(() => {
+			updateSize();
+		});
+
+		observer.observe(svgElement);
+		return () => observer.disconnect();
+	}, []);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -778,20 +816,33 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			return [] as VoronoiCell[];
 		}
 
+		const geometryScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
+		const geometryScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
+		const radiusScale = Math.min(geometryScaleX, geometryScaleY);
+		const geometryWidth = MAP_WIDTH * geometryScaleX;
+		const geometryHeight = MAP_HEIGHT * geometryScaleY;
+
+		const geometryPoints: GeometryVoronoiPoint[] = pulsedPoints.map((point) => ({
+			...point,
+			geometryX: point.x * geometryScaleX,
+			geometryY: point.y * geometryScaleY,
+			geometryRadius: Math.max(1, point.radius * radiusScale),
+		}));
+
 		const weightedVoronoi = weightedVoronoiFactory()
-			.x((d: VoronoiPoint) => d.x)
-			.y((d: VoronoiPoint) => d.y)
-			.weight((d: VoronoiPoint) => getPowerWeight(d))
+			.x((d: GeometryVoronoiPoint) => d.geometryX)
+			.y((d: GeometryVoronoiPoint) => d.geometryY)
+			.weight((d: GeometryVoronoiPoint) => Math.pow(d.geometryRadius, 2))
 			.clip([
 				[0, 0],
-				[MAP_WIDTH, 0],
-				[MAP_WIDTH, MAP_HEIGHT],
-				[0, MAP_HEIGHT],
+				[geometryWidth, 0],
+				[geometryWidth, geometryHeight],
+				[0, geometryHeight],
 			]);
 
-		const polygons = weightedVoronoi(pulsedPoints) as Array<
+		const polygons = weightedVoronoi(geometryPoints) as Array<
 			number[][] & {
-				site?: { originalObject?: VoronoiPoint };
+				site?: { originalObject?: GeometryVoronoiPoint };
 			}
 		>;
 
@@ -802,34 +853,36 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				continue;
 			}
 
-			const point = polygon.site?.originalObject || pulsedPoints[index];
+			const point = polygon.site?.originalObject || geometryPoints[index];
 			if (!point) {
 				continue;
 			}
 
-			const radiusPolygon = createCirclePolygon(point.x, point.y, point.radius);
+			const radiusPolygon = createCirclePolygon(point.geometryX, point.geometryY, point.geometryRadius);
 			const clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
 			if (clippedPolygon.length < 3 || getPolygonArea(clippedPolygon) <= MIN_RENDERABLE_CELL_AREA) {
 				continue;
 			}
 
-			const path = toPolygonPath(clippedPolygon);
+			const mapPolygon = clippedPolygon.map(([x, y]) => [x / geometryScaleX, y / geometryScaleY]);
+
+			const path = toPolygonPath(mapPolygon);
 			if (!path) {
 				continue;
 			}
-			const bounds = getPolygonBounds(clippedPolygon);
+			const bounds = getPolygonBounds(mapPolygon);
 
 			cells.push({
 				point,
 				path,
-				polygon: clippedPolygon,
+				polygon: mapPolygon,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				bounds,
 			});
 		}
 
 		return cells;
-	}, [pulsedPoints]);
+	}, [mapViewportSize.height, mapViewportSize.width, pulsedPoints]);
 
 	const hasAtlasLocations = targetPoints.length > 0;
 	const hasFullScreenCell = !!(fullScreenCellId || fullScreenTransitionCellId);
@@ -1115,6 +1168,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					}}
 				>
 					<svg
+						ref={mapSvgRef}
 						width="100%"
 						height="100%"
 						viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
@@ -1123,7 +1177,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						onDoubleClick={handleMapDoubleClick}
 						onPointerMove={handleMapPointerMove}
 						onPointerLeave={handleMapPointerLeave}
-						style={{ cursor: "crosshair", display: "block" }}
+						style={{ display: "block" }}
 					>
 							<g style={{ filter: `blur(${backgroundBlur * FULLSCREEN_BACKGROUND_BLUR_PX}px)` }}>
 								<image
