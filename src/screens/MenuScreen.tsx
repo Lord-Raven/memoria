@@ -295,7 +295,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         exit={{ opacity: 0, height: 0 }}
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                         style={{
-                                            overflow: 'visible',
                                             overflowY: 'hidden',
                                             overflowX: 'visible',
                                             width: '100%',
@@ -307,6 +306,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 <motion.div
                                                     key={button.key}
                                                     initial={{ opacity: 0, x: -30 }}
+                                                    style={{
+                                                        overflow: 'visible',
+                                                    }}
                                                     animate={{
                                                         opacity: 1,
                                                         x: hoveredButton === button.key && button.enabled ? 10 : 0
