@@ -21,7 +21,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-streets",
 		name: "The Streets of Ardeia",
 		description: "",
-		weight: 3,
+		weight: 6,
 		imageUrl: getLocationImage('ardeia/streets.png'),
 		center: { x: 0.2, y: 0.3 },
 		focalPoint: { x: 0.3, y: 0.2 },
@@ -33,7 +33,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-library",
 		name: "The Library",
 		description: "",
-		weight: 2,
+		weight: 4,
 		imageUrl: getLocationImage('ardeia/library.png'),
 		center: { x: 0.15, y: 0.275 },
 		focalPoint: { x: 0.2, y: 0.4 },
@@ -46,7 +46,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-temple",
 		name: "The Temple",
 		description: "",
-		weight: 2,
+		weight: 4,
 		imageUrl: getLocationImage('ardeia/temple.png'),
 		center: { x: 0.175, y: 0.35 },
 		focalPoint: { x: 0.4, y: 0.5 },
@@ -58,7 +58,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-gardens",
 		name: "The Gardens",
 		description: "",
-		weight: 2,
+		weight: 4,
 		imageUrl: getLocationImage('ardeia/gardens.png'),
 		center: { x: 0.25, y: 0.325 },
 		focalPoint: { x: 0.6, y: 0.4 },
@@ -70,7 +70,7 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-plaza",
 		name: "The Plaza",
 		description: "",
-		weight: 2,
+		weight: 4,
 		imageUrl: getLocationImage('ardeia/plaza.png'),
 		center: { x: 0.225, y: 0.25 },
 		focalPoint: { x: 0.2, y: 0.4 },
@@ -78,11 +78,12 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		themeColor: '#d8c659',
 		discovered: true,
 	},
+	// Near locations:
     {
         id: "slumbering-orchard",
         name: "Slumbering Orchard",
         description: "",
-        weight: 3,
+        weight: 8,
 		imageUrl: getLocationImage('outside/slumbering_orchard.png'),
         center: { x: 0.2, y: 0.6 }, // southwest
         focalPoint: { x: 0.7, y: 0.8 },
@@ -90,11 +91,36 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         themeColor: "#7ecfbe",
         discovered: true,
     },
+	{
+		id: "pilgrimage",
+		name: "Pilgrimage",
+		description: "",
+		weight: 8,
+		imageUrl: getLocationImage('outside/pilgrimage.png'),
+		center: { x: 0.5, y: 0.5 }, // center
+		focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#eeeedd",
+		themeColor: "#d86f5a",
+		discovered: true,
+	},
+	{
+        id: 'the-loom',
+        name: 'The Loom',
+        description: '',
+        weight: 7,
+		imageUrl: getLocationImage('outside/loom.png'),
+        center: { x: 0.5, y: 0.2 }, // northeast
+        focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#d7c091",
+        themeColor: '#d17ed8',
+        discovered: true,
+    },
+	// Mid-far:
     {
         id: "bleached-earth",
         name: "Bleached Earth",
         description: "",
-        weight: 5,
+        weight: 10,
 		imageUrl: getLocationImage('outside/bleached_earth.png'),
         center: { x: 0.7, y: 0.8 }, // southeast
         focalPoint: { x: 0.5, y: 0.5 },
@@ -102,18 +128,56 @@ const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         themeColor: "#e8e4d1",
         discovered: true,
     },
-    {
-        id: 'the-loom',
-        name: 'The Loom',
-        description: '',
-        weight: 2,
-		imageUrl: getLocationImage('outside/loom.png'),
-        center: { x: 0.5, y: 0.2 }, // northeast
-        focalPoint: { x: 0.5, y: 0.5 },
-		lightColor: "#d7c091",
-        themeColor: '#d17ed8',
-        discovered: true,
-    }
+	{
+		id: "blind-spire",
+		name: "Blind Spire",
+		description: "",
+		weight: 7,
+		imageUrl: getLocationImage('outside/blind_spire.png'),
+		center: { x: 0.8, y: 0.3 }, // far east
+		focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#ff99aa",
+		themeColor: '#ff6699',
+		discovered: true,
+	},
+	// Far:
+	{
+		id: "sunken-core",
+		name: "Sunken Core",
+		description: "",
+		weight: 9,
+		imageUrl: getLocationImage('outside/sunken_core.png'),
+		center: { x: 0.9, y: 0.9 }, // far southeast
+		focalPoint: { x: 0.5, y: 0.5 },
+		// light red/orange brown
+		lightColor: "#ffdd99",
+		themeColor: '#ff9966',
+		discovered: true,
+	},
+	{
+		id: "the-cradle",
+		name: "The Cradle",
+		description: "",
+		weight: 9,
+		imageUrl: getLocationImage('outside/cradle.png'),
+		center: { x: 0.1, y: 0.8 }, // far southwest
+		focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#bbbbee",
+		themeColor: '#9999cc',
+		discovered: true,
+	},
+	{
+		id: "the-threshold",
+		name: "The Threshold",
+		description: "",
+		weight: 8,
+		imageUrl: getLocationImage('outside/threshold.png'),
+		center: { x: 0.9, y: 0.1 }, // far northeast
+		focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#ddffbb",
+		themeColor: '#ccffaa',
+		discovered: true,
+	}
 ];
 
 export const createDefaultAtlas = () => {
