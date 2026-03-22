@@ -33,24 +33,14 @@ interface VoronoiPoint {
 	themeColor: string;
 }
 
-interface GeometryVoronoiPoint extends VoronoiPoint {
-	geometryX: number;
-	geometryY: number;
-	geometryRadius: number;
-}
-
 interface VoronoiCell extends MapCellData {
 	polygon: number[][];
 }
 
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 700;
-const MAP_MIN_DIMENSION = Math.min(MAP_WIDTH, MAP_HEIGHT);
-const MAP_VMIN_IN_MAP_UNITS = MAP_MIN_DIMENSION / 100;
-const MIN_LOCATION_RADIUS_VMIN = 0.2;
-const MAX_LOCATION_RADIUS_VMIN = 60;
-const MIN_CELL_RADIUS = MIN_LOCATION_RADIUS_VMIN * MAP_VMIN_IN_MAP_UNITS;
-const MAX_CELL_RADIUS = MAX_LOCATION_RADIUS_VMIN * MAP_VMIN_IN_MAP_UNITS;
+const MIN_CELL_RADIUS = 40;
+const MAX_CELL_RADIUS = 300;
 const MIN_RENDERABLE_CELL_AREA = 1;
 const POINT_TRANSITION_MS = 700;
 const HOVER_TRANSITION_MS = 240;
@@ -124,9 +114,9 @@ const getLocationBorderStroke = (themeColor: string) => {
 	return colorWithAlpha(normalizedThemeColor, 0.86, "rgba(215, 190, 122, 0.86)");
 };
 
-const getRadiusFromWeight = (baseRadiusVmin: number) => {
-	const normalizedBaseRadiusVmin = clamp(baseRadiusVmin, MIN_LOCATION_RADIUS_VMIN, MAX_LOCATION_RADIUS_VMIN);
-	const derivedRadius = normalizedBaseRadiusVmin * MAP_VMIN_IN_MAP_UNITS;
+const getRadiusFromWeight = (weight: number) => {
+	const normalizedWeight = clamp(weight, 0.05, 4);
+	const derivedRadius = 70 + Math.pow(normalizedWeight, 0.9) * 48;
 	return clamp(derivedRadius, MIN_CELL_RADIUS, MAX_CELL_RADIUS);
 };
 
@@ -321,10 +311,17 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 	return points;
 };
 
+const getPowerWeight = (point: VoronoiPoint) => {
+	const radius = Math.max(1, point.radius);
+	// Power-diagram weights are radius-squared; this moves borders toward smaller cells.
+	return radius * radius;
+};
+
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
 	const mapSvgRef = useRef<SVGSVGElement | null>(null);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
+	const [viewportScaleRatio, setViewportScaleRatio] = useState(1);
 	const { message: activeTooltipMessage, setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
@@ -344,46 +341,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const [fullScreenTransitionCellId, setFullScreenTransitionCellId] = useState<string | null>(null);
 	const [fullScreenProgress, setFullScreenProgress] = useState(0);
 	const [currentSkitIndex, setCurrentSkitIndex] = useState<number | null>(null);
-	const [mapViewportSize, setMapViewportSize] = useState<{ width: number; height: number }>({
-		width: MAP_WIDTH,
-		height: MAP_HEIGHT,
-	});
 	const mapClickTimeoutRef = useRef<number | null>(null);
 	const initializedSkitIdRef = useRef<string | null>(null);
 	const fullScreenProgressRef = useRef(0);
-
-	useEffect(() => {
-		const svgElement = mapSvgRef.current;
-		if (!svgElement) {
-			return;
-		}
-
-		const updateSize = () => {
-			const rect = svgElement.getBoundingClientRect();
-			const width = Math.max(1, rect.width);
-			const height = Math.max(1, rect.height);
-
-			setMapViewportSize((current) => {
-				if (Math.abs(current.width - width) < 0.1 && Math.abs(current.height - height) < 0.1) {
-					return current;
-				}
-				return { width, height };
-			});
-		};
-
-		updateSize();
-
-		if (typeof ResizeObserver === "undefined") {
-			return;
-		}
-
-		const observer = new ResizeObserver(() => {
-			updateSize();
-		});
-
-		observer.observe(svgElement);
-		return () => observer.disconnect();
-	}, []);
 
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
@@ -536,7 +496,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			(location) => location.discovered,
 		);
 		return atlasEntries.map((location) => {
-			const weight = Math.max(MIN_LOCATION_RADIUS_VMIN, location.weight || 1);
+			const weight = Math.max(0.05, location.weight || 1);
 			const focalPoint = normalizeRelativePoint(location.focalPoint, normalizeRelativePoint(location.center));
 
 			return {
@@ -610,7 +570,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			}
 			return {
 				...targetPoint,
-				weight: Math.max(MIN_LOCATION_RADIUS_VMIN, targetPoint.weight * 0.4),
+				weight: Math.max(0.05, targetPoint.weight * 0.4),
 				radius: clamp(targetPoint.radius * 0.45, MIN_CELL_RADIUS, MAX_CELL_RADIUS),
 			};
 		});
@@ -628,7 +588,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					...targetPoint,
 					x: lerp(startPoint.x, targetPoint.x, easedProgress),
 					y: lerp(startPoint.y, targetPoint.y, easedProgress),
-					weight: Math.max(MIN_LOCATION_RADIUS_VMIN, lerp(startPoint.weight, targetPoint.weight, easedProgress)),
+					weight: Math.max(0.05, lerp(startPoint.weight, targetPoint.weight, easedProgress)),
 					radius: clamp(
 						lerp(startPoint.radius, targetPoint.radius, easedProgress),
 						MIN_CELL_RADIUS,
@@ -654,6 +614,44 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			setPulseClock(performance.now());
 		}, PULSE_TICK_MS);
 		return () => window.clearInterval(interval);
+	}, []);
+
+	useEffect(() => {
+		const svgElement = mapSvgRef.current;
+		if (!svgElement) {
+			return;
+		}
+
+		const updateViewportScaleRatio = () => {
+			const rect = svgElement.getBoundingClientRect();
+			if (rect.width <= 0 || rect.height <= 0) {
+				return;
+			}
+
+			const scaleX = rect.width / MAP_WIDTH;
+			const scaleY = rect.height / MAP_HEIGHT;
+			if (scaleY <= 0) {
+				return;
+			}
+
+			const nextRatio = clamp(scaleX / scaleY, 0.1, 10);
+			setViewportScaleRatio((currentRatio) =>
+				Math.abs(currentRatio - nextRatio) < 1e-4 ? currentRatio : nextRatio,
+			);
+		};
+
+		updateViewportScaleRatio();
+
+		const observer = new ResizeObserver(() => {
+			updateViewportScaleRatio();
+		});
+		observer.observe(svgElement);
+		window.addEventListener("resize", updateViewportScaleRatio);
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener("resize", updateViewportScaleRatio);
+		};
 	}, []);
 
 	useEffect(() => {
@@ -804,7 +802,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				...point,
 				x: nextX,
 				y: nextY,
-				weight: Math.max(MIN_LOCATION_RADIUS_VMIN, point.weight * (1 + wave * pulse.amplitude)),
+				weight: Math.max(0.05, point.weight * (1 + wave * pulse.amplitude)),
 				radius: nextRadius,
 			};
 		});
@@ -820,33 +818,24 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			return [] as VoronoiCell[];
 		}
 
-		const geometryScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
-		const geometryScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
-		const radiusScale = Math.min(geometryScaleX, geometryScaleY);
-		const geometryWidth = MAP_WIDTH * geometryScaleX;
-		const geometryHeight = MAP_HEIGHT * geometryScaleY;
-
-		const geometryPoints: GeometryVoronoiPoint[] = pulsedPoints.map((point) => ({
-			...point,
-			geometryX: point.x * geometryScaleX,
-			geometryY: point.y * geometryScaleY,
-			geometryRadius: Math.max(1, point.radius * radiusScale),
-		}));
+		const aspectScaleX = viewportScaleRatio;
+		const toVoronoiX = (x: number) => x * aspectScaleX;
+		const fromVoronoiX = (x: number) => x / aspectScaleX;
 
 		const weightedVoronoi = weightedVoronoiFactory()
-			.x((d: GeometryVoronoiPoint) => d.geometryX)
-			.y((d: GeometryVoronoiPoint) => d.geometryY)
-			.weight((d: GeometryVoronoiPoint) => Math.pow(d.geometryRadius, 2))
+			.x((d: VoronoiPoint) => toVoronoiX(d.x))
+			.y((d: VoronoiPoint) => d.y)
+			.weight((d: VoronoiPoint) => getPowerWeight(d))
 			.clip([
 				[0, 0],
-				[geometryWidth, 0],
-				[geometryWidth, geometryHeight],
-				[0, geometryHeight],
+				[toVoronoiX(MAP_WIDTH), 0],
+				[toVoronoiX(MAP_WIDTH), MAP_HEIGHT],
+				[0, MAP_HEIGHT],
 			]);
 
-		const polygons = weightedVoronoi(geometryPoints) as Array<
+		const polygons = weightedVoronoi(pulsedPoints) as Array<
 			number[][] & {
-				site?: { originalObject?: GeometryVoronoiPoint };
+				site?: { originalObject?: VoronoiPoint };
 			}
 		>;
 
@@ -857,36 +846,36 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				continue;
 			}
 
-			const point = polygon.site?.originalObject || geometryPoints[index];
+			const point = polygon.site?.originalObject || pulsedPoints[index];
 			if (!point) {
 				continue;
 			}
 
-			const radiusPolygon = createCirclePolygon(point.geometryX, point.geometryY, point.geometryRadius);
+			const radiusPolygon = createCirclePolygon(toVoronoiX(point.x), point.y, point.radius);
 			const clippedPolygon = clipPolygonWithConvex(polygon, radiusPolygon);
 			if (clippedPolygon.length < 3 || getPolygonArea(clippedPolygon) <= MIN_RENDERABLE_CELL_AREA) {
 				continue;
 			}
 
-			const mapPolygon = clippedPolygon.map(([x, y]) => [x / geometryScaleX, y / geometryScaleY]);
+			const displayPolygon = clippedPolygon.map(([x, y]) => [fromVoronoiX(x), y]);
 
-			const path = toPolygonPath(mapPolygon);
+			const path = toPolygonPath(displayPolygon);
 			if (!path) {
 				continue;
 			}
-			const bounds = getPolygonBounds(mapPolygon);
+			const bounds = getPolygonBounds(displayPolygon);
 
 			cells.push({
 				point,
 				path,
-				polygon: mapPolygon,
+				polygon: displayPolygon,
 				clipPathId: `location-clip-${point.id.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 				bounds,
 			});
 		}
 
 		return cells;
-	}, [mapViewportSize.height, mapViewportSize.width, pulsedPoints]);
+	}, [pulsedPoints, viewportScaleRatio]);
 
 	const hasAtlasLocations = targetPoints.length > 0;
 	const hasFullScreenCell = !!(fullScreenCellId || fullScreenTransitionCellId);
@@ -940,19 +929,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				cx: number;
 				cy: number;
 				radius: number;
-				radiusX: number;
-				radiusY: number;
 				stroke: string;
 				strokeWidth: number;
 				clipPathId: string;
 			}>;
 		}
-
-		const viewportScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
-		const viewportScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
-		const uniformPortraitScale = Math.min(viewportScaleX, viewportScaleY);
-		const portraitScaleCompensationX = uniformPortraitScale / viewportScaleX;
-		const portraitScaleCompensationY = uniformPortraitScale / viewportScaleY;
 
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
@@ -984,14 +965,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const strokeWidth = 1.8 + emphasis * 0.4;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
 			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.13, 14, 28);
-			const radiusX = radius * portraitScaleCompensationX;
-			const radiusY = radius * portraitScaleCompensationY;
 			const alignsToLeftEdge = cell.point.x >= MAP_WIDTH / 2;
 			const preferredX = alignsToLeftEdge
-				? cell.bounds.x + radiusX + strokeWidth + 2
-				: cell.bounds.x + cell.bounds.width - radiusX - strokeWidth - 2;
-			const cx = clamp(preferredX, radiusX + 1, MAP_WIDTH - radiusX - 1);
-			const cy = clamp(cell.bounds.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1);
+				? cell.bounds.x + radius + strokeWidth + 2
+				: cell.bounds.x + cell.bounds.width - radius - strokeWidth - 2;
+			const cx = clamp(preferredX, radius + 1, MAP_WIDTH - radius - 1);
+			const cy = clamp(cell.bounds.y + radius + 5, radius + 1, MAP_HEIGHT - radius - 1);
 
 			return [{
 				key: `${choice.locationId}-${choice.partnerActorId}`,
@@ -999,14 +978,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				cx,
 				cy,
 				radius,
-				radiusX,
-				radiusY,
 				stroke,
 				strokeWidth,
 				clipPathId: `expedition-choice-portrait-${choice.locationId.replace(/[^a-zA-Z0-9_-]/g, "")}-${choice.partnerActorId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			}];
 		});
-	}, [expeditionChoiceSignature, mapMode, mapViewportSize.height, mapViewportSize.width, stage, targetRadiusById, voronoiCells]);
+	}, [expeditionChoiceSignature, mapMode, stage, targetRadiusById, voronoiCells]);
 
 	const selectMapLocation = useCallback((x: number, y: number) => {
 		const clickedCell = getCellAtCoordinates(x, y);
@@ -1193,7 +1170,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						onDoubleClick={handleMapDoubleClick}
 						onPointerMove={handleMapPointerMove}
 						onPointerLeave={handleMapPointerLeave}
-						style={{ display: "block" }}
+						style={{ cursor: "crosshair", display: "block" }}
 					>
 							<g style={{ filter: `blur(${backgroundBlur * FULLSCREEN_BACKGROUND_BLUR_PX}px)` }}>
 								<image
@@ -1216,7 +1193,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								))}
 								{expeditionPortraitMarkers.map((portrait) => (
 									<clipPath key={portrait.clipPathId} id={portrait.clipPathId} clipPathUnits="userSpaceOnUse">
-										<ellipse cx={portrait.cx} cy={portrait.cy} rx={portrait.radiusX} ry={portrait.radiusY} />
+										<circle cx={portrait.cx} cy={portrait.cy} r={portrait.radius} />
 									</clipPath>
 								))}
 						</defs>
@@ -1249,31 +1226,28 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 						{mapMode === 'management' && expeditionPortraitMarkers.map((portrait) => (
 							<g key={portrait.key} style={{ pointerEvents: 'none' }}>
-								<ellipse
+								<circle
 									cx={portrait.cx}
 									cy={portrait.cy}
-									rx={portrait.radiusX}
-									ry={portrait.radiusY}
+									r={portrait.radius}
 									fill="rgba(8, 12, 18, 0.95)"
 								/>
 								<image
 									href={portrait.imageUrl}
-									x={portrait.cx - portrait.radiusX}
-									y={portrait.cy - portrait.radiusY}
-									width={portrait.radiusX * 2}
-									height={portrait.radiusY * 2}
+									x={portrait.cx - portrait.radius}
+									y={portrait.cy - portrait.radius}
+									width={portrait.radius * 2}
+									height={portrait.radius * 2}
 									preserveAspectRatio="xMidYMin slice"
 									clipPath={`url(#${portrait.clipPathId})`}
 								/>
-								<ellipse
+								<circle
 									cx={portrait.cx}
 									cy={portrait.cy}
-									rx={portrait.radiusX}
-									ry={portrait.radiusY}
+									r={portrait.radius}
 									fill="none"
 									stroke={portrait.stroke}
 									strokeWidth={portrait.strokeWidth}
-									vectorEffect="non-scaling-stroke"
 								/>
 							</g>
 						))}
