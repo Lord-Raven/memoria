@@ -90,7 +90,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                         flexDirection: 'column',
                         alignItems: 'stretch',
                         gap: '16px',
-                        padding: '28px 26px',
+                        padding: '28px 26px 14px',
                     }}
                 >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 2 }}>

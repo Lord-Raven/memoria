@@ -410,7 +410,7 @@ export async function generateBaseActorImage(
                 image: baseSourceImage,
                 prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
                     `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `The image should be a waist-up portrait on a light gray background. `,
+                    `Ignore details below the waist. This image should be a waist-up portrait on a plain light-gray background. `,
                 remove_background: true,
                 transfer_type: 'canny'
             }, '');
@@ -451,7 +451,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
         stage.generationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
             image: getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
-            prompt: `${emotionPrompt}`,
+            prompt: `${emotionPrompt}\nMaintain the existing art style.`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
