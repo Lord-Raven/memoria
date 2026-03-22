@@ -139,37 +139,47 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                         width: 'min(440px, 90vw)',
                         maxWidth: '90vw',
                         maxHeight: '90vh',
-                        overflowY: 'auto',
                         overflowX: 'visible',
+                        overflowY: 'visible',
                         boxSizing: 'border-box',
                         position: 'relative',
                         zIndex: 10,
                     }}
                 >
-                    {/* Logo */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
+                    <div
+                        style={{
+                            maxHeight: 'calc(90vh - clamp(40px, 10vh, 80px))',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            paddingRight: '10px',
+                            marginRight: '-10px',
+                            boxSizing: 'border-box',
+                        }}
                     >
-                        <Box
-                            component="img"
-                            src={memoriaLogo}
-                            alt="Memoria"
-                            style={{ 
-                                display: 'block',
-                                textAlign: 'center', 
-                                marginBottom: 'clamp(20px, 5vh, 40px)', 
-                                width: 'min(70vw, 360px)',
-                                height: 'auto',
-                                marginLeft: 'auto',
-                                marginRight: 'auto',
-                            }}
-                        />
-                    </motion.div>
+                        {/* Logo */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3, duration: 0.5 }}
+                        >
+                            <Box
+                                component="img"
+                                src={memoriaLogo}
+                                alt="Memoria"
+                                style={{ 
+                                    display: 'block',
+                                    textAlign: 'center', 
+                                    marginBottom: 'clamp(20px, 5vh, 40px)', 
+                                    width: 'min(70vw, 360px)',
+                                    height: 'auto',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
+                                }}
+                            />
+                        </motion.div>
 
-                    {/* Menu sections */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
+                        {/* Menu sections */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 2vh, 15px)' }}>
                             <div>
                                 <Button
                                     variant="menu"
@@ -296,8 +306,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                         style={{
                                             overflowY: 'hidden',
                                             overflowX: 'visible',
-                                            width: 'calc(100% + 10px)',
-                                            marginRight: '-10px',
+                                            width: '100%',
                                             boxSizing: 'border-box',
                                         }}
                                     >
@@ -402,6 +411,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                 )}
                             </AnimatePresence>
                         </div>
+                    </div>
                     </div>
                 </motion.div>
             </Box>
