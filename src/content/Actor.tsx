@@ -57,26 +57,33 @@ type CharacterDefinition = {
     fullPath: string;
 }
 
+// * denotes final path.
 export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
-    {name: 'mel', fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a'},
-    {name: 'soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37'},
-    {name: 'thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58'},
-    {name: 'caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba'},
-    {name: 'elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888'},
-    {name: 'arca-7', fullPath: 'NobodyNos/arca-7-tactical-support-brat-4baf7876a442'},
+    {name: 'Mel', fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a'},
+    {name: 'Soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37'},
+    {name: 'Thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58'},
+    {name: 'Caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba'},
+    {name: 'Elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888'}, // *
+    {name: 'Arca-7', fullPath: 'NobodyNos/arca-7-tactical-support-brat-4baf7876a442'},
+    {name: 'Amat-Ea', fullPath: 'adelsvard/amat-ea-18df50a603a5'},
+    {name: 'Millia', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2'},
+    {name: 'Milliette', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2'},
+    {name: 'Lyra', fullPath: 'Birb_Brain/lyra-ardeia-expeditioner-5f531b2f758e'},
+    {name: 'Mira', fullPath: 'Derpnomicon/mira-dded7def497b'},
+//    {name: 'Reitia', fullPath: '7leaf/reitia-8f2ae18ad191'},
 
 ];
 
-export async function loadReserveActorFromFullPath(fullPath: string, stage: Stage): Promise<Actor|null> {
+export async function loadReserveActorFromFullPath(name: string, fullPath: string, stage: Stage): Promise<Actor|null> {
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
-    const dataName = item.node.definition.name.replaceAll('{{char}}', item.node.definition.name).replaceAll('{{user}}', 'Individual X');
+    const dataName = item.node.definition.name;
     console.log(item);
 
     const data = {
-        name: dataName,
+        name: name ||dataName,
         fullPath: item.node.fullPath,
-        personality: item.node.definition.personality.replaceAll('{{char}}', dataName).replaceAll('{{user}}', 'Individual X'),
+        personality: item.node.definition.personality.replaceAll('{{char}}', name || dataName),
         avatar: item.node.max_res_url,
         // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
         voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : '',
@@ -202,10 +209,8 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `The player of this game, ${stage.getPlayerActor()?.name || 'Player'}, is one of the many prisoners, bearing the signature bracer that binds them to Ardeia and the Warden. ` +
             `The prisoners work to keep the city running while also exploring the Outside, beyond the cities walls and Barriers. Some are new arrivals, while others have been here for centuries. ` +
             `They find all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. ` +
-            `\n\nThe Original Details below describe a character of this world or its past (${data.name}) to convert into a set of defined fields for this game. ` +
+            `\n\nThe Original Details below describe a character of this world (${data.name}) to convert into a set of defined fields for this game. ` +
             `\n\n` +
-            `The provided Original Details may reference 'Individual X' who was a part of their original background; ` +
-            `if Individual X remains relevant to this character, Individual X should be replaced with an invented yet appropriate name in the distillation below.\n\n` +
             `Original Details about ${data.name}:\n ${data.personality}\n\n` +
             `Available Voices:\n` +
             Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => ' - ' + voiceId + ': ' + voiceDesc).join('\n') +
@@ -377,8 +382,8 @@ export async function generateBaseActorImage(
     // If this actor's fullpath is a known supported character, skip the below and use the pre-generated base.png from assets:
     if (SUPPORTED_CHARACTERS.some(charDef => charDef.fullPath === actor.fullPath)) {
         const charDef = SUPPORTED_CHARACTERS.find(charDef => charDef.fullPath === actor.fullPath);
-        const assetImageUrl = getBaseImage(`${charDef?.name}/base.png`);
-        console.log(`Using pre-generated base image for supported character ${actor.name} from path ${actor.fullPath} (${charDef?.name}): ${assetImageUrl}`);
+        const assetImageUrl = getBaseImage(`${charDef?.name.toLowerCase()}/base.png`);
+        console.log(`Using pre-generated base image for supported character ${actor.name} from path ${actor.fullPath}`);
         setEmotionImageUrl(actor, 'base', targetAppearanceId, assetImageUrl);
     } else {
         

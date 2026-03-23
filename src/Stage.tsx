@@ -483,14 +483,18 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
                     // Instead, load one random actor from a hardcoded whitelist of fullPaths (SUPPORTED_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');
-                    const fullPath = this.pickRandom(SUPPORTED_CHARACTERS.filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)).map(charDef => charDef.fullPath))!;
-                    const newActor = await loadReserveActorFromFullPath(fullPath, this);
+                    const character = this.pickRandom(SUPPORTED_CHARACTERS.filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
+                    if (!character) {
+                        console.warn('No more supported characters to load as reserve actors.');
+                        break;
+                    }
+                    const newActor = await loadReserveActorFromFullPath(character.name, character.fullPath, this);
                     if (newActor) {
-                        console.log(`Loaded reserve actor ${newActor.name} from fullPath ${fullPath}`);
+                        console.log(`Loaded reserve actor ${newActor.name} from fullPath ${newActor.fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};
                         actors = this.getSave().actors || {};
                     } else {
-                        console.warn(`Failed to load actor from fullPath ${fullPath}`);
+                        console.warn(`Failed to load actor from fullPath ${character.fullPath}`);
                     }
                 }
                 console.log('Finished loading reserve actors');
