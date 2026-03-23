@@ -82,8 +82,8 @@ export const CASSIEL: Actor = {
     avatarImageUrl: '',
     appearances: [{
         id: 'default',
-        description: 'Default appearance of Cassiel, the Warden.',
-        name: 'Default',
+        description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
+        name: 'Celestial Robes',
         emotionPack: {
             base: getBaseImage('cassiel/base.png'),
         }
@@ -484,7 +484,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
         stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
 
-        const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
+        const emotionPrompt = stage.getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
 
         let baseImageUrl = getEmotionImage(actor, 'base', stage, targetAppearanceId);
 

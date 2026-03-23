@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
-import { FiberNew, PlayArrow, Settings } from "@mui/icons-material";
+import { EditNote, FiberNew, PlayArrow, Settings } from "@mui/icons-material";
 import { SettingsScreen } from "./SettingsScreen";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
 import { Button, GridOverlay } from "./UiComponents";
@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Box } from "@mui/material";
 import { useTooltip } from "./TooltipContext";
 import memoriaLogo from "../assets/memoria-logo.png";
+import React from "react";
+import { ContentManagementScreen } from "./ContentManagementScreen";
 
 interface MenuScreenProps {
     stage: () => Stage;
@@ -22,7 +24,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const [expandedSection, setExpandedSection] = useState<'menu' | 'version' | 'attribution'>('menu');
     const { setTooltip, clearTooltip } = useTooltip();
     const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
-    
+    const [showContentManagement, setShowContentManagement] = React.useState(false);
+
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
         return stage().getSave() && Object.keys(stage().getSave().actors).length > 2;
@@ -38,6 +41,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 } else if (saveExists() && !showSettings) {
                     console.log('continue');
                     handleContinue();
+                } else if (showContentManagement) {
+                    console.log('close content management');
+                    setShowContentManagement(false);
                 }
             }
         };
@@ -105,7 +111,15 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             enabled: !disableAllButtons,
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
             icon: Settings
-        }
+        },
+        ...(saveExists() ? [{
+            key: 'manage-content',
+            label: 'Manage Content',
+            onClick: () => setShowContentManagement(true),
+            enabled: !disableAllButtons,
+            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit generative content',
+            icon: EditNote,
+        }] : []),
     ];
 
     return (
@@ -413,6 +427,14 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                     onConfirm={handleSettingsConfirm}
                     isNewGame={isNewGameSettings}
                     setScreenType={setScreenType}
+                />
+            )}
+
+            {/* Content Management Modal */}
+            {showContentManagement && (
+                <ContentManagementScreen
+                    stage={stage}
+                    onClose={() => setShowContentManagement(false)}
                 />
             )}
         </BlurredBackground>

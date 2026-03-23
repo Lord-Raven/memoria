@@ -7,7 +7,7 @@ import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
-import { Emotion } from "./content/Emotion";
+import { Emotion, EmotionPromptMap } from "./content/Emotion";
 
 type MessageStateType = any;
 
@@ -30,8 +30,9 @@ type SaveType = {
     timestamp: number; // Time of last save
     textToSpeech?: boolean;
     language?: string;
-    lorebook?: LorebookEntry[]
-    expeditionChoices?: ExpeditionChoice[]
+    lorebook?: LorebookEntry[];
+    expeditionChoices?: ExpeditionChoice[];
+    emotionPrompts?: EmotionPromptMap;
 }
 
 type ExpeditionChoice = {
@@ -443,6 +444,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             console.error(`Error removing background`, error);
             return imageUrl;
         }
+    }
+
+    async uploadFile(fileName: string, file: File): Promise<string> {
+        // Don't honor file's name; want to overwrite existing content that may have had a different actual name.
+        const updateResponse = await this.storage.set(fileName, file).forUser();
+        if (!updateResponse.data || updateResponse.data.length == 0) {
+            throw new Error('Failed to upload file to storage.');
+        }
+        return updateResponse.data[0].value;
     }
 
     async loadActors() {
