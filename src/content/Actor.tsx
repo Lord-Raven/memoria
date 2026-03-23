@@ -303,13 +303,13 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
         // Replace name quotation marks with single-quotes to avoid issues where nicknames are highlighted as dialogue:
         name: (parsedData['name'] || data.name).replace(/["“”]/g, "'"),
         fullPath: data.fullPath || '',
-        avatarImageUrl: data.avatar || '',
         profile: parsedData['profile'] || '',
         characterArc: parsedData['motive'] || '',
         voiceId: data.voiceId || parsedData['voice'] || '',
         themeColor: themeColor,
         font: parsedData['font'] || 'Arial, sans-serif',
-        appearances: []
+        appearances: [],
+        sampleImageUrl: data.sampleImageUrl || data.avatar
     });
 
 
