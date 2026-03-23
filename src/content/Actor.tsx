@@ -71,6 +71,13 @@ export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
     {name: 'Lyra', fullPath: 'Birb_Brain/lyra-ardeia-expeditioner-5f531b2f758e'},
     {name: 'Mira', fullPath: 'Derpnomicon/mira-dded7def497b'},
 //    {name: 'Reitia', fullPath: '7leaf/reitia-8f2ae18ad191'},
+    {name: 'Persephone', fullPath: 'Sancay/persephone-the-normal-barmaid-774b0445ba84'},
+    {name: 'Vash', fullPath: 'XxSiCxX/vash-romina-ghosts-of-another-world-735a31a4e894'},
+    {name: 'Lumi', fullPath: 'DarkSkies/lumi-wip-a7970572de2c'},
+    {name: 'Nadiya', fullPath: 'xsenn/nadiya-18576a12939e'},
+    {name: 'Astraea', fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1'},
+    {name: 'Sam', fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1'},
+    {name: 'Aeriya', fullPath: 'SilverFlame/aeriya-361950a8a9ba'},
 
 ];
 
@@ -85,7 +92,7 @@ export const CASSIEL: Actor = {
         description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
         name: 'Celestial Robes',
         emotionPack: {
-            base: getBaseImage('cassiel/base.png'),
+            base: getBaseImage('cassiel/sample.png'),
         }
     }],
     appearanceId: 'default',
@@ -107,7 +114,7 @@ export async function loadReserveActorFromFullPath(name: string, fullPath: strin
         name: name ||dataName,
         fullPath: item.node.fullPath,
         personality: item.node.definition.personality.replaceAll('{{char}}', name || dataName),
-        sampleImageUrl: getBaseImage(`${charDef?.name.toLowerCase()}/base.png`) || item.node.max_res_url,
+        sampleImageUrl: getBaseImage(`${charDef?.name.toLowerCase()}/sample.png`) || item.node.max_res_url,
         // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
         voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : '',
     };
