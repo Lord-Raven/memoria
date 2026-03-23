@@ -1,12 +1,13 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, loadReserveActorFromFullPath, SUPPORTED_CHARACTERS } from "./content/Actor";
+import { Actor, ActorType, CASSIEL, generateEmotionImage, loadReserveActorFromFullPath, SUPPORTED_CHARACTERS } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
+import { Emotion } from "./content/Emotion";
 
 type MessageStateType = any;
 
@@ -37,7 +38,7 @@ type ExpeditionChoice = {
     id: string;
     locationId: string;
     description: string;
-    partnerActorId: string;
+    partnerActorIds: string[];
 }
 
 type LorebookEntry = {
@@ -174,26 +175,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Create Cassiel as the Warden and add to actors
         newSave.actors[`cassiel`] = {
-            id: `cassiel`,
-            name: 'Cassiel',
-            type: ActorType.WARDEN,
-            profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
-            avatarImageUrl: '',
-            appearances: [{
-                id: 'default',
-                description: 'Default appearance of Cassiel, the Warden.',
-                name: 'Default',
-                emotionPack: {
-                    neutral: ''
-                }
-            }],
-            appearanceId: '',
-            fullPath: '',
-            characterArc: '',
-            themeColor: '#8b0000',
-            themeFontFamily: 'Georgia, serif',
-            voiceId: ''
+            ...CASSIEL
         };
+
+        this.generationPromises['cassiel'] = new Promise(() => {});
+        generateEmotionImage(newSave.actors[`cassiel`], "neutral" as Emotion, this, false, 'default').finally(() => {
+            delete this.generationPromises['cassiel'];
+        });
 
         this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 2;
 
@@ -302,7 +290,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             id: generateUuid(),
             locationId: location.id,
             description: `Expedition to ${location.name}`,
-            partnerActorId: this.pickRandom(prisonerActors)?.id || '',
+            partnerActorIds: [this.pickRandom(prisonerActors)?.id || ''].filter(id => id !== ''),
         }));
 
         this.saveGame(); // Save the rough expedition options.
@@ -348,20 +336,32 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             return null;
         }
 
-        const isArdeia = this.isArdeiaLocationId(selectedLocation.id);
+        let skit: Skit;
 
-        const skitType = isArdeia ? SkitType.SOCIAL : SkitType.ADVENTURE;
+        if (this.isArdeiaLocationId(selectedLocation.id)) {
+            const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER');
+            const initialActor = this.pickRandom(potentialInitialActors) || undefined;
+            skit = new Skit({
+                skitType: SkitType.SOCIAL,
+                initialLocationId: selectedLocation.id,
+                script: [],
+                initialActors: [initialActor?.id].filter(Boolean),
+                summary: '',
+            });
+        } else {
+            // if there's an expedition, the initial actors should be the partner IDs from the expedition:
+            const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && actor.type !== 'WARDEN');
+            const expedition = save.expeditionChoices?.find(choice => choice.locationId === selectedLocation.id);
+            const initialActors = expedition ? expedition.partnerActorIds : [this.pickRandom(potentialInitialActors)?.id].filter(Boolean);
 
-        // Initial actor should be a random non-warden, non-player. Filter player and warden (if not Ardeia), then pick randomly from the remaining actors as the initial actor for the skit:
-        const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && (isArdeia || actor.type !== 'WARDEN'));
-        const initialActor = this.pickRandom(potentialInitialActors) || undefined;
-        const skit = new Skit({
-            skitType,
-            initialLocationId: selectedLocation.id,
-            script: [],
-            initialActors: [initialActor?.id].filter(Boolean),
-            summary: '',
-        });
+            skit = new Skit({
+                skitType: SkitType.ADVENTURE,
+                initialLocationId: selectedLocation.id,
+                script: [],
+                initialActors: initialActors,
+                summary: '',
+            });
+        }
 
         save.turn += 1;
         if (!save.timeline) {

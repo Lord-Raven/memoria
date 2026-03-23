@@ -74,6 +74,28 @@ export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
 
 ];
 
+export const CASSIEL: Actor = {
+    id: `cassiel`,
+    name: 'Cassiel',
+    type: ActorType.WARDEN,
+    profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
+    avatarImageUrl: '',
+    appearances: [{
+        id: 'default',
+        description: 'Default appearance of Cassiel, the Warden.',
+        name: 'Default',
+        emotionPack: {
+            base: getBaseImage('cassiel/base.png'),
+        }
+    }],
+    appearanceId: 'default',
+    fullPath: '',
+    characterArc: '',
+    themeColor: '#a6e683',
+    themeFontFamily: 'Georgia, serif',
+    voiceId: ''
+};
+
 export async function loadReserveActorFromFullPath(name: string, fullPath: string, stage: Stage): Promise<Actor|null> {
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
