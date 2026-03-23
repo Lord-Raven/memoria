@@ -454,14 +454,30 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
     const targetAppearanceId = appearanceId || actor.appearanceId;
     if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.generationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
+        // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
+        stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
+
         const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
-        stage.generationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
-            image: getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
+
+        let baseImageUrl = getEmotionImage(actor, 'base', stage, targetAppearanceId);
+
+        // If baseImageUrl is an assets URL, we need to convert it to a data URL:
+        if (baseImageUrl && baseImageUrl.startsWith('/assets/')) {
+            const response = await fetch(baseImageUrl);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            baseImageUrl = await new Promise<string>((resolve) => {
+                reader.onloadend = () => resolve(reader.result as string);
+            });
+        }
+
+        const imageUrl = await stage.makeImageFromImage({
+            image: baseImageUrl || '',
             prompt: `Swap the background to a contrasting flat gray. ${emotionPrompt}`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
-        const imageUrl = await stage.generationPromises[`actor/${actor.id}`];
         delete stage.generationPromises[`actor/${actor.id}`];
         console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
         getAppearanceById(actor, targetAppearanceId).emotionPack[emotion] = imageUrl || '';
