@@ -80,7 +80,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         `&require_expressions=true&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
-    readonly INITIAL_ACTORS = 5;
+    readonly INITIAL_ACTORS = 6;
 
     saveData: ChatStateType;
     primaryUser: User;
@@ -340,12 +340,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         if (this.isArdeiaLocationId(selectedLocation.id)) {
             const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER');
-            const initialActor = this.pickRandom(potentialInitialActors) || undefined;
+            // Choose one to three random actors.
             skit = new Skit({
                 skitType: SkitType.SOCIAL,
                 initialLocationId: selectedLocation.id,
                 script: [],
-                initialActors: [initialActor?.id].filter(Boolean),
+                initialActors: this.takeRandomDistinct(potentialInitialActors, Math.min(Math.floor(Math.random() * 3) + 1, potentialInitialActors.length)).map(actor => actor.id),
                 summary: '',
             });
         } else {
