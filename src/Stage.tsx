@@ -145,7 +145,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     name: playerData.name,
                     type: ActorType.PLAYER,
                     profile: playerData.personality,
-                    avatarImageUrl: '', // Unneeded; the player is never seen.
+                    sampleImageUrl: '', // Unneeded; the player is never seen.
                     appearances: [], // Ditto.
                     appearanceId: '', // Ditto.
                     fullPath: '',

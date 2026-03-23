@@ -18,7 +18,7 @@ const ORIGINAL_APPEARANCE_NAME = 'Original Outfit';
 
 export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, onClose }) => {
     type ImageTarget = 'base' | Emotion;
-    type BaseRegenSource = 'description' | 'avatar' | `appearance:${string}`;
+    type BaseRegenSource = 'description' | 'original sample' | `appearance:${string}`;
     const initialAppearanceIdRef = useRef(actor.appearanceId);
 
     const getClonedAppearances = (): Appearance[] => {
@@ -70,7 +70,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         open: boolean;
         target: ImageTarget | null;
     }>({ open: false, target: null });
-    const [baseRegenSource, setBaseRegenSource] = useState<BaseRegenSource>(() => (actor.avatarImageUrl ? 'avatar' : 'description'));
+    const [baseRegenSource, setBaseRegenSource] = useState<BaseRegenSource>(() => (actor.sampleImageUrl ? 'original sample' : 'description'));
     const [emotionPromptDraft, setEmotionPromptDraft] = useState('');
     const [isImageDropActive, setIsImageDropActive] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -270,7 +270,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const handleOpenImageDialog = (target: ImageTarget) => {
         setImageDialog({ open: true, target });
         if (target === 'base') {
-            setBaseRegenSource(actor.avatarImageUrl ? 'avatar' : 'description');
+            setBaseRegenSource(actor.sampleImageUrl ? 'original sample' : 'description');
             setEmotionPromptDraft('');
         } else {
             setEmotionPromptDraft(getEmotionPrompt(target));
@@ -329,23 +329,23 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const handleRegenerateBase = async (source: BaseRegenSource) => {
         if (regeneratingImages.has('base')) return;
 
-        const hasAvatarUrl = !!actor.avatarImageUrl;
+        const hasOriginalSample = !!actor.sampleImageUrl;
         const sourceAppearanceId = source.startsWith('appearance:') ? source.slice('appearance:'.length) : '';
         const sourceAppearance = editedAppearances.find((appearance) => appearance.id === sourceAppearanceId);
         const sourceImageUrl = sourceAppearance?.emotionPack?.base || '';
-        const selectedLabel = source === 'avatar'
-            ? 'Original Avatar'
+        const selectedLabel = source === 'original sample'
+            ? 'Original Sample Image'
             : source === 'description'
                 ? 'Description Only'
                 : `Appearance: ${sourceAppearance?.name || 'Unknown Appearance'}`;
 
-        if (source === 'avatar' && !hasAvatarUrl) {
-            stage().showPriorityMessage('Original avatar image is not available for this actor.');
+        if (source === 'original sample' && !hasOriginalSample) {
+            stage().showPriorityMessage('Original sample is not available for this actor.');
             return;
         }
 
         if (source.startsWith('appearance:') && !sourceImageUrl) {
-            stage().showPriorityMessage('The selected appearance does not have a base image.');
+            stage().showPriorityMessage('The selected appearance does not have an original sample.');
             return;
         }
 
@@ -366,8 +366,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                 // Force a re-render to show the new image
                 forceUpdate({});
             } catch (error) {
-                console.error('Failed to regenerate base image:', error);
-                stage().showPriorityMessage('Failed to regenerate base image. Check console for details.');
+                console.error('Failed to regenerate original sample:', error);
+                stage().showPriorityMessage('Failed to regenerate original sample. Check console for details.');
             } finally {
                 setRegeneratingImages(prev => {
                     const next = new Set(prev);
@@ -379,8 +379,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
 
         setConfirmDialog({
             open: true,
-            title: 'Regenerate Base Image',
-            message: `This will regenerate the base image from ${selectedLabel} and may affect all emotion variations. Continue?`,
+            title: 'Regenerate original sample',
+            message: `This will regenerate the original sample from ${selectedLabel} and may affect all emotion variations. Continue?`,
             actions: [
                 {
                     label: 'Regenerate',
@@ -400,7 +400,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const imageTargetAppearanceName = selectedAppearance?.name || 'Appearance';
     const baseRegenAppearanceOptions = editedAppearances.filter((appearance) => !!appearance.emotionPack?.base);
     const baseRegenOptions: Array<{ value: BaseRegenSource; label: string }> = [
-        ...(actor.avatarImageUrl ? [{ value: 'avatar' as BaseRegenSource, label: 'Original Avatar' }] : []),
+        ...(actor.sampleImageUrl ? [{ value: 'original sample' as BaseRegenSource, label: 'Original Sample Image' }] : []),
         { value: 'description' as BaseRegenSource, label: 'Description Only' },
         ...baseRegenAppearanceOptions.map((appearance) => ({
             value: `appearance:${appearance.id}` as BaseRegenSource,
@@ -859,7 +859,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                     gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
                                     gap: '15px' 
                                 }}>
-                                    {/* Base Image */}
+                                    {/* original sample */}
                                     <motion.div
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}

@@ -26,7 +26,7 @@ export class Actor {
     type: ActorType = ActorType.PRISONER; // Default to PRISONER
     name: string = ''; // Display name
     fullPath: string = ''; // Path to original character definition
-    avatarImageUrl: string = ''; // Original reference image
+    sampleImageUrl: string = ''; // Original reference image
     profile: string = ''; // Personality profile description of character
     appearanceId: string = ''; // The ID of the current appearance (outfit/description) for this actor; if empty, use the first appearance index
     appearances: Appearance[] = []; // Sets of appearances representing outfits or transformations for this actor; each appearance has a full set of emotions
@@ -79,7 +79,7 @@ export const CASSIEL: Actor = {
     name: 'Cassiel',
     type: ActorType.WARDEN,
     profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
-    avatarImageUrl: '',
+    sampleImageUrl: '',
     appearances: [{
         id: 'default',
         description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
@@ -100,13 +100,14 @@ export async function loadReserveActorFromFullPath(name: string, fullPath: strin
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
     const item = await response.json();
     const dataName = item.node.definition.name;
+    const charDef = SUPPORTED_CHARACTERS.find(char => char.fullPath === item.node.fullPath);
     console.log(item);
 
     const data = {
         name: name ||dataName,
         fullPath: item.node.fullPath,
         personality: item.node.definition.personality.replaceAll('{{char}}', name || dataName),
-        avatar: item.node.max_res_url,
+        sampleImageUrl: getBaseImage(`${charDef?.name.toLowerCase()}/base.png`) || item.node.max_res_url,
         // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
         voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : '',
     };
@@ -343,7 +344,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     });
 
     // Kick off emotion image:
-    await generateBaseActorImage(newActor, stage, false, true, newActor.appearanceId, newActor.avatarImageUrl);
+    await generateBaseActorImage(newActor, stage, false, true, newActor.appearanceId, newActor.sampleImageUrl);
     return newActor;
 }
 
@@ -374,10 +375,10 @@ export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?:
     const emotionPack = getAppearanceById(actor, targetAppearanceId).emotionPack;
     const emotionUrl = emotionPack[emotionKey];
     const neutralUrl = emotionPack['neutral'] || emotionPack['base'];
-    const fallbackUrl = neutralUrl || actor.avatarImageUrl || '';
+    const fallbackUrl = neutralUrl || actor.sampleImageUrl || '';
 
     // Check if we need to generate the image
-    if (stage && (emotion === 'neutral' /*|| !stage.getSave().disableEmotionImages*/) && (!emotionUrl || emotionUrl === actor.avatarImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
+    if (stage && (emotion === 'neutral' /*|| !stage.getSave().disableEmotionImages*/) && (!emotionUrl || emotionUrl === actor.sampleImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
         // Kick off generation in the background (don't wait)
         generateEmotionImage(actor, emotion as Emotion, stage, false, targetAppearanceId);
     }
@@ -401,62 +402,54 @@ export async function generateBaseActorImage(
     sourceImageUrl: string = ''
 ): Promise<void> {
     const targetAppearanceId = appearanceId || actor.appearanceId;
-    // If this actor's fullpath is a known supported character, skip the below and use the pre-generated base.png from assets:
-    if (SUPPORTED_CHARACTERS.some(charDef => charDef.fullPath === actor.fullPath)) {
-        const charDef = SUPPORTED_CHARACTERS.find(charDef => charDef.fullPath === actor.fullPath);
-        const assetImageUrl = getBaseImage(`${charDef?.name.toLowerCase()}/base.png`);
-        console.log(`Using pre-generated base image for supported character ${actor.name} from path ${actor.fullPath}`);
-        setEmotionImageUrl(actor, 'base', targetAppearanceId, assetImageUrl);
-    } else {
+
+    console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
+    // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
+    if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
+        console.log(`Generating neutral emotion image for actor ${actor.name}`);
+        // Want to clear in-progress stuff if forcing
+        if (force) {
+            getAppearanceById(actor, targetAppearanceId).emotionPack = {};
+            delete stage.generationPromises[`actor/${actor.id}`];
+        }
+        let imageUrl = '';
+        let baseSourceImage = sourceImageUrl || actor.sampleImageUrl || '';
         
-        console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
-        // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
-        if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
-            console.log(`Generating neutral emotion image for actor ${actor.name}`);
-            // Want to clear in-progress stuff if forcing
-            if (force) {
-                getAppearanceById(actor, targetAppearanceId).emotionPack = {};
-                delete stage.generationPromises[`actor/${actor.id}`];
-            }
-            let imageUrl = '';
-            let baseSourceImage = sourceImageUrl || actor.avatarImageUrl || '';
-            
-            if (!baseSourceImage || !fromAvatar) {
-                console.log(`Generating new image for actor ${actor.name} from description`);
-                // Use stage.makeImage to create a neutral expression based on the description
-                imageUrl = await stage.makeImage({
-                    prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
-                        `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
-                    aspect_ratio: AspectRatio.PHOTO_VERTICAL
-                }, '');
-                baseSourceImage = imageUrl || '';
-            } else {
-                // Need to adjust the base image to the right size/aspect ratio, then send that to the generator (880x1176).
-                try {
-                    baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
-                } catch (error) {
-                    console.warn('Failed to normalize base source image, using original source image instead.', error);
-                }
+        if (!baseSourceImage || !fromAvatar) {
+            console.log(`Generating new image for actor ${actor.name} from description`);
+            // Use stage.makeImage to create a neutral expression based on the description
+            imageUrl = await stage.makeImage({
+                prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
+                    `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
+                aspect_ratio: AspectRatio.PHOTO_VERTICAL
+            }, '');
+            baseSourceImage = imageUrl || '';
+        } else {
+            // Need to adjust the base image to the right size/aspect ratio, then send that to the generator (880x1176).
+            /*try {
+                baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
+            } catch (error) {
+                console.warn('Failed to normalize base source image, using original source image instead.', error);
+            }*/
 
-                // Use stage.makeImageFromImage to create a base image.
-                imageUrl = await stage.makeImageFromImage({
-                    image: baseSourceImage,
-                    prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
-                        `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                        `Ignore details below the waist. This image should be a waist-up portrait on a plain light-gray background. `,
-                    remove_background: true,
-                    transfer_type: 'canny'
-                }, '');
-            }
-            
-            console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
-            
-            setEmotionImageUrl(actor, 'base', targetAppearanceId, imageUrl || '');
+            // Use stage.makeImageFromImage to create a base image.
+            imageUrl = await stage.makeImageFromImage({
+                image: await getDataUrl(baseSourceImage),
+                prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
+                    `${getAppearanceById(actor, targetAppearanceId).description}\n` +
+                    `Ignore details below the waist. This image should be a waist-up portrait on a plain light-gray background. `,
+                remove_background: true,
+                transfer_type: 'canny'
+            }, '');
+        }
+        
+        console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
+        
+        setEmotionImageUrl(actor, 'base', targetAppearanceId, imageUrl || '');
 
-            if (force) {
-                // Invalidate all other emotions
-                getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
-            }
+        if (force) {
+            // Invalidate all other emotions
+            getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
         }
     }
     await generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
@@ -477,17 +470,7 @@ export async function generateAdditionalActorImages(actor: Actor, stage: Stage, 
     }
 }
 
-export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, appearanceId: string = ''): Promise<string> {
-    const targetAppearanceId = appearanceId || actor.appearanceId;
-    if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.generationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
-        console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
-        // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
-        stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
-
-        const emotionPrompt = stage.getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
-
-        let baseImageUrl = getEmotionImage(actor, 'base', stage, targetAppearanceId);
-
+async function getDataUrl(baseImageUrl: string): Promise<string> {
         // If baseImageUrl is an assets URL, we need to convert it to a data URL:
         if (baseImageUrl && baseImageUrl.startsWith('/assets/')) {
             const response = await fetch(baseImageUrl);
@@ -498,6 +481,19 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
                 reader.onloadend = () => resolve(reader.result as string);
             });
         }
+        return baseImageUrl;
+}
+
+export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, appearanceId: string = ''): Promise<string> {
+    const targetAppearanceId = appearanceId || actor.appearanceId;
+    if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.generationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
+        console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
+        // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
+        stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
+
+        const emotionPrompt = stage.getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
+
+        let baseImageUrl = await getDataUrl(getEmotionImage(actor, 'base', stage, targetAppearanceId));
 
         const imageUrl = await stage.makeImageFromImage({
             image: baseImageUrl || '',

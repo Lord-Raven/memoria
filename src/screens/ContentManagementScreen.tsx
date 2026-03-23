@@ -191,8 +191,8 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                             borderRadius: '50%',
                                                             backgroundColor: 'rgba(0, 20, 40, 0.8)',
                                                             border: `3px solid ${actor.themeColor}`,
-                                                            backgroundImage: getEmotionImage(actor, 'neutral') || getEmotionImage(actor, 'base') || actor.avatarImageUrl 
-                                                                ? `url(${getEmotionImage(actor, 'neutral') || getEmotionImage(actor, 'base') || actor.avatarImageUrl})` 
+                                                            backgroundImage: getEmotionImage(actor, 'neutral') || getEmotionImage(actor, 'base') || actor.sampleImageUrl 
+                                                                ? `url(${getEmotionImage(actor, 'neutral') || getEmotionImage(actor, 'base') || actor.sampleImageUrl})` 
                                                                 : 'none',
                                                             backgroundSize: 'cover',
                                                             backgroundPosition: 'top center',
@@ -201,7 +201,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                             justifyContent: 'center',
                                                         }}
                                                     >
-                                                        {!getEmotionImage(actor, 'neutral') && !getEmotionImage(actor, 'base') && !actor.avatarImageUrl && (
+                                                        {!getEmotionImage(actor, 'neutral') && !getEmotionImage(actor, 'base') && !actor.sampleImageUrl && (
                                                             <Person style={{ fontSize: '50px', color: 'rgba(0, 255, 136, 0.3)' }} />
                                                         )}
                                                     </div>

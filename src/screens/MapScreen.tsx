@@ -978,7 +978,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 			const imageUrl =
 				getEmotionImage(partnerActor, 'neutral', stage(), partnerActor.appearanceId) ||
-				partnerActor.avatarImageUrl ||
+				partnerActor.sampleImageUrl ||
 				'';
 			if (!imageUrl) {
 				return [];
