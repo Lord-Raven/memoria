@@ -511,10 +511,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		.sort()
 		.join('|');
 	const expeditionChoiceSignature = (stage().getSave().expeditionChoices || [])
-		.map((choice: { id: string; locationId: string; partnerActorId: string; description: string }) => [
+		.map((choice: { id: string; locationId: string; partnerActorIds: string[]; description: string }) => [
 			choice.id,
 			choice.locationId,
-			choice.partnerActorId,
+			choice.partnerActorIds.join(','),
 			choice.description ?? '',
 		].join(':'))
 		.sort()
@@ -525,7 +525,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			id: string;
 			locationId: string;
 			description: string;
-			partnerActorId: string;
+			partnerActorIds: string[];
 		}>;
 		return new Map(choices.map((choice) => [choice.locationId, choice]));
 	}, [expeditionChoiceSignature, stage]);
@@ -962,7 +962,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
 			locationId: string;
-			partnerActorId: string;
+			partnerActorIds: string[];
 		}>;
 
 		return choices.flatMap((choice) => {
@@ -971,7 +971,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				return [];
 			}
 
-			const partnerActor = save.actors?.[choice.partnerActorId];
+			const partnerActor = save.actors?.[choice.partnerActorIds[0]];
 			if (!partnerActor) {
 				return [];
 			}
@@ -999,7 +999,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const cy = clamp(cell.bounds.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1);
 
 			return [{
-				key: `${choice.locationId}-${choice.partnerActorId}`,
+				key: `${choice.locationId}-${choice.partnerActorIds.join(',')}`,
 				imageUrl,
 				cx,
 				cy,
@@ -1008,7 +1008,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				radiusY,
 				stroke,
 				strokeWidth,
-				clipPathId: `expedition-choice-portrait-${choice.locationId.replace(/[^a-zA-Z0-9_-]/g, "")}-${choice.partnerActorId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+				clipPathId: `expedition-choice-portrait-${choice.locationId.replace(/[^a-zA-Z0-9_-]/g, "")}-${choice.partnerActorIds.join(',').replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			}];
 		});
 	}, [expeditionChoiceSignature, mapMode, mapViewportSize.height, mapViewportSize.width, stage, targetRadiusById, voronoiCells]);
