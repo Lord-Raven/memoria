@@ -8,6 +8,7 @@ export enum Emotion {
     disgust = 'disgust',
     embarrassment = 'embarrassment',
     ecstasy = 'ecstasy',
+    exhaustion = 'exhaustion',
     fear = 'fear', // surprised (unpleasant)
     grief = 'grief',
     guilt = 'guilt', // remorse
@@ -22,10 +23,11 @@ export enum Emotion {
 }
 
 // Map these emotions to base emotions
-//  
+//  detachment = 
 
 export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
-    neutral: ['calm', 'placid', 'serene', 'tranquil', 'stoic', 'neutrality', 'composed', 'composure', 'unemotional', 'impassive', 'impassivity'],
+    neutral: ['calm', 'placid', 'serene', 'tranquil', 'stoic', 'neutrality', 'composed', 'composure', 'unemotional', 'impassive', 'impassivity', 'detached', 'detachment',
+        'indifferent', 'indifference', 'apathy', 'dispassionate', 'dispassion'],
     approval: ['content', 'amusement', 'pleased', 'appreciative', 'appreciation', 'satisfaction', 'satisfied', 'enjoyment', 'enjoying', 'content', 
         'contentedness', 'contentment', 'cheerfulness', 'cheerful'],
     anger: ['angry', 'furious', 'fury', 'enraged', 'livid', 'wrath', 'wrathful', 'frustration', 'ire', 'rage'],
@@ -36,6 +38,7 @@ export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
     embarrassment: ['embarrassed', 'shame', 'ashamed', 'sheepish', 'chagrin', 'mortification', 'abashment', 'selfconsciousness', 'self-consciousness', 'shy', 'shyness', 
         'bashfulness', 'bashful', 'flustered', 'fluster', 'awkwardness', 'awkward', 'discomfiture', 'discomfited', 'discomfort'],
     ecstasy: ['ecstasy', 'ecstatic', 'orgasm', 'orgasmic', 'finishing', 'coming', 'euphoria', 'euphoric', 'mania', 'manic'],
+    exhaustion: ['exhausted', 'tired', 'weary', 'fatigued', 'drained', 'burned out', 'burnt out', 'worn out', 'sleepy', 'sleepiness', 'exhaustion', 'fatigue', 'weariness', 'sapped', 'enervation', 'enervated'],
     fear: ['shocked', 'terrified', 'terror', 'panic', 'alarm', 'alarmed', 'frightened', 'horror', 'horrified', 'shock'],
     grief: ['sad', 'upset', 'depressed', 'depression', 'sobbing', 'desperation', 'sorrow', 'despair'],
     guilt: ['remorseful', 'remorse', 'repentant', 'regretful', 'regretting', 'guiltridden', 'penitent', 'penitence', 'concern'],
@@ -73,6 +76,7 @@ export const EMOTION_PROMPTS: EmotionPromptMap = {
     disgust: 'Give this character a disgusted, grossed-out expression and repulsed gesture or pose.',
     embarrassment: 'Give this character an embarrassed expression and awkward gesture or pose.',
     ecstasy: 'Give this character a euphoric expression, eyes rolled back slightly, with an orgasmic, lusty pose.',
+    exhaustion: 'Give this character a tired, weary expression and slumped, drained pose.',
     fear: 'Give this character a shocked, terrified expression and defensive or cowering pose.',
     grief: 'Give this character a depressed, sobbing expression and mournful pose.',
     guilt: 'Give this character a remorseful, apologetic expression and diminished, contrite pose.',

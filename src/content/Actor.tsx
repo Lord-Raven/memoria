@@ -442,11 +442,12 @@ export async function generateBaseActorImage(
             // Use stage.makeImageFromImage to create a base image.
             imageUrl = await stage.makeImageFromImage({
                 image: await getDataUrl(baseSourceImage),
-                prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
+                prompt: `If needed, alter this character to match this description:\n` +
                     `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Ignore details below the waist. This image should be a waist-up portrait on a plain light-gray background. `,
+                    `Disregard details below the waist. This image remains a waist-up portrait on a plain light-gray background.\n` +
+                    `Preserve the messy, anime-inspired concept-art style with thick brush strokes and lustrous colors.`,
                 remove_background: true,
-                transfer_type: 'canny'
+                transfer_type: 'edit'
             }, '');
         }
         

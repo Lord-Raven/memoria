@@ -2,9 +2,11 @@ import { FC, CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useAnimationControls, useMotionValue, useTransform } from 'framer-motion';
 import gearSvgRaw from '../assets/gear.svg?raw';
 import slideGearSvgRaw from '../assets/slide-gear.svg?raw';
+import barGearSvgRaw from '../assets/bar-gear.svg?raw';
 
 const gearSvg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(gearSvgRaw)}`;
 const slideGearSvg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(slideGearSvgRaw)}`;
+const barGearSvg = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(barGearSvgRaw)}`;
 
 interface GearSliderFidgetProps {
     className?: string;
@@ -309,6 +311,25 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             } as CSSProperties}
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: 0,
+                        bottom: 0,
+                        width: `${rackWidth}px`,
+                        height: `${rackHeight}px`,
+                        zIndex: 0,
+                        background: '#808f8f',
+                        maskImage: `url("${barGearSvg}")`,
+                        WebkitMaskImage: `url("${barGearSvg}")`,
+                        maskRepeat: 'repeat-x',
+                        WebkitMaskRepeat: 'repeat-x',
+                        maskPosition: 'left bottom',
+                        WebkitMaskPosition: 'left bottom',
+                        maskSize: 'auto 100%',
+                        WebkitMaskSize: 'auto 100%',
+                    }}
+                />
                 <motion.div
                     className="gear-slider-rack-progress"
                     initial={false}

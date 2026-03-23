@@ -389,10 +389,7 @@ body {
   left: 0;
   height: 100%;
   opacity: 1;
-  background:
-    radial-gradient(circle at 34% 30%, rgba(237, 242, 242, 0.95) 0%, rgba(237, 242, 242, 0.3) 18%, rgba(237, 242, 242, 0) 28%),
-    radial-gradient(circle at 52% 54%, rgba(137, 205, 135, 0.24) 0%, rgba(137, 205, 135, 0) 44%),
-    linear-gradient(150deg, var(--gsf-gear-highlight) 0%, var(--gsf-gear-mid) 42%, var(--gsf-gear-shadow) 100%);
+  background: #808f8f;
   mask-repeat: repeat-x;
   -webkit-mask-repeat: repeat-x;
   mask-position: left center;
