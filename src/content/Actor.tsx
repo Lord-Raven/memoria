@@ -4,6 +4,8 @@ import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
 
+const getBaseImage = createImageAssetUrlResolver('characters');
+
 export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
     WARDEN = 'WARDEN', // Cassiel, special role that needs to be treated distinctly
@@ -60,7 +62,9 @@ export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
     {name: 'soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37'},
     {name: 'thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58'},
     {name: 'caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba'},
-    {name: 'elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888'}
+    {name: 'elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888'},
+    {name: 'arca-7', fullPath: 'NobodyNos/arca-7-tactical-support-brat-4baf7876a442'},
+
 ];
 
 export async function loadReserveActorFromFullPath(fullPath: string, stage: Stage): Promise<Actor|null> {
@@ -204,7 +208,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `if Individual X remains relevant to this character, Individual X should be replaced with an invented yet appropriate name in the distillation below.\n\n` +
             `Original Details about ${data.name}:\n ${data.personality}\n\n` +
             `Available Voices:\n` +
-            Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => '  - ' + voiceId + ': ' + voiceDesc).join('\n') +
+            Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => ' - ' + voiceId + ': ' + voiceDesc).join('\n') +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
             `System: NAME: Their simple name\n` +
             `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
@@ -373,7 +377,7 @@ export async function generateBaseActorImage(
     // If this actor's fullpath is a known supported character, skip the below and use the pre-generated base.png from assets:
     if (SUPPORTED_CHARACTERS.some(charDef => charDef.fullPath === actor.fullPath)) {
         const charDef = SUPPORTED_CHARACTERS.find(charDef => charDef.fullPath === actor.fullPath);
-        const assetImageUrl = createImageAssetUrlResolver('characters')(charDef?.name + '/base.png');
+        const assetImageUrl = getBaseImage(`${charDef?.name}/base.png`);
         console.log(`Using pre-generated base image for supported character ${actor.name} from path ${actor.fullPath} (${charDef?.name}): ${assetImageUrl}`);
         setEmotionImageUrl(actor, 'base', targetAppearanceId, assetImageUrl);
     } else {
