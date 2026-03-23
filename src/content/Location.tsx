@@ -1,17 +1,7 @@
 import { v4 as generateUuid } from 'uuid';
+import { createImageAssetUrlResolver } from './imageAssetUrl';
 
-const LOCATION_IMAGE_URLS = import.meta.glob('../assets/locations/**/*.{png,jpg,jpeg,webp,avif}', {
-	eager: true,
-	import: 'default',
-}) as Record<string, string>;
-
-const getLocationImage = (relativePath: string): string => {
-	const imageUrl = LOCATION_IMAGE_URLS[`../assets/locations/${relativePath}`];
-	if (!imageUrl) {
-		throw new Error(`Missing location image: ${relativePath}`);
-	}
-	return imageUrl;
-};
+const getLocationImage = createImageAssetUrlResolver('locations');
 
 // Customize this list to define which locations are restored when the map is cleared.
 // Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.

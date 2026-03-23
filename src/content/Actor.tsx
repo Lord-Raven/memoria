@@ -2,6 +2,7 @@ import { v4 as generateUuid } from 'uuid';
 import { Emotion, EMOTION_PROMPTS, EmotionPack } from './Emotion';
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
+import { createImageAssetUrlResolver } from './imageAssetUrl';
 
 export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
@@ -49,25 +50,18 @@ export class Actor {
     }
 }
 
-export const WHITELISTED_FULLPATHS = [
-    'ashen1n/melina-mel-argyra-68a8d1c1c55a',
-    'Ruranel/soren-rokhe-d7bcedc04e37',
-    'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58',
-    'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba',
-    'Richarrd/elowen-bridgewater-f2bfac00b888'
-]
-
-// This is a map of hard-coded actor appearances for a set of common full-paths, to reduce generation time for common characters.
-const hardCodedActorAppearances: {[fullPath: string]: Appearance} = {
-    /*'ashen1n/melina-mel-argyra-68a8d1c1c55a': {
-        id: 'default',
-        name: 'Default Appearance',
-        description: '',
-        emotionPack: {
-            neutral: ''    
-        }
-    },*/
+type CharacterDefinition = {
+    name: string;
+    fullPath: string;
 }
+
+export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
+    {name: 'mel', fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a'},
+    {name: 'soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37'},
+    {name: 'thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58'},
+    {name: 'caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba'},
+    {name: 'elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888'}
+];
 
 export async function loadReserveActorFromFullPath(fullPath: string, stage: Stage): Promise<Actor|null> {
     const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
@@ -376,57 +370,64 @@ export async function generateBaseActorImage(
     sourceImageUrl: string = ''
 ): Promise<void> {
     const targetAppearanceId = appearanceId || actor.appearanceId;
-    console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
-    // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
-    if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
-        console.log(`Generating neutral emotion image for actor ${actor.name}`);
-        // Want to clear in-progress stuff if forcing
-        if (force) {
-            getAppearanceById(actor, targetAppearanceId).emotionPack = {};
-            delete stage.generationPromises[`actor/${actor.id}`];
-        }
-        let imageUrl = '';
-        let baseSourceImage = sourceImageUrl || actor.avatarImageUrl || '';
+    // If this actor's fullpath is a known supported character, skip the below and use the pre-generated base.png from assets:
+    if (SUPPORTED_CHARACTERS.some(charDef => charDef.fullPath === actor.fullPath)) {
+        const charDef = SUPPORTED_CHARACTERS.find(charDef => charDef.fullPath === actor.fullPath);
+        const assetImageUrl = createImageAssetUrlResolver('characters')(charDef?.name + '/base.png');
+        setEmotionImageUrl(actor, 'base', targetAppearanceId, assetImageUrl);
+    } else {
         
-        if (!baseSourceImage || !fromAvatar) {
-            console.log(`Generating new image for actor ${actor.name} from description`);
-            // Use stage.makeImage to create a neutral expression based on the description
-            imageUrl = await stage.makeImage({
-                prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
-                    `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
-                aspect_ratio: AspectRatio.PHOTO_VERTICAL
-            }, '');
-            baseSourceImage = imageUrl || '';
-        } else {
-            // Need to adjust the base image to the right size/aspect ratio, then send that to the generator (880x1176).
-            try {
-                baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
-            } catch (error) {
-                console.warn('Failed to normalize base source image, using original source image instead.', error);
+        console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
+        // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
+        if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
+            console.log(`Generating neutral emotion image for actor ${actor.name}`);
+            // Want to clear in-progress stuff if forcing
+            if (force) {
+                getAppearanceById(actor, targetAppearanceId).emotionPack = {};
+                delete stage.generationPromises[`actor/${actor.id}`];
             }
+            let imageUrl = '';
+            let baseSourceImage = sourceImageUrl || actor.avatarImageUrl || '';
+            
+            if (!baseSourceImage || !fromAvatar) {
+                console.log(`Generating new image for actor ${actor.name} from description`);
+                // Use stage.makeImage to create a neutral expression based on the description
+                imageUrl = await stage.makeImage({
+                    prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
+                        `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
+                    aspect_ratio: AspectRatio.PHOTO_VERTICAL
+                }, '');
+                baseSourceImage = imageUrl || '';
+            } else {
+                // Need to adjust the base image to the right size/aspect ratio, then send that to the generator (880x1176).
+                try {
+                    baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
+                } catch (error) {
+                    console.warn('Failed to normalize base source image, using original source image instead.', error);
+                }
 
-            // Use stage.makeImageFromImage to create a base image.
-            imageUrl = await stage.makeImageFromImage({
-                image: baseSourceImage,
-                prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
-                    `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Ignore details below the waist. This image should be a waist-up portrait on a plain light-gray background. `,
-                remove_background: true,
-                transfer_type: 'canny'
-            }, '');
-        }
-        
-        console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
-        
-        setEmotionImageUrl(actor, 'base', targetAppearanceId, imageUrl || '');
+                // Use stage.makeImageFromImage to create a base image.
+                imageUrl = await stage.makeImageFromImage({
+                    image: baseSourceImage,
+                    prompt: `Create an artful, messy, anime concept-art portrait of this character:\n` +
+                        `${getAppearanceById(actor, targetAppearanceId).description}\n` +
+                        `Ignore details below the waist. This image should be a waist-up portrait on a plain light-gray background. `,
+                    remove_background: true,
+                    transfer_type: 'canny'
+                }, '');
+            }
+            
+            console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
+            
+            setEmotionImageUrl(actor, 'base', targetAppearanceId, imageUrl || '');
 
-        if (force) {
-            // Invalidate all other emotions
-            getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
+            if (force) {
+                // Invalidate all other emotions
+                getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
+            }
         }
-        // Generate neutral but don't wait up.
-        void generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
     }
+    await generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
 }
 
 export async function generateAdditionalActorImages(actor: Actor, stage: Stage, appearanceId: string = ''): Promise<void> {
@@ -450,8 +451,8 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
         const emotionPrompt = /*stage.getSave().emotionPrompts?.[emotion] ||*/ EMOTION_PROMPTS[emotion];
         stage.generationPromises[`actor/${actor.id}`] = stage.makeImageFromImage({
-            image: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c7e00bb8-9977-4e1c-bffd-c361e9a07ca3/97950f92-e1a7-4cfe-b211-6ce10712f0dc.png',//getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
-            prompt: `${emotionPrompt}\nMaintain the existing art style, but give them a contrasting gray background.`,
+            image: getEmotionImage(actor, 'base', stage, targetAppearanceId) || '',
+            prompt: `Swap the background to a contrasting flat gray. ${emotionPrompt}`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');

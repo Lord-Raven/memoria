@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, loadReserveActorFromFullPath, WHITELISTED_FULLPATHS } from "./content/Actor";
+import { Actor, ActorType, loadReserveActorFromFullPath, SUPPORTED_CHARACTERS } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -79,7 +79,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         `&require_expressions=true&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
 
-    readonly INITIAL_ACTORS = 3;
+    readonly INITIAL_ACTORS = 5;
 
     saveData: ChatStateType;
     primaryUser: User;
@@ -481,9 +481,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     this.getSave().actors = {...actors, ...Object.fromEntries(newActors.filter(a => a !== null).map(a => [a!.id, a!]))};
                     actors = this.getSave().actors || {};*/
 
-                    // Instead, load one random actor from a hardcoded whitelist of fullPaths
-                    console.log('Loading reserve actor from whitelist...');
-                    const fullPath = WHITELISTED_FULLPATHS[Math.floor(Math.random() * WHITELISTED_FULLPATHS.length)];
+                    // Instead, load one random actor from a hardcoded whitelist of fullPaths (SUPPORTED_CHARACTERS); filter out characters that are already in actors
+                    console.log('Loading reserve actor from supported characters...');
+                    const fullPath = this.pickRandom(SUPPORTED_CHARACTERS.filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)).map(charDef => charDef.fullPath))!;
                     const newActor = await loadReserveActorFromFullPath(fullPath, this);
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${fullPath}`);
