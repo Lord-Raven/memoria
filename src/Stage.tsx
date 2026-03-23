@@ -20,7 +20,7 @@ type ChatStateType = {
     lastSaveSlot: number
 };
 
-type SaveType = {
+export type SaveType = {
     playerId: string;
     actors: {[key: string]: Actor};
     atlas: {[key: string]: Location};
@@ -198,9 +198,29 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             this.saveGame();
         });
     }
+    
+    loadSave(slotIndex: number) {
+        if (this.saveData.saves[this.saveData.lastSaveSlot]) {
+            this.saveData.lastSaveSlot = slotIndex;
+        }
+    }
+
+    saveToSlot(slotIndex: number) {
+        this.saveData.saves[slotIndex] = JSON.parse(JSON.stringify(this.getSave()));
+        this.saveData.lastSaveSlot = slotIndex;
+        this.saveGame();
+    }
 
     saveGame() {
         this.messenger.updateChatState(this.saveData);
+    }
+
+    deleteSave(slotIndex: number) {
+        this.saveData.saves[slotIndex] = undefined;
+        if (this.saveData.lastSaveSlot === slotIndex) {
+            this.saveData.lastSaveSlot = this.saveData.saves.findIndex(save => save !== undefined) ?? 0;
+        }
+        this.saveGame();
     }
 
     getSave(): SaveType {

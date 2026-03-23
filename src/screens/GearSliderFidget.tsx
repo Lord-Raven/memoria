@@ -311,6 +311,15 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
             } as CSSProperties}
         >
             <div className="gear-slider-rack-window" aria-hidden="true">
+
+                <motion.div
+                    className="gear-slider-rack-progress"
+                    initial={false}
+                    animate={{ width: `${clampedLoadingPercentage}%` }}
+                    transition={{ duration: 0.56, ease: 'easeOut' }}
+                >
+                    <span className="gear-slider-rack-progress-bubbles" />
+                </motion.div>
                 <div
                     style={{
                         position: 'absolute',
@@ -318,7 +327,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                         bottom: 0,
                         width: `${rackWidth}px`,
                         height: `${rackHeight}px`,
-                        zIndex: 0,
+                        zIndex: 1,
                         background: '#808f8f',
                         maskImage: `url("${barGearSvg}")`,
                         WebkitMaskImage: `url("${barGearSvg}")`,
@@ -331,14 +340,6 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                     }}
                 />
                 <motion.div
-                    className="gear-slider-rack-progress"
-                    initial={false}
-                    animate={{ width: `${clampedLoadingPercentage}%` }}
-                    transition={{ duration: 0.56, ease: 'easeOut' }}
-                >
-                    <span className="gear-slider-rack-progress-bubbles" />
-                </motion.div>
-                <motion.div
                     initial={{ x: 0 }}
                     animate={rackIdleControls}
                     style={{
@@ -347,7 +348,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                         right: 0,
                         bottom: 0,
                         height: `${rackHeight}px`,
-                        zIndex: 1,
+                        zIndex: 2,
                         x: rackIdleMotionX,
                     }}
                 >
