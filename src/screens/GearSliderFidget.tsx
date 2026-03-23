@@ -49,6 +49,10 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
         () => Math.max(0, Math.min(100, loadingPercentage)),
         [loadingPercentage],
     );
+    const displayedLoadingPercentage = useMemo(
+        () => Math.round(clampedLoadingPercentage),
+        [clampedLoadingPercentage],
+    );
     const rackGradientContactOffset = useMemo(
         () => (gearSize - rackWidth) / 2,
         [gearSize, rackWidth],
@@ -388,7 +392,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 aria-hidden="true"
                 className={`gear-slider-loading-icon ${isTampered ? 'is-tampered' : ''}`.trim()}
             >
-                <span className="gear-slider-loading-pct">{loadingPercentage}%</span>
+                <span className="gear-slider-loading-pct">{displayedLoadingPercentage}%</span>
             </span>
         </div>
     );

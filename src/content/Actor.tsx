@@ -374,6 +374,7 @@ export async function generateBaseActorImage(
     if (SUPPORTED_CHARACTERS.some(charDef => charDef.fullPath === actor.fullPath)) {
         const charDef = SUPPORTED_CHARACTERS.find(charDef => charDef.fullPath === actor.fullPath);
         const assetImageUrl = createImageAssetUrlResolver('characters')(charDef?.name + '/base.png');
+        console.log(`Using pre-generated base image for supported character ${actor.name} from path ${actor.fullPath} (${charDef?.name}): ${assetImageUrl}`);
         setEmotionImageUrl(actor, 'base', targetAppearanceId, assetImageUrl);
     } else {
         
