@@ -150,8 +150,8 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'stretch',
-                        gap: '16px',
-                        padding: '28px 26px 14px',
+                        gap: '12px',
+                        padding: '20px 22px 10px',
                     }}
                 >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 2 }}>
@@ -160,7 +160,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
                         </Title>
                     </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'center', pt: 0.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', lineHeight: 0 }}>
                         <GearSliderFidget
                             loadingPercentage={progress}
                             gearSize={226.46}

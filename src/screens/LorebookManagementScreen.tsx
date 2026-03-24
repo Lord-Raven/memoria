@@ -435,7 +435,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                         animate={shouldReduceMotion ? { height: 'auto', opacity: 1 } : { height: 'auto', opacity: 1, y: 0 }}
                                                         exit={shouldReduceMotion ? { height: 0, opacity: 0 } : { height: 0, opacity: 0, y: -6 }}
                                                         transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }}
-                                                        style={{ overflow: 'hidden' }}
+                                                        style={{ overflow: 'visible' }}
                                                     >
                                                         {categoryEntries.length === 0 ? (
                                                             <div style={{ color: 'rgba(224, 240, 255, 0.6)', fontSize: '13px', padding: '6px 0 8px' }}>
