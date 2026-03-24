@@ -4,7 +4,7 @@ import { Add, Close, KeyboardArrowDownRounded, KeyboardArrowUpRounded, Visibilit
 import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
 import { createLoreEntry, Lore } from '../content/Lore';
-import { Button, GlassPanel, TextInput, Title } from './UiComponents';
+import { Button, ConfirmDialog, GlassPanel, TextInput, Title } from './UiComponents';
 
 interface LorebookManagementScreenProps {
     stage: () => Stage;
@@ -91,6 +91,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
     });
     const [editingTriggerIndex, setEditingTriggerIndex] = useState<number | 'new' | null>(null);
     const [editingTriggerValue, setEditingTriggerValue] = useState('');
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [collapsedCategories, setCollapsedCategories] = useState<Record<LoreCategory, boolean>>({
         character: false,
         location: false,
@@ -156,16 +157,10 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
 
         const clonedEntry = createLoreEntry({
             ...selectedLore,
-            title: selectedLore.title ? `${selectedLore.title} (Copy)` : '',
-            insertionOrder: getNextInsertionOrder(),
+            title: `${selectedLore.title} (Copy)`,
         });
 
         applyLorebookChange((entries) => [...entries, clonedEntry]);
-        setSelectedLoreId(clonedEntry.id);
-        setCollapsedCategories((current) => ({
-            ...current,
-            [clonedEntry.type]: false,
-        }));
     };
 
     const deleteSelectedLore = () => {
@@ -173,9 +168,11 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
             return;
         }
 
-        const displayTitle = selectedLore.title || '(Untitled)';
-        const shouldDelete = window.confirm(`Delete lore entry "${displayTitle}"? This cannot be undone.`);
-        if (!shouldDelete) {
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteSelectedLore = () => {
+        if (!selectedLore) {
             return;
         }
 
@@ -183,6 +180,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
         const remainingEntries = loreEntries.filter((entry) => entry.id !== selectedLore.id);
 
         applyLorebookChange(() => remainingEntries);
+        setIsDeleteConfirmOpen(false);
 
         if (remainingEntries.length === 0) {
             setSelectedLoreId(null);
@@ -244,6 +242,10 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
             cancelTriggerEdit();
         }
     }, [selectedLore?.constant, editingTriggerIndex]);
+
+    useEffect(() => {
+        setIsDeleteConfirmOpen(false);
+    }, [selectedLoreId]);
 
     return (
         <AnimatePresence>
@@ -726,13 +728,23 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
 
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                                             <Button variant="secondary" onClick={cloneSelectedLore}>Clone</Button>
-                                            <Button variant="secondary" onClick={deleteSelectedLore}>Delete</Button>
+                                            <Button variant="danger" onClick={deleteSelectedLore}>Delete</Button>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </GlassPanel>
+                    <ConfirmDialog
+                        isOpen={isDeleteConfirmOpen && selectedLore !== null}
+                        title={selectedLore ? `Delete ${selectedLore.title || '(Untitled)'}?` : 'Delete lore entry?'}
+                        message="This will permanently remove the selected lore entry. This cannot be undone."
+                        confirmText="Delete"
+                        confirmVariant="danger"
+                        cancelText="Cancel"
+                        onConfirm={confirmDeleteSelectedLore}
+                        onCancel={() => setIsDeleteConfirmOpen(false)}
+                    />
                 </motion.div>
             </motion.div>
         </AnimatePresence>

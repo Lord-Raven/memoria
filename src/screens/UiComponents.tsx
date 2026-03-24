@@ -45,7 +45,7 @@ export const GlassPanel: FC<GlassPanelProps> = ({
    =============================================== */
 
 interface ButtonProps {
-	variant?: 'primary' | 'secondary' | 'menu';
+	variant?: 'primary' | 'secondary' | 'menu' | 'danger';
 	children: ReactNode;
 	disabled?: boolean;
 	onClick?: () => void;
@@ -410,6 +410,7 @@ interface ConfirmDialogProps {
 	message: string;
 	confirmText?: string;
 	cancelText?: string;
+	confirmVariant?: ButtonProps['variant'];
 	onConfirm: () => void;
 	onCancel: () => void;
 }
@@ -420,6 +421,7 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
 	message,
 	confirmText = 'Continue',
 	cancelText = 'Cancel',
+	confirmVariant = 'primary',
 	onConfirm,
 	onCancel,
 }) => {
@@ -501,7 +503,7 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
 							<Button variant="secondary" onClick={onCancel}>
 								{cancelText}
 							</Button>
-							<Button variant="primary" onClick={onConfirm}>
+							<Button variant={confirmVariant} onClick={onConfirm}>
 								{confirmText}
 							</Button>
 						</div>

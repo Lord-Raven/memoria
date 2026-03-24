@@ -113,7 +113,8 @@ body {
 
 .btn-primary,
 .btn-secondary,
-.btn-menu {
+.btn-menu,
+.btn-danger {
   border: 1px solid transparent;
   border-radius: 10px;
   color: var(--mem-fog);
@@ -145,6 +146,13 @@ body {
   background: linear-gradient(140deg, rgba(31, 37, 58, 0.95), rgba(24, 29, 45, 0.96));
   border-color: rgba(138, 176, 204, 0.28);
   box-shadow: 0 10px 24px rgba(5, 10, 20, 0.34);
+}
+
+.btn-danger {
+  color: #ffe3e0;
+  background: linear-gradient(135deg, rgba(122, 34, 34, 0.96), rgba(168, 54, 54, 0.94));
+  border-color: rgba(255, 126, 126, 0.42);
+  box-shadow: 0 10px 24px rgba(46, 7, 7, 0.36);
 }
 
 .menu-section-header {
@@ -201,15 +209,22 @@ body {
 
 .btn-primary:hover,
 .btn-secondary:hover,
-.btn-menu:hover {
+.btn-menu:hover,
+.btn-danger:hover {
   transform: translateY(-2px);
   border-color: rgba(137, 205, 135, 0.42);
   box-shadow: 0 12px 24px rgba(4, 11, 22, 0.42), 0 0 18px rgba(138, 176, 204, 0.24);
 }
 
+.btn-danger:hover {
+  border-color: rgba(255, 150, 150, 0.58);
+  box-shadow: 0 12px 24px rgba(46, 7, 7, 0.44), 0 0 18px rgba(214, 92, 92, 0.24);
+}
+
 .btn-primary:disabled,
 .btn-secondary:disabled,
-.btn-menu:disabled {
+.btn-menu:disabled,
+.btn-danger:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
