@@ -6,7 +6,7 @@ const getLocationImage = createImageAssetUrlResolver('locations');
 // Customize this list to define which locations are restored when the map is cleared.
 // Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.
 // Ardeia is a fantasy sci-fi city with a mixture of heavy gothic architecture mixed with overgrown greenery and archaically high-tech machinery that feels ancient and alien at once.
-const DEFAULT_ATLAS_LOCATIONS: Location[] = [
+export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 	{
 		id: "ardeia-streets",
 		name: "The Streets of Ardeia",

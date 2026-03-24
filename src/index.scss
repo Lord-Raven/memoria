@@ -238,6 +238,16 @@ body {
   box-shadow: 0 0 0 3px rgba(137, 205, 135, 0.2);
 }
 
+select.input-base {
+  color-scheme: dark;
+}
+
+select.input-base option,
+select.input-base optgroup {
+  color: var(--mem-text-primary);
+  background-color: #1f2438;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(138, 176, 204, 0.45) rgba(17, 22, 35, 0.35);

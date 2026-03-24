@@ -275,14 +275,8 @@ export const NamePlate: FC<NamePlateProps> = ({
    INPUT COMPONENTS (Using MUI TextField)
    =============================================== */
 
-interface TextInputProps {
+interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	fullWidth?: boolean;
-	value?: string;
-	onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-	onFocus?: () => void;
-	onBlur?: () => void;
-	placeholder?: string;
-	id?: string;
 	style?: React.CSSProperties;
 	className?: string;
 }

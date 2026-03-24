@@ -1,6 +1,7 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Close } from '@mui/icons-material';
+import { Add, Close, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
 import { Lore } from '../content/Lore';
 import { Button, GlassPanel, TextInput, Title } from './UiComponents';
@@ -47,6 +48,13 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
         const initialEntries = sortLoreEntries(stage().getSave().lorebook || []);
         return initialEntries[0]?.id || null;
     });
+    const [editingTriggerIndex, setEditingTriggerIndex] = useState<number | 'new' | null>(null);
+    const [editingTriggerValue, setEditingTriggerValue] = useState('');
+    const [collapsedCategories, setCollapsedCategories] = useState<Record<LoreCategory, boolean>>({
+        character: false,
+        location: false,
+        other: false,
+    });
 
     const groupedEntries = useMemo(() => {
         const groups: Record<LoreCategory, Lore[]> = {
@@ -88,6 +96,42 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
             entry.id === selectedLoreId ? { ...entry, ...patch } : entry
         )));
     };
+
+    const toggleLoreEnabled = (loreId: string) => {
+        applyLorebookChange((entries) => entries.map((entry) => (
+            entry.id === loreId ? { ...entry, enabled: !entry.enabled } : entry
+        )));
+    };
+
+    const cancelTriggerEdit = () => {
+        setEditingTriggerIndex(null);
+        setEditingTriggerValue('');
+    };
+
+    const commitTriggerEdit = () => {
+        if (!selectedLore || editingTriggerIndex === null) {
+            return;
+        }
+
+        const nextValues = parseTriggers(editingTriggerValue);
+
+        if (editingTriggerIndex === 'new') {
+            if (nextValues.length > 0) {
+                updateSelectedLore({ triggers: [...selectedLore.triggers, ...nextValues] });
+            }
+            cancelTriggerEdit();
+            return;
+        }
+
+        const nextTriggers = [...selectedLore.triggers];
+        nextTriggers.splice(editingTriggerIndex, 1, ...nextValues);
+        updateSelectedLore({ triggers: nextTriggers });
+        cancelTriggerEdit();
+    };
+
+    useEffect(() => {
+        cancelTriggerEdit();
+    }, [selectedLoreId]);
 
     return (
         <AnimatePresence>
@@ -206,47 +250,101 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             return null;
                                         }
 
+                                        const isCollapsed = collapsedCategories[category];
+
                                         return (
                                             <div key={category} style={{ marginBottom: '16px' }}>
-                                                <div
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCollapsedCategories((current) => ({
+                                                            ...current,
+                                                            [category]: !current[category],
+                                                        }));
+                                                    }}
+                                                    aria-expanded={!isCollapsed}
                                                     style={{
+                                                        width: '100%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        padding: 0,
                                                         color: 'rgba(0, 255, 136, 0.9)',
                                                         fontWeight: 700,
                                                         fontSize: '13px',
                                                         letterSpacing: '0.08em',
                                                         textTransform: 'uppercase',
                                                         marginBottom: '8px',
+                                                        cursor: 'pointer',
                                                     }}
                                                 >
-                                                    {CATEGORY_LABELS[category]} ({categoryEntries.length})
-                                                </div>
-                                                <div style={{ display: 'grid', gap: '8px' }}>
-                                                    {categoryEntries.map((entry) => {
-                                                        const isSelected = selectedLoreId === entry.id;
-                                                        return (
-                                                            <motion.button
-                                                                key={entry.id}
-                                                                whileHover={{ scale: 1.01 }}
-                                                                whileTap={{ scale: 0.99 }}
-                                                                onClick={() => setSelectedLoreId(entry.id)}
-                                                                style={{
-                                                                    textAlign: 'left',
-                                                                    background: isSelected ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 30, 60, 0.5)',
-                                                                    border: `1px solid ${isSelected ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.22)'}`,
-                                                                    borderRadius: '8px',
-                                                                    padding: '10px',
-                                                                    cursor: 'pointer',
-                                                                    color: '#e0f0ff',
-                                                                }}
-                                                            >
-                                                                <div style={{ fontWeight: 600, marginBottom: '4px' }}>{entry.title || '(Untitled)'}</div>
-                                                                <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                                                                    order {entry.insertionOrder} · {entry.enabled ? 'enabled' : 'disabled'}
-                                                                </div>
-                                                            </motion.button>
-                                                        );
-                                                    })}
-                                                </div>
+                                                    <span>{CATEGORY_LABELS[category]} ({categoryEntries.length})</span>
+                                                    <span aria-hidden="true">{isCollapsed ? '▸' : '▾'}</span>
+                                                </button>
+                                                {!isCollapsed && (
+                                                    <div style={{ display: 'grid', gap: '8px' }}>
+                                                        {categoryEntries.map((entry) => {
+                                                            const isSelected = selectedLoreId === entry.id;
+                                                            return (
+                                                                <motion.div
+                                                                    key={entry.id}
+                                                                    whileHover={{ scale: 1.01 }}
+                                                                    style={{
+                                                                        background: isSelected ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 30, 60, 0.5)',
+                                                                        border: `1px solid ${isSelected ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.22)'}`,
+                                                                        borderRadius: '8px',
+                                                                        padding: '10px',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '8px',
+                                                                        color: '#e0f0ff',
+                                                                        opacity: entry.enabled ? 1 : (isSelected ? 0.75 : 0.55),
+                                                                    }}
+                                                                >
+                                                                    <motion.button
+                                                                        type="button"
+                                                                        whileHover={{ scale: 1.1 }}
+                                                                        whileTap={{ scale: 0.9 }}
+                                                                        onClick={() => toggleLoreEnabled(entry.id)}
+                                                                        aria-label={entry.enabled ? 'Disable lore entry' : 'Enable lore entry'}
+                                                                        title={entry.enabled ? 'Disable entry' : 'Enable entry'}
+                                                                        style={{
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            background: 'transparent',
+                                                                            border: 'none',
+                                                                            color: entry.enabled ? 'rgba(0, 255, 136, 0.95)' : 'rgba(224, 240, 255, 0.55)',
+                                                                            cursor: 'pointer',
+                                                                            padding: 0,
+                                                                            flexShrink: 0,
+                                                                        }}
+                                                                    >
+                                                                        {entry.enabled ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+                                                                    </motion.button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setSelectedLoreId(entry.id)}
+                                                                        style={{
+                                                                            textAlign: 'left',
+                                                                            background: 'transparent',
+                                                                            border: 'none',
+                                                                            cursor: 'pointer',
+                                                                            color: '#e0f0ff',
+                                                                            padding: 0,
+                                                                            width: '100%',
+                                                                            fontWeight: 600,
+                                                                        }}
+                                                                    >
+                                                                        {entry.title || '(Untitled)'}
+                                                                    </button>
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })
@@ -313,6 +411,8 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Order</label>
                                                 <TextInput
+                                                    type="number"
+                                                    step="any"
                                                     value={String(selectedLore.insertionOrder)}
                                                     onChange={(event) => updateSelectedLore({ insertionOrder: asNumber(event.target.value, selectedLore.insertionOrder) })}
                                                     fullWidth
@@ -321,6 +421,8 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Priority</label>
                                                 <TextInput
+                                                    type="number"
+                                                    step="any"
                                                     value={String(selectedLore.priority)}
                                                     onChange={(event) => updateSelectedLore({ priority: asNumber(event.target.value, selectedLore.priority) })}
                                                     fullWidth
@@ -329,6 +431,8 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Probability</label>
                                                 <TextInput
+                                                    type="number"
+                                                    step="any"
                                                     value={String(selectedLore.probability)}
                                                     onChange={(event) => updateSelectedLore({ probability: asNumber(event.target.value, selectedLore.probability) })}
                                                     fullWidth
@@ -337,6 +441,8 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Scan Depth</label>
                                                 <TextInput
+                                                    type="number"
+                                                    step="any"
                                                     value={String(selectedLore.scanDepth)}
                                                     onChange={(event) => updateSelectedLore({ scanDepth: asNumber(event.target.value, selectedLore.scanDepth) })}
                                                     fullWidth
@@ -348,14 +454,6 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             <label style={{ color: '#cfe6ff', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedLore.enabled}
-                                                    onChange={(event) => updateSelectedLore({ enabled: event.target.checked })}
-                                                />
-                                                Enabled
-                                            </label>
-                                            <label style={{ color: '#cfe6ff', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                <input
-                                                    type="checkbox"
                                                     checked={selectedLore.constant}
                                                     onChange={(event) => updateSelectedLore({ constant: event.target.checked })}
                                                 />
@@ -364,13 +462,114 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                         </div>
 
                                         <div style={{ display: 'grid', gap: '6px' }}>
-                                            <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Triggers (comma or newline separated)</label>
-                                            <textarea
-                                                value={selectedLore.triggers.join('\n')}
-                                                onChange={(event) => updateSelectedLore({ triggers: parseTriggers(event.target.value) })}
-                                                className="input-base"
-                                                style={{ width: '100%', minHeight: '100px', resize: 'vertical' }}
-                                            />
+                                            <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Triggers</label>
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: '8px',
+                                                    padding: '8px',
+                                                    borderRadius: '10px',
+                                                    border: '1px solid rgba(0, 255, 136, 0.25)',
+                                                    background: 'rgba(0, 30, 60, 0.25)',
+                                                    minHeight: '44px',
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                {selectedLore.triggers.map((trigger, index) => {
+                                                    if (editingTriggerIndex === index) {
+                                                        return (
+                                                            <input
+                                                                key={`editing-${index}`}
+                                                                value={editingTriggerValue}
+                                                                onChange={(event) => setEditingTriggerValue(event.target.value)}
+                                                                onBlur={commitTriggerEdit}
+                                                                onKeyDown={(event) => {
+                                                                    if (event.key === 'Enter') {
+                                                                        event.preventDefault();
+                                                                        commitTriggerEdit();
+                                                                    }
+                                                                    if (event.key === 'Escape') {
+                                                                        event.preventDefault();
+                                                                        cancelTriggerEdit();
+                                                                    }
+                                                                }}
+                                                                autoFocus
+                                                                className="input-base"
+                                                                style={{ width: '160px', height: '34px' }}
+                                                            />
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <Chip
+                                                            key={`${trigger}-${index}`}
+                                                            label={trigger}
+                                                            onClick={() => {
+                                                                setEditingTriggerIndex(index);
+                                                                setEditingTriggerValue(trigger);
+                                                            }}
+                                                            onDelete={() => {
+                                                                const nextTriggers = selectedLore.triggers.filter((_, triggerIndex) => triggerIndex !== index);
+                                                                updateSelectedLore({ triggers: nextTriggers });
+                                                            }}
+                                                            size="small"
+                                                            sx={{
+                                                                color: 'rgba(224, 240, 255, 0.95)',
+                                                                backgroundColor: 'rgba(0, 255, 136, 0.16)',
+                                                                border: '1px solid rgba(0, 255, 136, 0.35)',
+                                                                '.MuiChip-deleteIcon': {
+                                                                    color: 'rgba(224, 240, 255, 0.7)',
+                                                                    '&:hover': {
+                                                                        color: 'rgba(224, 240, 255, 1)',
+                                                                    },
+                                                                },
+                                                            }}
+                                                        />
+                                                    );
+                                                })}
+
+                                                {editingTriggerIndex === 'new' ? (
+                                                    <input
+                                                        value={editingTriggerValue}
+                                                        onChange={(event) => setEditingTriggerValue(event.target.value)}
+                                                        onBlur={commitTriggerEdit}
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === 'Enter') {
+                                                                event.preventDefault();
+                                                                commitTriggerEdit();
+                                                            }
+                                                            if (event.key === 'Escape') {
+                                                                event.preventDefault();
+                                                                cancelTriggerEdit();
+                                                            }
+                                                        }}
+                                                        autoFocus
+                                                        placeholder="new trigger"
+                                                        className="input-base"
+                                                        style={{ width: '160px', height: '34px' }}
+                                                    />
+                                                ) : (
+                                                    <Chip
+                                                        icon={<Add />}
+                                                        label="Add trigger"
+                                                        variant="outlined"
+                                                        onClick={() => {
+                                                            setEditingTriggerIndex('new');
+                                                            setEditingTriggerValue('');
+                                                        }}
+                                                        size="small"
+                                                        sx={{
+                                                            color: 'rgba(224, 240, 255, 0.85)',
+                                                            borderColor: 'rgba(0, 255, 136, 0.35)',
+                                                            backgroundColor: 'rgba(0, 255, 136, 0.08)',
+                                                            '& .MuiChip-icon': {
+                                                                color: 'rgba(224, 240, 255, 0.8)',
+                                                            },
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div style={{ display: 'grid', gap: '6px' }}>
@@ -381,10 +580,6 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                 className="input-base"
                                                 style={{ width: '100%', minHeight: '280px', resize: 'vertical' }}
                                             />
-                                        </div>
-
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                            <Button variant="secondary" onClick={onClose}>Close</Button>
                                         </div>
                                     </div>
                                 )}
