@@ -133,6 +133,12 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
         cancelTriggerEdit();
     }, [selectedLoreId]);
 
+    useEffect(() => {
+        if (selectedLore?.constant && editingTriggerIndex !== null) {
+            cancelTriggerEdit();
+        }
+    }, [selectedLore?.constant, editingTriggerIndex]);
+
     return (
         <AnimatePresence>
             <motion.div
@@ -357,7 +363,10 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     border: '1px solid rgba(0, 255, 136, 0.25)',
                                     borderRadius: '12px',
                                     padding: '18px',
-                                    overflowY: 'auto',
+                                    overflow: 'hidden',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    minHeight: 0,
                                 }}
                             >
                                 {!selectedLore ? (
@@ -372,12 +381,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                         Select a lore entry to view and edit details.
                                     </div>
                                 ) : (
-                                    <div style={{ display: 'grid', gap: '14px' }}>
-                                        <div style={{ display: 'grid', gap: '6px' }}>
-                                            <label style={{ color: '#cfe6ff', fontSize: '13px' }}>ID</label>
-                                            <TextInput value={selectedLore.id} fullWidth style={{ opacity: 0.7 }} />
-                                        </div>
-
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', minHeight: 0 }}>
                                         <div style={{ display: 'grid', gap: '6px' }}>
                                             <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Title</label>
                                             <TextInput
@@ -450,19 +454,25 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'flex', gap: '18px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                            <label style={{ color: '#cfe6ff', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedLore.constant}
-                                                    onChange={(event) => updateSelectedLore({ constant: event.target.checked })}
-                                                />
-                                                Constant
-                                            </label>
-                                        </div>
-
                                         <div style={{ display: 'grid', gap: '6px' }}>
-                                            <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Triggers</label>
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: '12px',
+                                                }}
+                                            >
+                                                <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Triggers</label>
+                                                <label style={{ color: '#cfe6ff', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedLore.constant}
+                                                        onChange={(event) => updateSelectedLore({ constant: event.target.checked })}
+                                                    />
+                                                    Constant
+                                                </label>
+                                            </div>
                                             <div
                                                 style={{
                                                     display: 'flex',
@@ -474,6 +484,8 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                     background: 'rgba(0, 30, 60, 0.25)',
                                                     minHeight: '44px',
                                                     alignItems: 'center',
+                                                    opacity: selectedLore.constant ? 0.5 : 1,
+                                                    pointerEvents: selectedLore.constant ? 'none' : 'auto',
                                                 }}
                                             >
                                                 {selectedLore.triggers.map((trigger, index) => {
@@ -505,6 +517,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                         <Chip
                                                             key={`${trigger}-${index}`}
                                                             label={trigger}
+                                                            disabled={selectedLore.constant}
                                                             onClick={() => {
                                                                 setEditingTriggerIndex(index);
                                                                 setEditingTriggerValue(trigger);
@@ -554,6 +567,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                         icon={<Add />}
                                                         label="Add trigger"
                                                         variant="outlined"
+                                                        disabled={selectedLore.constant}
                                                         onClick={() => {
                                                             setEditingTriggerIndex('new');
                                                             setEditingTriggerValue('');
@@ -572,13 +586,13 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'grid', gap: '6px' }}>
+                                        <div style={{ display: 'grid', gap: '6px', flex: 1, minHeight: 0 }}>
                                             <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Content</label>
                                             <textarea
                                                 value={selectedLore.content}
                                                 onChange={(event) => updateSelectedLore({ content: event.target.value })}
                                                 className="input-base"
-                                                style={{ width: '100%', minHeight: '280px', resize: 'vertical' }}
+                                                style={{ width: '100%', flex: 1, minHeight: 0, resize: 'none', overflowY: 'auto' }}
                                             />
                                         </div>
                                     </div>

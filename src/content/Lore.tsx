@@ -37,29 +37,6 @@ export async function fetchLorebook() {
     const response = await fetch(lorebookQuery);
     const item = await response.json();
 
-    /* Anticipated structure of the response that I care about:
-    {
-        node: {
-            definition: {
-                embedded_lorebook: {
-                    entries: [{
-                        "id": 1, -> (as string) id
-                        "keys": [ -> triggers
-                            "World"
-                        ],
-                        "name": "The World", -> title
-                        "content": "Content about the World", -> content
-                        "enabled": true, -> enabled
-                        "constant": false, -> constant
-                        "priority" : 0, -> priority
-                        "probability": 100, -> probability
-                        "insertion_order": 0 -> insertionOrder
-                    }]
-                }
-            }
-        }
-    }*/
-
     // Convert the fetched data into an array of Lore objects:
     const loreEntries: Lore[] = item.node.definition.embedded_lorebook.entries.map((entry: any, index: number) => {
         // Determine the type based on the title and the TYPE_MAPPING:
@@ -79,7 +56,7 @@ export async function fetchLorebook() {
             triggers: entry.keys,
             enabled: entry.enabled,
             constant: entry.constant,
-            scanDepth: 2, // default value
+            scanDepth: 15, // default value
             insertionOrder: entry.insertion_order,
             priority: entry.priority,
             probability: entry.probability
