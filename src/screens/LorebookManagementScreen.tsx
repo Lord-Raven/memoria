@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Add, Close, Visibility, VisibilityOff } from '@mui/icons-material';
 import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
@@ -43,6 +43,7 @@ const asNumber = (value: string, fallback: number) => {
 };
 
 export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ stage, onClose }) => {
+    const shouldReduceMotion = useReducedMotion();
     const [loreEntries, setLoreEntries] = useState<Lore[]>(() => sortLoreEntries(stage().getSave().lorebook || []));
     const [selectedLoreId, setSelectedLoreId] = useState<string | null>(() => {
         const initialEntries = sortLoreEntries(stage().getSave().lorebook || []);
@@ -259,7 +260,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                         const isCollapsed = collapsedCategories[category];
 
                                         return (
-                                            <div key={category} style={{ marginBottom: '16px' }}>
+                                            <motion.div layout key={category} style={{ marginBottom: '16px' }}>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -287,71 +288,91 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                     }}
                                                 >
                                                     <span>{CATEGORY_LABELS[category]} ({categoryEntries.length})</span>
-                                                    <span aria-hidden="true">{isCollapsed ? '▸' : '▾'}</span>
+                                                    <motion.span
+                                                        aria-hidden="true"
+                                                        animate={{ rotate: isCollapsed ? 0 : 90 }}
+                                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
+                                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    >
+                                                        ▸
+                                                    </motion.span>
                                                 </button>
-                                                {!isCollapsed && (
-                                                    <div style={{ display: 'grid', gap: '8px' }}>
-                                                        {categoryEntries.map((entry) => {
-                                                            const isSelected = selectedLoreId === entry.id;
-                                                            return (
-                                                                <motion.div
-                                                                    key={entry.id}
-                                                                    whileHover={{ scale: 1.01 }}
-                                                                    style={{
-                                                                        background: isSelected ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 30, 60, 0.5)',
-                                                                        border: `1px solid ${isSelected ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.22)'}`,
-                                                                        borderRadius: '8px',
-                                                                        padding: '10px',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        gap: '8px',
-                                                                        color: '#e0f0ff',
-                                                                        opacity: entry.enabled ? 1 : (isSelected ? 0.75 : 0.55),
-                                                                    }}
-                                                                >
-                                                                    <motion.button
-                                                                        type="button"
-                                                                        whileHover={{ scale: 1.1 }}
-                                                                        whileTap={{ scale: 0.9 }}
-                                                                        onClick={() => toggleLoreEnabled(entry.id)}
-                                                                        aria-label={entry.enabled ? 'Disable lore entry' : 'Enable lore entry'}
-                                                                        title={entry.enabled ? 'Disable entry' : 'Enable entry'}
-                                                                        style={{
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'center',
-                                                                            background: 'transparent',
-                                                                            border: 'none',
-                                                                            color: entry.enabled ? 'rgba(0, 255, 136, 0.95)' : 'rgba(224, 240, 255, 0.55)',
-                                                                            cursor: 'pointer',
-                                                                            padding: 0,
-                                                                            flexShrink: 0,
-                                                                        }}
-                                                                    >
-                                                                        {entry.enabled ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
-                                                                    </motion.button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setSelectedLoreId(entry.id)}
-                                                                        style={{
-                                                                            textAlign: 'left',
-                                                                            background: 'transparent',
-                                                                            border: 'none',
-                                                                            cursor: 'pointer',
-                                                                            color: '#e0f0ff',
-                                                                            padding: 0,
-                                                                            width: '100%',
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                    >
-                                                                        {entry.title || '(Untitled)'}
-                                                                    </button>
-                                                                </motion.div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
+                                                <AnimatePresence initial={false}>
+                                                    {!isCollapsed && (
+                                                        <motion.div
+                                                            key={`${category}-entries`}
+                                                            layout
+                                                            initial={shouldReduceMotion ? false : { height: 0, opacity: 0, y: -6 }}
+                                                            animate={shouldReduceMotion ? { height: 'auto', opacity: 1 } : { height: 'auto', opacity: 1, y: 0 }}
+                                                            exit={shouldReduceMotion ? { height: 0, opacity: 0 } : { height: 0, opacity: 0, y: -6 }}
+                                                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }}
+                                                            style={{ overflow: 'hidden' }}
+                                                        >
+                                                            <div style={{ display: 'grid', gap: '8px', paddingTop: '2px' }}>
+                                                                {categoryEntries.map((entry) => {
+                                                                    const isSelected = selectedLoreId === entry.id;
+                                                                    return (
+                                                                        <motion.div
+                                                                            layout
+                                                                            key={entry.id}
+                                                                            whileHover={{ scale: 1.01 }}
+                                                                            style={{
+                                                                                background: isSelected ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 30, 60, 0.5)',
+                                                                                border: `1px solid ${isSelected ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.22)'}`,
+                                                                                borderRadius: '8px',
+                                                                                padding: '10px',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '8px',
+                                                                                color: '#e0f0ff',
+                                                                                opacity: entry.enabled ? 1 : (isSelected ? 0.75 : 0.55),
+                                                                            }}
+                                                                        >
+                                                                            <motion.button
+                                                                                type="button"
+                                                                                whileHover={{ scale: 1.1 }}
+                                                                                whileTap={{ scale: 0.9 }}
+                                                                                onClick={() => toggleLoreEnabled(entry.id)}
+                                                                                aria-label={entry.enabled ? 'Disable lore entry' : 'Enable lore entry'}
+                                                                                title={entry.enabled ? 'Disable entry' : 'Enable entry'}
+                                                                                style={{
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    justifyContent: 'center',
+                                                                                    background: 'transparent',
+                                                                                    border: 'none',
+                                                                                    color: entry.enabled ? 'rgba(0, 255, 136, 0.95)' : 'rgba(224, 240, 255, 0.55)',
+                                                                                    cursor: 'pointer',
+                                                                                    padding: 0,
+                                                                                    flexShrink: 0,
+                                                                                }}
+                                                                            >
+                                                                                {entry.enabled ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+                                                                            </motion.button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setSelectedLoreId(entry.id)}
+                                                                                style={{
+                                                                                    textAlign: 'left',
+                                                                                    background: 'transparent',
+                                                                                    border: 'none',
+                                                                                    cursor: 'pointer',
+                                                                                    color: '#e0f0ff',
+                                                                                    padding: 0,
+                                                                                    width: '100%',
+                                                                                    fontWeight: 600,
+                                                                                }}
+                                                                            >
+                                                                                {entry.title || '(Untitled)'}
+                                                                            </button>
+                                                                        </motion.div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </motion.div>
                                         );
                                     })
                                 )}
@@ -586,7 +607,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'grid', gap: '6px', flex: 1, minHeight: 0 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: 0 }}>
                                             <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Content</label>
                                             <textarea
                                                 value={selectedLore.content}
