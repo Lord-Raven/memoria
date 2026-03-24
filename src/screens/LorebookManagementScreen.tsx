@@ -344,7 +344,6 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     border: '1px solid rgba(0, 255, 136, 0.25)',
                                     borderRadius: '12px',
                                     padding: '14px',
-                                    overflowX: 'visible',
                                     overflowY: 'auto',
                                 }}
                             >
@@ -360,6 +359,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
+                                                    overflow: 'visible',
                                                     marginBottom: '8px',
                                                 }}
                                             >
