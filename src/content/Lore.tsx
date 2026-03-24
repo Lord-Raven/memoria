@@ -15,7 +15,7 @@ const TYPE_MAPPING: Record<LoreType, string[]> = {
     other: [], // Everything else ends up being assigned to this by default.
 }
 
-type Lore = {
+export type Lore = {
     id: string;
     type: LoreType;
     title: string;

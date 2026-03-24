@@ -8,7 +8,7 @@ import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
 import { Emotion, EmotionPromptMap } from "./content/Emotion";
-import { fetchLorebook } from "./content/Lore";
+import { fetchLorebook, Lore } from "./content/Lore";
 
 type MessageStateType = any;
 
