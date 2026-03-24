@@ -4,10 +4,11 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { EditNote, LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
+import { AutoStories, EditNote, LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { ContentManagementScreen } from "./ContentManagementScreen";
+import { LorebookManagementScreen } from "./LorebookManagementScreen";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
@@ -353,6 +354,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const initializedSkitIdRef = useRef<string | null>(null);
 	const fullScreenProgressRef = useRef(0);
 	const [showContentManagement, setShowContentManagement] = useState(false);
+	const [showLorebookManagement, setShowLorebookManagement] = useState(false);
 
 	useEffect(() => {
 		const svgElement = mapSvgRef.current;
@@ -1152,6 +1154,31 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			>
 
 				<IconButton
+					onClick={() => setShowLorebookManagement(true)}
+					onMouseEnter={() => setTooltip("Manage lorebook", AutoStories)}
+					onMouseLeave={clearTooltip}
+					aria-label="Manage lorebook"
+					sx={{
+						position: "absolute",
+						top: 16,
+						right: 144,
+						zIndex: 11,
+						color: "rgba(244, 250, 255, 0.94)",
+						backgroundColor: "rgba(22, 28, 44, 0.76)",
+						backdropFilter: "blur(6px)",
+						padding: "8px 16px",
+						borderRadius: "20px",
+						border: "1px solid rgba(138, 176, 204, 0.48)",
+						boxShadow: "0 4px 18px rgba(10, 16, 29, 0.55), 0 0 16px rgba(138, 176, 204, 0.2)",
+						"&:hover": {
+							backgroundColor: "rgba(32, 42, 64, 0.86)",
+						},
+					}}
+				>
+					<AutoStories sx={{ fontSize: 28 }} />
+				</IconButton>
+
+				<IconButton
 					onClick={() => setShowContentManagement(true)}
 					onMouseEnter={() => setTooltip("Manage content", EditNote)}
 					onMouseLeave={clearTooltip}
@@ -1519,6 +1546,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			<ContentManagementScreen
 				stage={stage}
 				onClose={() => setShowContentManagement(false)}
+			/>
+		)}
+		{showLorebookManagement && (
+			<LorebookManagementScreen
+				stage={stage}
+				onClose={() => setShowLorebookManagement(false)}
 			/>
 		)}
 		</>

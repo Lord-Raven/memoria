@@ -3,6 +3,7 @@ import { v4 as generateUuid } from 'uuid';
 import { Outcome } from "./Outcome";
 import { Stage } from "../Stage";
 import { Actor, findBestNameMatch } from "./Actor";
+import { MAX_ENTRIES } from "./Lore";
 
 export enum SkitType {
     INTRO = 'INTRO',
@@ -147,8 +148,30 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
     const location = skit ? save.atlas[skit.initialLocationId] : undefined;
     const pastEvents = (save.timeline ? save.timeline.slice(-historyLength) : []).filter(e => e.skit !== skit);
     const currentActors = skit ? getCurrentActors(skit, skit.script.length - 1).map(actorId => save.actors?.[actorId]).filter(actor => actor !== undefined && actor !== stage.getPlayerActor()) as Actor[] : [];
-    
+    const lorebook = save.lorebook || [];
+
+    // For lorebook context, we go through lorebook entries and add them 
+    let triggeredLore = lorebook.filter(lore => lore.enabled && (lore.constant || lore.triggers.some(trigger => {
+        // Scan lore.scanDepth entries of the current skit for details that match this trigger
+        for (let i = skit ? skit.script.length - 1 : 0; i >= Math.max(0, (skit ? skit.script.length - lore.scanDepth : 0)); i--) {
+            return (skit?.script[i]?.message || '').toLowerCase().includes(trigger.toLowerCase());
+        }
+        return false
+    }))).sort((a, b) => a.insertionOrder - b.insertionOrder);
+
+    // Run probabilities on triggeredLore, and remove entries that don't pass. For each record, look at the entry's prorobability (100 by default) and run a calculation to determine whether to keep it in the context or not. This adds an element of variability and surprise to the lore that can be included in the context, while still prioritizing important lore with higher probability and insertion order.
+    triggeredLore = triggeredLore.filter(lore => Math.random() * 100 <= lore.probability);
+
+    // If triggeredLore has more than MAX_ENTRIES entries, we cut it down to MAX_ENTRIES based on priority (higher priority wins).
+    if (triggeredLore.length > MAX_ENTRIES) {
+        triggeredLore = triggeredLore.sort((a, b) => b.priority - a.priority).slice(0, MAX_ENTRIES);
+    }
+
+    // Finally, order the triggeredLore list by insertion order, so that earlier lore entries appear first in the context.
+    triggeredLore = triggeredLore.sort((a, b) => a.insertionOrder - b.insertionOrder);
+
     const coreContext = `{{messages}}\nPremise: ${buildPremise(playerName)}\n` +
+        (triggeredLore.length > 0 ?  `\n\nRelevant Information About the World:\n` + triggeredLore.map(lore => `  ${lore.title}: ${lore.content}`).join('\n') : '') +
         ((historyLength > 0 && pastEvents.length) ? 
                 // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
                 '\n\nRecent Events for additional context:' + pastEvents.map((v, index) =>  {
@@ -163,7 +186,6 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
                     return `\n\n  Action ${stage.getSave().turn - v.turn} days ago: ${v.description || ''}`;
                 }
             }).join('') : '') +
-        (skit ? `\n\nCurrent scene summary: ${skit.summary || '(No summary yet)'}` : '') +
         (location ? (`\n\nCurrent Location:\n  The following scene is set in ` +
             `${location.name || 'Unknown Location'}. ${location.description || 'No description available.'}\n`) : '') +
 
@@ -174,6 +196,11 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
             return `  ${actor.name}\n    Current Appearance (${currentApperance.name}): ${currentApperance.description}\n` +
                 (otherAppearances.length > 0 ? `    Other Appearances: ${otherAppearances.map(o => o.name).join(', ')}\n` : '') +
                 `    Profile: ${actor.profile}\n    Character Arc: ${actor.characterArc}`}).join('\n')}` : '');
+
+
+
+
+
     return coreContext;
 }
 

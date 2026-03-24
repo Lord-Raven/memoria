@@ -15,24 +15,80 @@ const TYPE_MAPPING: Record<LoreType, string[]> = {
     other: [], // Everything else ends up being assigned to this by default.
 }
 
+export const MAX_ENTRIES = 30; // Maximum number of lore entries to add to context; if there are more, we'll prioritize based on priority and probability.
+
 export type Lore = {
     id: string;
     type: LoreType;
     title: string;
     content: string;
     triggers: string[];
+    enabled: boolean;
     constant: boolean;
-    depth: number;
+    scanDepth: number; // default to 15
+    insertionOrder: number;
     priority: number;
+    probability: number; // 1 to 100
 }
 
 export async function fetchLorebook() {
-    const lorebookQuery = 'https://inference.chub.ai/api/lorebooks/miyo_rin/memoria-world-lore-5ddc2d6a3c0e';
+    const lorebookQuery = 'https://inference.chub.ai/api/lorebooks/miyo_rin/memoria-world-lore-5ddc2d6a3c0e?full=true';
 
     const response = await fetch(lorebookQuery);
     const item = await response.json();
 
-    console.log('Fetched lorebook item:');
-    console.log(item);
+    /* Anticipated structure of the response that I care about:
+    {
+        node: {
+            definition: {
+                embedded_lorebook: {
+                    entries: [{
+                        "id": 1, -> (as string) id
+                        "keys": [ -> triggers
+                            "World"
+                        ],
+                        "name": "The World", -> title
+                        "content": "Content about the World", -> content
+                        "enabled": true, -> enabled
+                        "constant": false, -> constant
+                        "priority" : 0, -> priority
+                        "probability": 100, -> probability
+                        "insertion_order": 0 -> insertionOrder
+                    }]
+                }
+            }
+        }
+    }*/
+
+    // Convert the fetched data into an array of Lore objects:
+    const loreEntries: Lore[] = item.node.definition.embedded_lorebook.entries.map((entry: any, index: number) => {
+        // Determine the type based on the title and the TYPE_MAPPING:
+        let type: LoreType = "other"; // default to "other"
+        for (const [key, names] of Object.entries(TYPE_MAPPING)) {
+            if (names.includes(entry.name)) {
+                type = key as LoreType;
+                break;
+            }
+        }
+
+        return {
+            id: entry.id.toString(),
+            type,
+            title: entry.name,
+            content: entry.content,
+            triggers: entry.keys,
+            enabled: entry.enabled,
+            constant: entry.constant,
+            scanDepth: 2, // default value
+            insertionOrder: entry.insertion_order,
+            priority: entry.priority,
+            probability: entry.probability
+        };
+    });
+
+
+    console.log('Fetched and parsed lorebook:');
+    console.log(loreEntries);
+    return loreEntries;
 
 }
