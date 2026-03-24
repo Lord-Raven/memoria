@@ -34,7 +34,6 @@ export type Lore = {
 
 export function createLoreEntry(params: Partial<Omit<Lore, 'id'>>): Lore {
     return {
-        id: generateUuid(),
         type: "other",
         title: "",
         content: "",
@@ -45,7 +44,8 @@ export function createLoreEntry(params: Partial<Omit<Lore, 'id'>>): Lore {
         insertionOrder: 0,
         priority: 0,
         probability: 100,
-        ...params
+        ...params,
+        id: generateUuid()
     };
 }
 

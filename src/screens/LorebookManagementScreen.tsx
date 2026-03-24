@@ -158,6 +158,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
         const clonedEntry = createLoreEntry({
             ...selectedLore,
             title: `${selectedLore.title} (Copy)`,
+            triggers: [...selectedLore.triggers],
         });
 
         applyLorebookChange((entries) => [...entries, clonedEntry]);
@@ -343,6 +344,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     border: '1px solid rgba(0, 255, 136, 0.25)',
                                     borderRadius: '12px',
                                     padding: '14px',
+                                    overflowX: 'visible',
                                     overflowY: 'auto',
                                 }}
                             >
