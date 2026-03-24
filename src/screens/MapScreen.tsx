@@ -4,9 +4,10 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
+import { EditNote, LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
+import { ContentManagementScreen } from "./ContentManagementScreen";
 import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
@@ -351,6 +352,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const mapClickTimeoutRef = useRef<number | null>(null);
 	const initializedSkitIdRef = useRef<string | null>(null);
 	const fullScreenProgressRef = useRef(0);
+	const [showContentManagement, setShowContentManagement] = useState(false);
 
 	useEffect(() => {
 		const svgElement = mapSvgRef.current;
@@ -1132,6 +1134,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	return (
+		<>
 		<BlurredBackground
 			imageUrl={MAP_BACKGROUND_IMAGE}
 			overlay="linear-gradient(130deg, rgba(5, 24, 34, 0.78) 0%, rgba(18, 47, 32, 0.72) 50%, rgba(37, 24, 57, 0.78) 100%)"
@@ -1147,6 +1150,31 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					position: "relative",
 				}}
 			>
+
+				<IconButton
+					onClick={() => setShowContentManagement(true)}
+					onMouseEnter={() => setTooltip("Manage content", EditNote)}
+					onMouseLeave={clearTooltip}
+					aria-label="Manage content"
+					sx={{
+						position: "absolute",
+						top: 16,
+						right: 80,
+						zIndex: 11,
+						color: "rgba(244, 250, 255, 0.94)",
+						backgroundColor: "rgba(22, 28, 44, 0.76)",
+						backdropFilter: "blur(6px)",
+						padding: "8px 16px",
+						borderRadius: "20px",
+						border: "1px solid rgba(138, 176, 204, 0.48)",
+						boxShadow: "0 4px 18px rgba(10, 16, 29, 0.55), 0 0 16px rgba(138, 176, 204, 0.2)",
+						"&:hover": {
+							backgroundColor: "rgba(32, 42, 64, 0.86)",
+						},
+					}}
+				>
+					<EditNote sx={{ fontSize: 28 }} />
+				</IconButton>
 
 				<IconButton
 					onClick={() => setScreenType(ScreenType.MENU)}
@@ -1486,5 +1514,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					onCancel={() => setPendingLocation(null)}
 				/>
 			</BlurredBackground>
-		);
+
+		{showContentManagement && (
+			<ContentManagementScreen
+				stage={stage}
+				onClose={() => setShowContentManagement(false)}
+			/>
+		)}
+		</>
+	);
 };

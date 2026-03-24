@@ -8,6 +8,7 @@ import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
 import { Emotion, EmotionPromptMap } from "./content/Emotion";
+import { fetchLorebook } from "./content/Lore";
 
 type MessageStateType = any;
 
@@ -30,7 +31,7 @@ export type SaveType = {
     timestamp: number; // Time of last save
     textToSpeech?: boolean;
     language?: string;
-    lorebook?: LorebookEntry[];
+    lorebook?: Lore[];
     expeditionChoices?: ExpeditionChoice[];
     emotionPrompts?: EmotionPromptMap;
 }
@@ -40,13 +41,6 @@ type ExpeditionChoice = {
     locationId: string;
     description: string;
     partnerActorIds: string[];
-}
-
-type LorebookEntry = {
-    id: string;
-    title: string;
-    content: string;
-    triggers: string[];
 }
 
 type TimelineEntry = {
@@ -80,6 +74,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         `&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=5000` +
         `&require_expressions=true&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
+    
 
     readonly INITIAL_ACTORS = 6;
 
@@ -113,6 +108,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
+
+        fetchLorebook();
+
         return {
             success: true,
             error: null,

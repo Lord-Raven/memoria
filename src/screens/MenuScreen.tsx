@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { Stage } from "../Stage";
 import { ScreenType } from "./BaseScreen";
-import { EditNote, FiberNew, Folder, PlayArrow, Save, SaveAlt, Settings } from "@mui/icons-material";
+import { FiberNew, Folder, PlayArrow, Save, SaveAlt, Settings } from "@mui/icons-material";
 import { SettingsScreen } from "./SettingsScreen";
 import { BlurredBackground } from "@lord-raven/novel-visualizer";
 import { Button, GridOverlay } from "./UiComponents";
@@ -10,7 +10,6 @@ import { Box } from "@mui/material";
 import { useTooltip } from "./TooltipContext";
 import memoriaLogo from "../assets/memoria-logo.png";
 import React from "react";
-import { ContentManagementScreen } from "./ContentManagementScreen";
 import { SaveLoadScreen } from "./SaveLoadScreen";
 
 interface MenuScreenProps {
@@ -27,7 +26,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     const disableAllButtons = false; // When true, disable all options on this menu, including escape to continue; this is being used to effectively shut down the game at the moment.
     const [showSaveLoad, setShowSaveLoad] = React.useState(false);
     const [saveLoadMode, setSaveLoadMode] = React.useState<'save' | 'load'>('save');
-    const [showContentManagement, setShowContentManagement] = React.useState(false);
 
     // Check if a save exists (if there are any actors or the layout has been modified)
     const saveExists = () => {
@@ -44,9 +42,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 } else if (showSaveLoad) {
                     console.log('close save/load');
                     setShowSaveLoad(false);
-                } else if (showContentManagement) {
-                    console.log('close content management');
-                    setShowContentManagement(false);
                 } else if (saveExists() && !showSettings) {
                     console.log('continue');
                     handleContinue();
@@ -124,17 +119,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Start a fresh playthrough',
             icon: FiberNew
         },
-        ...(saveExists() ? [{
-            key: 'quicksave',
-            label: 'Quick Save',
-            onClick: () => {
-                stage().saveGame();
-                setTooltip('Game saved!', Save, 2000);
-            },
-            enabled: !disableAllButtons,
-            tooltip: disableAllButtons ? 'Currently unavailable' : 'Quickly save your current progress',
-            icon: Save,
-        }] : []),
         {
             key: 'save',
             label: 'Save Game',
@@ -159,14 +143,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
             tooltip: disableAllButtons ? 'Currently unavailable' : 'Adjust game settings and preferences',
             icon: Settings
         },
-        ...(saveExists() ? [{
-            key: 'manage-content',
-            label: 'Manage Content',
-            onClick: () => setShowContentManagement(true),
-            enabled: !disableAllButtons,
-            tooltip: disableAllButtons ? 'Currently unavailable' : 'View and edit generative content',
-            icon: EditNote,
-        }] : []),
     ];
 
     return (
@@ -487,13 +463,6 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                 />
             )}
 
-            {/* Content Management Modal */}
-            {showContentManagement && (
-                <ContentManagementScreen
-                    stage={stage}
-                    onClose={() => setShowContentManagement(false)}
-                />
-            )}
         </BlurredBackground>
     );
 };
