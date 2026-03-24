@@ -1,4 +1,5 @@
 type LoreType = "character" | "location" | "other";
+import { v4 as generateUuid } from 'uuid';
 
 // Hard-coding entry names to type for character and location:
 const TYPE_MAPPING: Record<LoreType, string[]> = {
@@ -31,6 +32,23 @@ export type Lore = {
     probability: number; // 1 to 100
 }
 
+export function createLoreEntry(params: Partial<Omit<Lore, 'id'>>): Lore {
+    return {
+        id: generateUuid(),
+        type: "other",
+        title: "",
+        content: "",
+        triggers: [],
+        enabled: true,
+        constant: false,
+        scanDepth: 15,
+        insertionOrder: 0,
+        priority: 0,
+        probability: 100,
+        ...params
+    };
+}
+
 export async function fetchLorebook() {
     const lorebookQuery = 'https://inference.chub.ai/api/lorebooks/miyo_rin/memoria-world-lore-5ddc2d6a3c0e?full=true';
 
@@ -48,19 +66,17 @@ export async function fetchLorebook() {
             }
         }
 
-        return {
-            id: entry.id.toString(),
+        return createLoreEntry({
             type,
             title: entry.name,
             content: entry.content,
             triggers: entry.keys,
             enabled: entry.enabled,
             constant: entry.constant,
-            scanDepth: 15, // default value
             insertionOrder: entry.insertion_order,
             priority: entry.priority,
             probability: entry.probability
-        };
+        });
     });
 
 

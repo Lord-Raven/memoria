@@ -1,9 +1,9 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Add, Close, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Add, Close, KeyboardArrowDownRounded, KeyboardArrowUpRounded, Visibility, VisibilityOff } from '@mui/icons-material';
 import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
-import { Lore } from '../content/Lore';
+import { createLoreEntry, Lore } from '../content/Lore';
 import { Button, GlassPanel, TextInput, Title } from './UiComponents';
 
 interface LorebookManagementScreenProps {
@@ -40,6 +40,46 @@ const parseTriggers = (value: string) => {
 const asNumber = (value: string, fallback: number) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+interface NumberStepperInputProps {
+    value: number;
+    onChange: (value: number) => void;
+    ariaLabel: string;
+}
+
+const NumberStepperInput: FC<NumberStepperInputProps> = ({ value, onChange, ariaLabel }) => {
+    return (
+        <div className="number-stepper-shell">
+            <TextInput
+                type="number"
+                step="any"
+                value={String(value)}
+                onChange={(event) => onChange(asNumber(event.target.value, value))}
+                className="number-stepper-input"
+                fullWidth
+                aria-label={ariaLabel}
+            />
+            <div className="number-stepper-buttons" aria-hidden="true">
+                <button
+                    type="button"
+                    className="number-stepper-button"
+                    onClick={() => onChange(value + 1)}
+                    tabIndex={-1}
+                >
+                    <KeyboardArrowUpRounded fontSize="small" />
+                </button>
+                <button
+                    type="button"
+                    className="number-stepper-button"
+                    onClick={() => onChange(value - 1)}
+                    tabIndex={-1}
+                >
+                    <KeyboardArrowDownRounded fontSize="small" />
+                </button>
+            </div>
+        </div>
+    );
 };
 
 export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ stage, onClose }) => {
@@ -86,6 +126,71 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
             stage().saveGame();
             return nextEntries;
         });
+    };
+
+    const getNextInsertionOrder = () => {
+        if (loreEntries.length === 0) {
+            return 0;
+        }
+        return Math.max(...loreEntries.map((entry) => entry.insertionOrder)) + 1;
+    };
+
+    const createNewLoreEntry = (type: LoreCategory) => {
+        const newEntry = createLoreEntry({
+            type,
+            insertionOrder: getNextInsertionOrder(),
+        });
+
+        applyLorebookChange((entries) => [...entries, newEntry]);
+        setSelectedLoreId(newEntry.id);
+        setCollapsedCategories((current) => ({
+            ...current,
+            [type]: false,
+        }));
+    };
+
+    const cloneSelectedLore = () => {
+        if (!selectedLore) {
+            return;
+        }
+
+        const clonedEntry = createLoreEntry({
+            ...selectedLore,
+            title: selectedLore.title ? `${selectedLore.title} (Copy)` : '',
+            insertionOrder: getNextInsertionOrder(),
+        });
+
+        applyLorebookChange((entries) => [...entries, clonedEntry]);
+        setSelectedLoreId(clonedEntry.id);
+        setCollapsedCategories((current) => ({
+            ...current,
+            [clonedEntry.type]: false,
+        }));
+    };
+
+    const deleteSelectedLore = () => {
+        if (!selectedLore) {
+            return;
+        }
+
+        const displayTitle = selectedLore.title || '(Untitled)';
+        const shouldDelete = window.confirm(`Delete lore entry "${displayTitle}"? This cannot be undone.`);
+        if (!shouldDelete) {
+            return;
+        }
+
+        const deletedIndex = loreEntries.findIndex((entry) => entry.id === selectedLore.id);
+        const remainingEntries = loreEntries.filter((entry) => entry.id !== selectedLore.id);
+
+        applyLorebookChange(() => remainingEntries);
+
+        if (remainingEntries.length === 0) {
+            setSelectedLoreId(null);
+            return;
+        }
+
+        const nextIndex = Math.min(Math.max(deletedIndex, 0), remainingEntries.length - 1);
+        setSelectedLoreId(remainingEntries[nextIndex].id);
     };
 
     const updateSelectedLore = (patch: Partial<Lore>) => {
@@ -239,28 +344,21 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     overflowY: 'auto',
                                 }}
                             >
-                                {loreEntries.length === 0 ? (
-                                    <div
-                                        style={{
-                                            color: 'rgba(224, 240, 255, 0.7)',
-                                            fontSize: '14px',
-                                            textAlign: 'center',
-                                            padding: '20px',
-                                        }}
-                                    >
-                                        No lore entries found in this save.
-                                    </div>
-                                ) : (
-                                    CATEGORY_ORDER.map((category) => {
-                                        const categoryEntries = groupedEntries[category];
-                                        if (categoryEntries.length === 0) {
-                                            return null;
-                                        }
+                                {CATEGORY_ORDER.map((category) => {
+                                    const categoryEntries = groupedEntries[category];
+                                    const isCollapsed = collapsedCategories[category];
 
-                                        const isCollapsed = collapsedCategories[category];
-
-                                        return (
-                                            <motion.div layout key={category} style={{ marginBottom: '16px' }}>
+                                    return (
+                                        <div key={category} style={{ marginBottom: '16px' }}>
+                                            <div
+                                                style={{
+                                                    width: '100%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    marginBottom: '8px',
+                                                }}
+                                            >
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -271,10 +369,9 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                     }}
                                                     aria-expanded={!isCollapsed}
                                                     style={{
-                                                        width: '100%',
                                                         display: 'flex',
                                                         alignItems: 'center',
-                                                        justifyContent: 'space-between',
+                                                        gap: '8px',
                                                         background: 'transparent',
                                                         border: 'none',
                                                         padding: 0,
@@ -283,7 +380,6 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                         fontSize: '13px',
                                                         letterSpacing: '0.08em',
                                                         textTransform: 'uppercase',
-                                                        marginBottom: '8px',
                                                         cursor: 'pointer',
                                                     }}
                                                 >
@@ -297,30 +393,49 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                         ▸
                                                     </motion.span>
                                                 </button>
-                                                <AnimatePresence initial={false}>
-                                                    {!isCollapsed && (
-                                                        <motion.div
-                                                            key={`${category}-entries`}
-                                                            layout
-                                                            initial={shouldReduceMotion ? false : { height: 0, opacity: 0, y: -6 }}
-                                                            animate={shouldReduceMotion ? { height: 'auto', opacity: 1 } : { height: 'auto', opacity: 1, y: 0 }}
-                                                            exit={shouldReduceMotion ? { height: 0, opacity: 0 } : { height: 0, opacity: 0, y: -6 }}
-                                                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }}
-                                                            style={{ overflow: 'hidden' }}
-                                                        >
+                                                <Button
+                                                    variant="secondary"
+                                                    onClick={() => createNewLoreEntry(category)}
+                                                    style={{
+                                                        padding: '4px 10px',
+                                                        fontSize: '12px',
+                                                        borderRadius: '8px',
+                                                        alignSelf: 'auto',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                    }}
+                                                >
+                                                    <Add style={{ fontSize: '16px' }} /> New
+                                                </Button>
+                                            </div>
+                                            <AnimatePresence initial={false}>
+                                                {!isCollapsed && (
+                                                    <motion.div
+                                                        key={`${category}-entries`}
+                                                        initial={shouldReduceMotion ? false : { height: 0, opacity: 0, y: -6 }}
+                                                        animate={shouldReduceMotion ? { height: 'auto', opacity: 1 } : { height: 'auto', opacity: 1, y: 0 }}
+                                                        exit={shouldReduceMotion ? { height: 0, opacity: 0 } : { height: 0, opacity: 0, y: -6 }}
+                                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.22, ease: 'easeOut' }}
+                                                        style={{ overflow: 'hidden' }}
+                                                    >
+                                                        {categoryEntries.length === 0 ? (
+                                                            <div style={{ color: 'rgba(224, 240, 255, 0.6)', fontSize: '13px', padding: '6px 0 8px' }}>
+                                                                No entries
+                                                            </div>
+                                                        ) : (
                                                             <div style={{ display: 'grid', gap: '8px', paddingTop: '2px' }}>
                                                                 {categoryEntries.map((entry) => {
                                                                     const isSelected = selectedLoreId === entry.id;
                                                                     return (
                                                                         <motion.div
-                                                                            layout
                                                                             key={entry.id}
                                                                             whileHover={{ scale: 1.01 }}
                                                                             style={{
                                                                                 background: isSelected ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 30, 60, 0.5)',
                                                                                 border: `1px solid ${isSelected ? 'rgba(0, 255, 136, 0.6)' : 'rgba(0, 255, 136, 0.22)'}`,
                                                                                 borderRadius: '8px',
-                                                                                padding: '10px',
+                                                                                padding: '8px 10px',
                                                                                 display: 'flex',
                                                                                 alignItems: 'center',
                                                                                 gap: '8px',
@@ -369,13 +484,13 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                                     );
                                                                 })}
                                                             </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </motion.div>
-                                        );
-                                    })
-                                )}
+                                                        )}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    );
+                                })}
                             </div>
 
                             <div
@@ -435,42 +550,34 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                         >
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Order</label>
-                                                <TextInput
-                                                    type="number"
-                                                    step="any"
-                                                    value={String(selectedLore.insertionOrder)}
-                                                    onChange={(event) => updateSelectedLore({ insertionOrder: asNumber(event.target.value, selectedLore.insertionOrder) })}
-                                                    fullWidth
+                                                <NumberStepperInput
+                                                    value={selectedLore.insertionOrder}
+                                                    onChange={(value) => updateSelectedLore({ insertionOrder: value })}
+                                                    ariaLabel="Lore insertion order"
                                                 />
                                             </div>
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Priority</label>
-                                                <TextInput
-                                                    type="number"
-                                                    step="any"
-                                                    value={String(selectedLore.priority)}
-                                                    onChange={(event) => updateSelectedLore({ priority: asNumber(event.target.value, selectedLore.priority) })}
-                                                    fullWidth
+                                                <NumberStepperInput
+                                                    value={selectedLore.priority}
+                                                    onChange={(value) => updateSelectedLore({ priority: value })}
+                                                    ariaLabel="Lore priority"
                                                 />
                                             </div>
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Probability</label>
-                                                <TextInput
-                                                    type="number"
-                                                    step="any"
-                                                    value={String(selectedLore.probability)}
-                                                    onChange={(event) => updateSelectedLore({ probability: asNumber(event.target.value, selectedLore.probability) })}
-                                                    fullWidth
+                                                <NumberStepperInput
+                                                    value={selectedLore.probability}
+                                                    onChange={(value) => updateSelectedLore({ probability: value })}
+                                                    ariaLabel="Lore probability"
                                                 />
                                             </div>
                                             <div style={{ display: 'grid', gap: '6px' }}>
                                                 <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Scan Depth</label>
-                                                <TextInput
-                                                    type="number"
-                                                    step="any"
-                                                    value={String(selectedLore.scanDepth)}
-                                                    onChange={(event) => updateSelectedLore({ scanDepth: asNumber(event.target.value, selectedLore.scanDepth) })}
-                                                    fullWidth
+                                                <NumberStepperInput
+                                                    value={selectedLore.scanDepth}
+                                                    onChange={(value) => updateSelectedLore({ scanDepth: value })}
+                                                    ariaLabel="Lore scan depth"
                                                 />
                                             </div>
                                         </div>
@@ -615,6 +722,11 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                 className="input-base"
                                                 style={{ width: '100%', flex: 1, minHeight: 0, resize: 'none', overflowY: 'auto' }}
                                             />
+                                        </div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                            <Button variant="secondary" onClick={cloneSelectedLore}>Clone</Button>
+                                            <Button variant="secondary" onClick={deleteSelectedLore}>Delete</Button>
                                         </div>
                                     </div>
                                 )}

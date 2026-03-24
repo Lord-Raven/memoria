@@ -238,6 +238,70 @@ body {
   box-shadow: 0 0 0 3px rgba(137, 205, 135, 0.2);
 }
 
+.number-stepper-shell {
+  position: relative;
+  width: 100%;
+}
+
+.number-stepper-input {
+  padding-right: 40px;
+}
+
+.number-stepper-input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.number-stepper-input[type="number"]::-webkit-outer-spin-button,
+.number-stepper-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.number-stepper-buttons {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 34px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--mem-border);
+  border-radius: 0 8px 8px 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--mem-bg-soft), var(--mem-bg-mid));
+}
+
+.number-stepper-button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--mem-mist);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.number-stepper-button + .number-stepper-button {
+  border-top: 1px solid var(--mem-border);
+}
+
+.number-stepper-button:hover {
+  color: var(--mem-fog);
+  background: var(--mem-glass-bright);
+}
+
+.number-stepper-button:active {
+  background: var(--mem-glass);
+}
+
+.number-stepper-button:focus-visible {
+  outline: 1px solid var(--mem-border-strong);
+  outline-offset: -1px;
+}
+
 select.input-base {
   color-scheme: dark;
 }
