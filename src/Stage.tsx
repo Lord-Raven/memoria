@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, CASSIEL, generateEmotionImage, loadReserveActorFromFullPath, SUPPORTED_CHARACTERS } from "./content/Actor";
+import { Actor, ActorType, CASSIEL, findBestNameMatch, generateEmotionImage, loadReserveActorFromFullPath, SUPPORTED_CHARACTERS } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -169,6 +169,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Create new save data structure
         const newSave: SaveType = this.generateFreshSave(playerData);
 
+        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 3;
+
         // Create Cassiel as the Warden and add to actors
         newSave.actors[`cassiel`] = {
             ...CASSIEL
@@ -186,8 +188,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             console.error('Error fetching lorebook', err);
             delete this.generationPromises['lorebook'];
         });
-
-        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 2;
 
         // Save the new game
         this.saveData.saves[saveSlotIndex] = newSave;
@@ -489,32 +489,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(this.getSave().actors);
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
-                    // Populate reserve actors; this is loaded with data from a service, calling the characterServiceQuery URL:
-                    /*const exclusions = (this.getSave().bannedTags || []).concat(this.bannedTagsDefault).map(tag => encodeURIComponent(tag)).join('%2C');
-                    const response = await fetch(this.characterSearchQuery
-                        .replace('{{PAGE_NUMBER}}', '1')
-                        .replace('{{EXCLUSIONS}}', exclusions ? exclusions + '%2C' : '')
-                        .replace('{{SEARCH_TAGS}}', ['female'].concat(['woman']).join('%2C')));
-                    const searchResults = await response.json();
-                    console.log(searchResults);
-                    // Need to do a secondary lookup for each character in searchResults, to get the details we actually care about:
-                    const basicCharacterData = searchResults.data?.nodes.filter((item: string, index: number) => index < this.INITIAL_ACTORS - Object.keys(actors).length).map((item: any) => item.fullPath) || [];
-                    if (searchResults.data?.nodes.length === 0) {
-                        console.warn('No more characters found from search results; resetting page number to 1 to retry with the same parameters.');
-                        this.actorPageNumber = 1;
-                    } else {
-                        this.actorPageNumber = (this.actorPageNumber % this.MAX_PAGES) + 1;
-                    }
-                    console.log(basicCharacterData);
-
-                    const newActors: Actor[] = await Promise.all(basicCharacterData.map(async (fullPath: string) => {
-                        return loadReserveActorFromFullPath(fullPath, this);
-                    }));
-
-                    this.getSave().actors = {...actors, ...Object.fromEntries(newActors.filter(a => a !== null).map(a => [a!.id, a!]))};
-                    actors = this.getSave().actors || {};*/
-
-                    // Instead, load one random actor from a hardcoded whitelist of fullPaths (SUPPORTED_CHARACTERS); filter out characters that are already in actors
+                    // Load one random actor from a hardcoded whitelist of fullPaths (SUPPORTED_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');
                     const character = this.pickRandom(SUPPORTED_CHARACTERS.filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
                     if (!character) {
@@ -525,6 +500,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${newActor.fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};
+                        // Disable character lorebook entry with a name match on newActor:
+                        const lore = findBestNameMatch(newActor.name, this.getSave().lorebook || [], 'title');
+                        if (lore) {
+                            lore.enabled = false;
+                        }
+
                         actors = this.getSave().actors || {};
                     } else {
                         console.warn(`Failed to load actor from fullPath ${character.fullPath}`);

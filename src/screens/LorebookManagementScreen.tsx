@@ -5,6 +5,7 @@ import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
 import { createLoreEntry, Lore } from '../content/Lore';
 import { Button, ConfirmDialog, GlassPanel, TextInput, Title } from './UiComponents';
+import { findBestNameMatch } from '../content/Actor';
 
 interface LorebookManagementScreenProps {
     stage: () => Stage;
@@ -118,6 +119,19 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
     }, [loreEntries]);
 
     const selectedLore = useMemo(() => loreEntries.find((entry) => entry.id === selectedLoreId) || null, [loreEntries, selectedLoreId]);
+
+    const selectedLoreMatchesExistingActor = useMemo(() => {
+        if (!selectedLore || selectedLore.type !== 'character') {
+            return false;
+        }
+
+        const normalizedTitle = selectedLore.title.trim().toLowerCase();
+        if (!normalizedTitle) {
+            return false;
+        }
+
+        return !!findBestNameMatch(normalizedTitle, Object.values(stage().getSave().actors) || []);
+    }, [selectedLore]);
 
     const applyLorebookChange = (updater: (entries: Lore[]) => Lore[]) => {
         setLoreEntries((currentEntries) => {
@@ -522,6 +536,24 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     </div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', minHeight: 0 }}>
+                                        {selectedLoreMatchesExistingActor && (
+                                            <div
+                                                style={{
+                                                    color: 'rgba(224, 240, 255, 0.95)',
+                                                    background: 'rgba(0, 255, 136, 0.12)',
+                                                    border: '1px solid rgba(0, 255, 136, 0.35)',
+                                                    borderRadius: '10px',
+                                                    padding: '10px 12px',
+                                                    fontSize: '13px',
+                                                    lineHeight: 1.4,
+                                                }}
+                                            >
+                                                {selectedLore.enabled
+                                                    ? 'This character is now being managed by the game; consider disabling this entry.'
+                                                    : 'This entry has been disabled because this character is now being managed by the game.'}
+                                            </div>
+                                        )}
+
                                         <div style={{ display: 'grid', gap: '6px' }}>
                                             <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Title</label>
                                             <TextInput

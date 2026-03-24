@@ -74,7 +74,7 @@ export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
     {name: 'Milliette', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png'},
     {name: 'Mira', fullPath: 'Derpnomicon/mira-dded7def497b', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/39a4bd46-60f0-486e-9127-72470ef82c17/cd3a5df1-96c2-4621-9246-6e0145e990a3.png'},
     {name: 'Nadiya', fullPath: 'xsenn/nadiya-18576a12939e', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/612f24c2-3742-4963-8f3e-10afd2193833/1d8a6e1f-cee0-4c40-b49a-e79dba4c64cd.png'},
-    {name: 'Persephone', fullPath: 'Sancay/persephone-the-normal-barmaid-774b0445ba84', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'},
+    { name: 'Persephone', fullPath: 'Sancay/persephone-the-normal-barmaid-a45c371b9af0', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'},
     { name: 'Reitia', fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png'},
     {name: 'Sam', fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png'},
     {name: 'Soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'},
@@ -584,9 +584,10 @@ export function getNameSimilarity(name: string, possibleName: string): number {
  * @param candidates An array of objects with name properties
  * @returns The best matching candidate, or null if no good match is found
  */
-export function findBestNameMatch<T extends { name: string }>(
+export function findBestNameMatch<T extends Record<K, string>, K extends string = 'name'>(
     searchName: string,
-    candidates: T[]
+    candidates: T[],
+    nameProperty: K = 'name' as K
 ): T | null {
     if (!searchName || candidates.length === 0) {
         return null;
@@ -597,7 +598,7 @@ export function findBestNameMatch<T extends { name: string }>(
     const threshold = 0.7; // Minimum similarity threshold
 
     for (const candidate of candidates) {
-        const score = getNameSimilarity(candidate.name, searchName);
+        const score = getNameSimilarity(candidate[nameProperty], searchName);
         // Only consider matches above threshold
         if (score > threshold && score > bestScore) {
             bestScore = score;
