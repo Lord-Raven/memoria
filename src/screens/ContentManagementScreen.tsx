@@ -48,7 +48,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 1000,
-                        padding: '20px',
+                        padding: '10px 20px 30px',
                     }}
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {

@@ -58,23 +58,24 @@ type CharacterDefinition = {
     sampleImage: string;
 }
 
-// * denotes final path.
+// extra space temporarily denotes final path.
 export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
     {name: 'Aeriya', fullPath: 'SilverFlame/aeriya-361950a8a9ba', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8118f416-076c-46c0-b6ec-cd162b928e21/58f1442e-3c03-4740-b138-6c100bcc20bf.png'},
     {name: 'Amat-Ea', fullPath: 'adelsvard/amat-ea-18df50a603a5', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6b8ac58-f648-4c87-8d67-3d6c63adefad/527d8308-8594-4254-b4e1-5efde4ad9cc1.png'},
     {name: 'Arca-7', fullPath: 'NobodyNos/arca-7-tactical-support-brat-4baf7876a442', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png'},
     {name: 'Astraea', fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'},
     {name: 'Caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6a6deed-e2e1-47a8-a4f6-439a6b011749/d0292798-e93f-4824-87c3-4d5205d99afa.png'},
-    {name: 'Elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png'}, // *
-//    {name: 'Lumi', fullPath: 'DarkSkies/lumi-wip-a7970572de2c', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png'},
+    { name: 'Elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png'},
+    { name: 'Lumi', fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png'},
     {name: 'Lyra', fullPath: 'Birb_Brain/lyra-ardeia-expeditioner-5f531b2f758e', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png'},
+    { name: 'Mallory', fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png'},
     {name: 'Mel', fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a02ae02e-b798-4ef5-bd6f-2f26c47593e4/16d1ad89-ae10-43c0-bc16-eaed773849ce.png'},
     {name: 'Millia', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png'},
     {name: 'Milliette', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png'},
     {name: 'Mira', fullPath: 'Derpnomicon/mira-dded7def497b', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/39a4bd46-60f0-486e-9127-72470ef82c17/cd3a5df1-96c2-4621-9246-6e0145e990a3.png'},
     {name: 'Nadiya', fullPath: 'xsenn/nadiya-18576a12939e', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/612f24c2-3742-4963-8f3e-10afd2193833/1d8a6e1f-cee0-4c40-b49a-e79dba4c64cd.png'},
     {name: 'Persephone', fullPath: 'Sancay/persephone-the-normal-barmaid-774b0445ba84', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'},
-//    {name: 'Reitia', fullPath: '7leaf/reitia-8f2ae18ad191', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/1e5ace08-813e-40f0-b3c1-13a40ae86a01/bb78d15e-85d5-4bf6-a31e-fa8cc312d783.png'},
+    { name: 'Reitia', fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png'},
     {name: 'Sam', fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png'},
     {name: 'Soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'},
     {name: 'Thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58', sampleImage: ''},

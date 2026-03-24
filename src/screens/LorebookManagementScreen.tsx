@@ -267,7 +267,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 1000,
-                    padding: '20px',
+                    padding: '10px 20px 30px',
                 }}
                 onClick={(event) => {
                     if (event.target === event.currentTarget) {

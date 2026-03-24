@@ -427,7 +427,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 1000,
-                    padding: '20px',
+                    padding: '10px 20px 30px',
                 }}
                 onClick={(e) => {
                     // Close if clicking backdrop
