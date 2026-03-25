@@ -880,9 +880,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 backgroundColor: getSelectedAppearanceImageUrl('base') ? 'transparent' : 'rgba(0, 20, 40, 0.6)',
                                                 border: `2px solid ${getSelectedAppearanceImageUrl('base') ? 'rgba(255, 136, 0, 0.5)' : 'rgba(0, 255, 136, 0.2)'}`,
                                                 borderRadius: '8px',
-                                                backgroundImage: getSelectedAppearanceImageUrl('base') ? `url(${getSelectedAppearanceImageUrl('base')})` : 'none',
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center top',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -890,6 +887,19 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 position: 'relative',
                                             }}
                                         >
+                                            {getSelectedAppearanceImageUrl('base') && (
+                                                <img
+                                                    src={getSelectedAppearanceImageUrl('base')}
+                                                    alt={`${selectedAppearance?.name || 'Appearance'} base`}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                        objectPosition: 'center top',
+                                                        display: 'block',
+                                                    }}
+                                                />
+                                            )}
                                             {!getSelectedAppearanceImageUrl('base') && (
                                                 <div style={{
                                                     color: 'rgba(0, 255, 136, 0.3)',
@@ -954,9 +964,6 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                         backgroundColor: hasImage ? 'transparent' : 'rgba(0, 20, 40, 0.6)',
                                                         border: `2px solid ${hasImage ? 'rgba(0, 255, 136, 0.5)' : 'rgba(0, 255, 136, 0.2)'}`,
                                                         borderRadius: '8px',
-                                                        backgroundImage: hasImage ? `url(${imageUrl})` : 'none',
-                                                        backgroundSize: 'cover',
-                                                        backgroundPosition: 'center top',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
@@ -964,6 +971,19 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                         position: 'relative',
                                                     }}
                                                 >
+                                                    {hasImage && (
+                                                        <img
+                                                            src={imageUrl}
+                                                            alt={`${selectedAppearance?.name || 'Appearance'} ${emotion}`}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'cover',
+                                                                objectPosition: 'center top',
+                                                                display: 'block',
+                                                            }}
+                                                        />
+                                                    )}
                                                     {!hasImage && (
                                                         <div style={{
                                                             color: 'rgba(0, 255, 136, 0.3)',
