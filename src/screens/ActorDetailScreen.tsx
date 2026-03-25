@@ -229,6 +229,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                 setRegeneratingImages(prev => new Set(prev).add(emotion));
                 
                 try {
+                    console.log('Regenerating emotion image with prompt:', getEmotionPrompt(emotion));
                     await generateEmotionImage(actor, emotion, stage(), true, selectedAppearanceId);
                     syncEditedAppearancesFromActor();
                     // Force a re-render to show the new image

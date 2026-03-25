@@ -485,12 +485,14 @@ async function getDataUrl(baseImageUrl: string): Promise<string> {
 
 export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, appearanceId: string = ''): Promise<string> {
     const targetAppearanceId = appearanceId || actor.appearanceId;
+    console.log(`Generating ${emotion} emotion image for actor ${actor.name} (ID: ${actor.id}) with appearance ID: ${targetAppearanceId}`);
     if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.generationPromises[`actor/${actor.id}`] || force) && (emotion == 'neutral' /*|| !stage.getSave().disableEmotionImages*/)) {
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
         // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
         stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
 
         const emotionPrompt = stage.getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
+        console.log(`Using emotion prompt for ${emotion}: ${emotionPrompt}`);
 
         let baseImageUrl = await getDataUrl(getEmotionImage(actor, 'base', stage, targetAppearanceId));
 
