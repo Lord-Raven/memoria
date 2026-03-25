@@ -366,10 +366,9 @@ select.input-base optgroup {
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: flex-end;
   width: var(--gsf-rack-window-width);
-  height: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5));
-  padding-top: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5) - var(--gsf-rack-window-height));
+  height: calc((var(--gsf-gear-size) * 0.72) + var(--gsf-rack-window-height));
   --gsf-gear-highlight: var(--mem-fog);
   --gsf-gear-mid: var(--mem-mist);
   --gsf-gear-shadow: var(--mem-lichen);
@@ -387,6 +386,7 @@ select.input-base optgroup {
   position: relative;
   width: var(--gsf-rack-window-width);
   height: var(--gsf-rack-window-height);
+  flex: 0 0 auto;
   overflow: hidden;
   border-radius: 7px;
   border: 1px solid rgba(138, 176, 204, 0.4);

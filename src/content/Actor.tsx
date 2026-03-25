@@ -159,7 +159,17 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, {
         name: 'Sam',
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png',
+        appearances: [{
+            id: 'default',
+            name: 'Scythe Form',
+            description: 'A five-foot-long, elegantly curved scythe with a haft of dark, polished wood and a blade of shimmering, silvery metal that seems to drink in the light. The weapon is immaculate and radiates a faint, watchful presence.',
+            emotionPack: {
+                base: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png',
+                neutral: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png'
+            }
+        }],
+        appearanceId: 'default'
     },/* {
         name: 'Soren',
         fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37',
