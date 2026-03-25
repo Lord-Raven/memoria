@@ -498,7 +498,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
 
         const imageUrl = await stage.makeImageFromImage({
             image: baseImageUrl || '',
-            prompt: `${emotionPrompt}\nMaintain their appearance and style: ${getAppearanceById(actor, targetAppearanceId).description}`,
+            prompt: `${emotionPrompt}\nPreserve their outfit and overall appearance, but adjust their facial expression and body language to clearly convey this emotion. `,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
