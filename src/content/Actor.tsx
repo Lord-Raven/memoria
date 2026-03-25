@@ -100,7 +100,22 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, */{ 
         name: 'Elowen', 
         fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png'
+        profile: 'Calm, controlled, and intellectually precise. She observes and analyzes before speaking in a measured, deliberate tone. Publicly, she is a composed reformist who values systems, efficiency, and moral clarity over sentiment or chaos.',
+        characterArc: 'To seize ideological leadership within Ardeia and shape its future direction. She accepts the system but believes it must aim higher than mere survival, and she intends to be the one to guide it there.',
+        themeColor: '#2C3E50',
+        themeFontFamily: '"Times New Roman", serif',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png',
+        appearances: [{
+            id: 'default',
+            name: 'Tailored Peasant Garb',
+            description: 'A tall, fine-boned woman with a severe pale-blonde pixie cut, a thin braid, and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears tailored, practical peasant clothing in earth tones, everything intentional and devoid of decoration.',
+            emotionPack: {
+                base: 'https://media.charhub.io/70e3344a-6859-425e-97d8-7f1bb34a4378/c7114535-4ca4-415e-8c81-e93641df3bb8.png',
+                neutral: 'https://media.charhub.io/054cc56b-3e4e-4078-b5a0-6372356a1fdc/c2aa2ee3-6032-4008-a0bb-914eebaa99f7.png',
+                exhaustion: 'https://media.charhub.io/183daf13-12c7-4a52-9b96-08961fc65af5/8d5ad846-cc53-4fdf-aad1-38138648fbc3.png'
+            }
+        }],
+        appearanceId: 'default',
     }, { 
         name: 'Lumi', 
         fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
@@ -458,7 +473,7 @@ export async function generateBaseActorImage(
     console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
     if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
-        console.log(`Generating neutral emotion image for actor ${actor.name}`);
+        console.log(`Generating base emotion image for actor ${actor.name}`);
         // Want to clear in-progress stuff if forcing
         if (force) {
             getAppearanceById(actor, targetAppearanceId).emotionPack = {};
@@ -478,12 +493,12 @@ export async function generateBaseActorImage(
             baseSourceImage = imageUrl || '';
         } else {
             // Need to adjust the base image to the right size/aspect ratio, and add a margin
-            try {
+            /*try {
                 baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
                 console.log(baseSourceImage);
             } catch (error) {
                 console.warn('Failed to normalize base source image, using original source image instead.', error);
-            }
+            }*/
 
             // Use stage.makeImageFromImage to create a base image.
             imageUrl = await stage.makeImageFromImage({
