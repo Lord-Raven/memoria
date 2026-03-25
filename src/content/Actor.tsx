@@ -3,6 +3,7 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack } from './Emotion';
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
+import { act } from 'react';
 
 const getBaseImage = createImageAssetUrlResolver('characters');
 
@@ -52,81 +53,84 @@ export class Actor {
     }
 }
 
-type CharacterDefinition = {
-    name: string;
-    fullPath: string;
-    sampleImage: string;
-}
 
 // extra space temporarily denotes final path.
-export const SUPPORTED_CHARACTERS: CharacterDefinition[] = [
-    {name: 'Aeriya', fullPath: 'SilverFlame/aeriya-361950a8a9ba', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8118f416-076c-46c0-b6ec-cd162b928e21/58f1442e-3c03-4740-b138-6c100bcc20bf.png'},
-    {name: 'Amat-Ea', fullPath: 'adelsvard/amat-ea-18df50a603a5', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6b8ac58-f648-4c87-8d67-3d6c63adefad/527d8308-8594-4254-b4e1-5efde4ad9cc1.png'},
-    {name: 'Arca-7', fullPath: 'NobodyNos/arca-7-tactical-support-brat-4baf7876a442', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png'},
-    {name: 'Astraea', fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'},
-    {name: 'Caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6a6deed-e2e1-47a8-a4f6-439a6b011749/d0292798-e93f-4824-87c3-4d5205d99afa.png'},
-    { name: 'Elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png'},
-    { name: 'Lumi', fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png'},
-    {name: 'Lyra', fullPath: 'Birb_Brain/lyra-ardeia-expeditioner-5f531b2f758e', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png'},
-    { name: 'Mallory', fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png'},
-    {name: 'Mel', fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a02ae02e-b798-4ef5-bd6f-2f26c47593e4/16d1ad89-ae10-43c0-bc16-eaed773849ce.png'},
-    {name: 'Millia', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png'},
-    {name: 'Milliette', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png'},
-    {name: 'Mira', fullPath: 'Derpnomicon/mira-dded7def497b', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/39a4bd46-60f0-486e-9127-72470ef82c17/cd3a5df1-96c2-4621-9246-6e0145e990a3.png'},
-    {name: 'Nadiya', fullPath: 'xsenn/nadiya-18576a12939e', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/612f24c2-3742-4963-8f3e-10afd2193833/1d8a6e1f-cee0-4c40-b49a-e79dba4c64cd.png'},
-    { name: 'Persephone', fullPath: 'Sancay/persephone-the-normal-barmaid-a45c371b9af0', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'},
-    { name: 'Reitia', fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png'},
-    {name: 'Sam', fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png'},
-    {name: 'Soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'},
-    {name: 'Thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58', sampleImage: ''},
-    {name: 'Vash', fullPath: 'XxSiCxX/vash-romina-ghosts-of-another-world-735a31a4e894', sampleImage: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/f7504502-57f0-49ef-9178-b4f053c9bb37/e09c6364-4e67-4ccb-b744-c4748316335f.png'},
+export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
+    {
+        id: `cassiel`,
+        name: 'Cassiel',
+        type: ActorType.WARDEN,
+        profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
+        sampleImageUrl: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
+        appearances: [{
+            id: 'default',
+            description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
+            name: 'Celestial Robes',
+            emotionPack: {
+                base: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
+                neutral: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png'
+            }
+        }],
+        appearanceId: 'default',
+        fullPath: '',
+        characterArc: '',
+        themeColor: '#a6e683',
+        themeFontFamily: 'Georgia, serif',
+        voiceId: 'calm_female_20s'
+    },
+    {
+        name: 'Aeriya', 
+        fullPath: 'SilverFlame/aeriya-361950a8a9ba', 
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8118f416-076c-46c0-b6ec-cd162b928e21/58f1442e-3c03-4740-b138-6c100bcc20bf.png'
+    },
+
+    {name: 'Amat-Ea', fullPath: 'adelsvard/amat-ea-18df50a603a5', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6b8ac58-f648-4c87-8d67-3d6c63adefad/527d8308-8594-4254-b4e1-5efde4ad9cc1.png'},
+    {name: 'Arca-7', fullPath: 'NobodyNos/arca-7-tactical-support-brat-4baf7876a442', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png'},
+    {name: 'Astraea', fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'},
+    {name: 'Caedmon', fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6a6deed-e2e1-47a8-a4f6-439a6b011749/d0292798-e93f-4824-87c3-4d5205d99afa.png'},
+    { name: 'Elowen', fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png'},
+    { name: 'Lumi', fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png'},
+    {name: 'Lyra', fullPath: 'Birb_Brain/lyra-ardeia-expeditioner-5f531b2f758e', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png'},
+    { name: 'Mallory', fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png'},
+    {name: 'Mel', fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a02ae02e-b798-4ef5-bd6f-2f26c47593e4/16d1ad89-ae10-43c0-bc16-eaed773849ce.png'},
+    {name: 'Millia', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png'},
+    {name: 'Milliette', fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png'},
+    {name: 'Mira', fullPath: 'Derpnomicon/mira-dded7def497b', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/39a4bd46-60f0-486e-9127-72470ef82c17/cd3a5df1-96c2-4621-9246-6e0145e990a3.png'},
+    {name: 'Nadiya', fullPath: 'xsenn/nadiya-18576a12939e', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/612f24c2-3742-4963-8f3e-10afd2193833/1d8a6e1f-cee0-4c40-b49a-e79dba4c64cd.png'},
+    { name: 'Persephone', fullPath: 'Sancay/persephone-the-normal-barmaid-a45c371b9af0', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'},
+    { name: 'Reitia', fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png'},
+    {name: 'Sam', fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png'},
+    {name: 'Soren', fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'},
+    {name: 'Thessaly', fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58', sampleImageUrl: ''},
+    {name: 'Vash', fullPath: 'XxSiCxX/vash-romina-ghosts-of-another-world-735a31a4e894', sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/f7504502-57f0-49ef-9178-b4f053c9bb37/e09c6364-4e67-4ccb-b744-c4748316335f.png'},
 
 ];
 
-export const CASSIEL: Actor = {
-    id: `cassiel`,
-    name: 'Cassiel',
-    type: ActorType.WARDEN,
-    profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
-    sampleImageUrl: '',
-    appearances: [{
-        id: 'default',
-        description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
-        name: 'Celestial Robes',
-        emotionPack: {
-            base: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/9989ec41-b3f4-4649-8547-697d48102f7b/28e87723-7c60-4ef8-b2b2-d433be59638a.png',//getBaseImage('cassiel/sample.png'),
-        }
-    }],
-    appearanceId: 'default',
-    fullPath: '',
-    characterArc: '',
-    themeColor: '#a6e683',
-    themeFontFamily: 'Georgia, serif',
-    voiceId: ''
-};
+export async function loadSupportedActor(name: string, stage: Stage): Promise<Actor|null> {
+    // Canon data within the stage:
+    const newActor = new Actor(SUPPORTED_CHARACTERS.find(char => char.name === name));
 
-export async function loadReserveActorFromFullPath(name: string, fullPath: string, stage: Stage): Promise<Actor|null> {
-    const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', fullPath));
-    const item = await response.json();
-    const dataName = item.node.definition.name;
-    const charDef = SUPPORTED_CHARACTERS.find(char => char.fullPath === item.node.fullPath);
-    console.log(item);
+    // Retrieve data from Chub to fill in possible gaps:
+    let definition: any = {};
+    try {
+        const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', newActor.fullPath));
+        definition = (await response.json()).node.definition;
 
-    const data = {
-        name: name ||dataName,
-        fullPath: item.node.fullPath,
-        personality: item.node.definition.personality.replaceAll('{{char}}', name || dataName),
-        sampleImageUrl: charDef?.sampleImage || item.node.max_res_url,
-        // If the voice ID is not in the VOICE_MAP, it is a custom voice and should be preserved
-        voiceId: !VOICE_MAP[item.node.definition.voice_id] ? item.node.definition.voice_id : '',
-    };
+    } catch (error) {
+        console.warn(`Failed to fetch character details for ${name} at path ${newActor.fullPath}:`, error);
+    }
 
-    stage.generationPromises[`loading_actor/${data.fullPath}`] = loadReserveActor(data, stage).finally(() => {
-        console.log('Finished loading actor for path:', data.fullPath);
-        delete stage.generationPromises[`loading_actor/${data.fullPath}`];
-    });
+    // Even if nothing else, use the definition voice ID over whatever is in the stage.
+    if (definition.voice_id && !VOICE_MAP[definition.voice_id]) {
+        newActor.voiceId = definition.voice_id;
+    }
 
-    return stage.generationPromises[`loading_actor/${data.fullPath}`];
+    // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
+    if (!newActor.profile || !newActor.appearances) {
+        return await distillActor(newActor, definition, stage);
+    }
+
+    return newActor;
 }
 
 // Mapping of voice IDs to a description of the voice, so the AI can choose an ID based on the character profile.
@@ -184,9 +188,9 @@ async function normalizeBaseSourceImage(imageUrl: string): Promise<string> {
     return contextCanvas.toDataURL('image/png');
 }
 
-export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|null> {
-    console.log('Loading reserve actor:', data.name);
-    console.log(data);
+export async function distillActor(actor: Actor, definition: any, stage: Stage): Promise<Actor|null> {
+    console.log('Loading reserve actor:', definition.name);
+    console.log(definition);
 
     // Attempt to substitute words to avert bad content into something more agreeable (if the distillation still has these, then drop the card).
     const bannedWordSubstitutes: {[key: string]: string} = {
@@ -212,24 +216,7 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
 
 
     // Preserve content while removing JSON-like structures.
-    data.name = data.name.replace(/{/g, '(').replace(/}/g, ')');
-    data.personality = data.personality.replace(/{/g, '(').replace(/}/g, ')');
-
-    // Apply banned word substitutions:
-    for (const [bannedWord, substitute] of Object.entries(bannedWordSubstitutes)) {
-        // Need to do a case-insensitive replacement for each occurrence:
-        const regex = new RegExp(bannedWord, 'gi');
-        data.name = data.name.replace(regex, substitute);
-        data.personality = data.personality.replace(regex, substitute);
-    }
-
-    if (Object.keys(bannedWordSubstitutes).some(word => data.personality.toLowerCase().includes(word) || data.name.toLowerCase().includes(word))) {
-        console.log(`Immediately discarding actor due to banned words: ${data.name}`);
-        return null;
-    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${data.name}${data.personality}`)) {
-        console.log(`Immediately discarding actor due to non-english characters: ${data.name}`);
-        return null;
-    }
+    definition.personality = definition.personality.replace(/{/g, '(').replace(/}/g, ')');
 
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
     const generationRequest = stage.generator.textGen({
@@ -241,9 +228,9 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `The player of this game, ${stage.getPlayerActor()?.name || 'Player'}, is one of the many prisoners, bearing the signature bracer that binds them to Ardeia and the Warden. ` +
             `The prisoners work to keep the city running while also exploring the Outside, beyond the cities walls and Barriers. Some are new arrivals, while others have been here for centuries. ` +
             `They find all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. ` +
-            `\n\nThe Original Details below describe a character of this world (${data.name}) to convert into a set of defined fields for this game. ` +
+            `\n\nThe Original Details below describe a character of this world (${actor.name}) to convert into a set of defined fields for this game. ` +
             `\n\n` +
-            `Original Details about ${data.name}:\n ${data.personality}\n\n` +
+            `Original Details about ${actor.name}:\n ${definition.personality}\n\n` +
             `Available Voices:\n` +
             Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => ' - ' + voiceId + ': ' + voiceDesc).join('\n') +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
@@ -263,16 +250,16 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
             `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention.\n` +
             `MOTIVE: Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
             `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
-            `COLOR: #333333\n` +
+            `COLOR: #666666\n` +
             `FONT: Calibri, sans-serif\n` +
             `#END#`,
         stop: ['#END'],
         include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
         max_tokens: 400,
     });
-    stage.generationPromises[`distilling_actor/${data.fullPath}`] = generationRequest.finally(() => {
-            console.log('Finished generating distillation for actor:', data.name);
-            delete stage.generationPromises[`distilling_actor/${data.fullPath}`];
+    stage.generationPromises[`distilling_actor/${actor.fullPath}`] = generationRequest.finally(() => {
+            console.log('Finished generating distillation for actor:', actor.name);
+            delete stage.generationPromises[`distilling_actor/${actor.fullPath}`];
     });
     const generatedResponse = await generationRequest;
     console.log('Generated character distillation:');
@@ -300,61 +287,42 @@ export async function loadReserveActor(data: any, stage: Stage): Promise<Actor|n
     const themeColor = /^#([0-9A-F]{6}|[0-9A-F]{8})$/i.test(parsedData['color']) ?
             parsedData['color'] :
             ['#788ebdff', '#d3aa68ff', '#75c275ff', '#c28891ff', '#55bbb2ff'][Math.floor(Math.random() * 5)];
-    const newActor = new Actor({
-        // Replace name quotation marks with single-quotes to avoid issues where nicknames are highlighted as dialogue:
-        name: (parsedData['name'] || data.name).replace(/["“”]/g, "'"),
-        fullPath: data.fullPath || '',
-        profile: parsedData['profile'] || '',
-        characterArc: parsedData['motive'] || '',
-        voiceId: data.voiceId || parsedData['voice'] || '',
-        themeColor: themeColor,
-        font: parsedData['font'] || 'Arial, sans-serif',
-        appearances: [],
-        sampleImageUrl: data.sampleImageUrl || data.avatar
-    });
 
+    // Fill in actor, but favor any current settings:
+    actor.profile = actor.profile || parsedData['profile'] || '';
+    actor.characterArc = actor.characterArc || parsedData['motive'] || '';
+    actor.voiceId = actor.voiceId || parsedData['voice'] || '';
+    actor.themeColor = actor.themeColor || themeColor;
+    actor.themeFontFamily = actor.themeFontFamily || parsedData['font'] || 'Arial, sans-serif';
+    actor.appearances = actor.appearances.length > 0 ? actor.appearances : [];
 
-    const defaultAppearanceName = parsedData['outfit'] || 'Default Outfit';
-    const defaultAppearanceDescription = (parsedData['description'] || '');
+    if (actor.appearances.length === 0) {
 
-    console.log(`Loaded new actor: ${newActor.name} (ID: ${newActor.id})`);
-    console.log(newActor);
-    // If name, description, profile, or motive are missing, or banned words are present or the attributes are all defaults (unlikely to have been set at all) or description is non-english, discard this actor by returning null
-    // Rewrite discard reasons to log which reason applied:
-    if (!newActor.name) {
-        console.log(`Discarding actor due to missing name: ${newActor.name}`);
-        return null;
-    } else if (!defaultAppearanceDescription) {
-        console.log(`Discarding actor due to missing description: ${newActor.name}`);
-        return null;
-    } else if (!newActor.profile) {
-        console.log(`Discarding actor due to missing profile: ${newActor.name}`);
-        return null;
-    } else if (!newActor.characterArc) {
-        console.log(`Discarding actor due to missing motive/character arc: ${newActor.name}`);
-        return null;
-    } else if (Object.keys(bannedWordSubstitutes).some(word => defaultAppearanceDescription.toLowerCase().includes(word))) {
-        console.log(`Discarding actor due to banned words in description: ${newActor.name}`);
-        return null;
-    } else if (newActor.name.length <= 2 || newActor.name.length >= 30) {
-        console.log(`Discarding actor due to extreme name length: ${newActor.name}`);
-        return null;
-    } else if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(`${newActor.name}${defaultAppearanceDescription}${newActor.profile}${newActor.characterArc}`)) {
-        console.log(`Discarding actor due to non-english characters in name/description/profile/motive: ${newActor.name}`);
-        return null;
+        const defaultAppearanceName = parsedData['outfit'] || 'Default Outfit';
+        const defaultAppearanceDescription = (parsedData['description'] || '');
+
+        // Add shell of an initial appearance
+        actor.appearances.push({
+            id: generateUuid(),
+            name: defaultAppearanceName,
+            description: defaultAppearanceDescription,
+            emotionPack: {}, // This will be filled in later when the player views this character and the emotions are generated on demand.
+        });
     }
 
-    // Add shell of an initial appearance
-    newActor.appearances.push({
-        id: generateUuid(),
-        name: defaultAppearanceName,
-        description: defaultAppearanceDescription,
-        emotionPack: {}, // This will be filled in later when the player views this character and the emotions are generated on demand.
-    });
+    if (actor.appearanceId === '') {
+        actor.appearanceId = actor.appearances[0].id;
+    }
 
-    // Kick off emotion image:
-    await generateBaseActorImage(newActor, stage, false, true, newActor.appearanceId, newActor.sampleImageUrl);
-    return newActor;
+    const currentAppearance = getActiveAppearance(actor);
+    if (!currentAppearance.emotionPack['base']) {
+        // Kick off base image generation:
+        await generateBaseActorImage(actor, stage, false, true, actor.appearanceId, actor.sampleImageUrl);
+    } else if (!currentAppearance.emotionPack['neutral']) {
+        // Kick off neutral image generation:
+        await generateEmotionImage(actor, Emotion.neutral, stage, false, actor.appearanceId);
+    }
+    return actor;
 }
 
 function getActiveAppearance(actor: Actor): Appearance {
@@ -446,7 +414,7 @@ export async function generateBaseActorImage(
                 image: await getDataUrl(baseSourceImage),
                 prompt: `If needed, alter this character to match this description:\n` +
                     `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Disregard details below the waist. This image remains a waist-up portrait on a plain light-gray background.\n` +
+                    `Disregard details below the waist. This image remains a waist-up portrait on a textured light-gray background.\n` +
                     `Preserve the messy, anime-inspired concept-art style with thick brush strokes and lustrous colors.`,
                 remove_background: true,
                 transfer_type: 'edit'

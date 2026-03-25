@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, CASSIEL, findBestNameMatch, generateEmotionImage, loadReserveActorFromFullPath, SUPPORTED_CHARACTERS } from "./content/Actor";
+import { Actor, ActorType, findBestNameMatch, generateEmotionImage, distillActor, SUPPORTED_CHARACTERS, loadSupportedActor } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -171,10 +171,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 3;
 
-        // Create Cassiel as the Warden and add to actors
-        newSave.actors[`cassiel`] = {
-            ...CASSIEL
-        };
+        // Load Cassiel as the Warden and add to actors
+        loadSupportedActor('cassiel', this).then(cassielActor => {
+            if (cassielActor) {
+                newSave.actors[`cassiel`] = cassielActor;
+                this.saveGame(); // Save after adding Cassiel so that we have her in the save data when we generate her emotion images and lorebook entry.
+            }
+        });
 
         this.generationPromises['cassiel'] = new Promise(() => {});
         generateEmotionImage(newSave.actors[`cassiel`], "neutral" as Emotion, this, false, 'default').finally(() => {
@@ -495,8 +498,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     if (!character) {
                         console.warn('No more supported characters to load as reserve actors.');
                         break;
+                    } else if (!character.name || !character.fullPath) {
+                        continue;
                     }
-                    const newActor = await loadReserveActorFromFullPath(character.name, character.fullPath, this);
+                    const newActor = await loadSupportedActor(character.name, this);
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${newActor.fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};
