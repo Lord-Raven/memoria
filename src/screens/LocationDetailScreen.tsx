@@ -139,6 +139,28 @@ export const LocationDetailScreen: FC<LocationDetailScreenProps> = ({ location, 
         fontFamily: 'inherit',
     };
 
+    const sliderRowStyle: React.CSSProperties = {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        alignItems: 'center',
+        gap: '12px',
+    };
+
+    const sliderStyle: React.CSSProperties = {
+        width: '100%',
+        accentColor: '#00ff88',
+        cursor: 'pointer',
+    };
+
+    const sliderValueStyle: React.CSSProperties = {
+        minWidth: '56px',
+        textAlign: 'right',
+        color: '#e0f0ff',
+        fontSize: '13px',
+        fontVariantNumeric: 'tabular-nums',
+        opacity: 0.9,
+    };
+
     return (
         <AnimatePresence>
             <motion.div
@@ -336,62 +358,78 @@ export const LocationDetailScreen: FC<LocationDetailScreenProps> = ({ location, 
                                                 (base cell radius in map-vmin units)
                                             </span>
                                         </label>
-                                        <input
-                                            type="number"
-                                            value={editedLocation.weight}
-                                            min={1}
-                                            step={1}
-                                            onChange={(e) => handleInputChange('weight', parseFloat(e.target.value) || 1)}
-                                            style={numberInputStyle}
-                                        />
+                                        <div style={sliderRowStyle}>
+                                            <input
+                                                type="range"
+                                                value={editedLocation.weight}
+                                                min={1}
+                                                max={100}
+                                                step={1}
+                                                onChange={(e) => handleInputChange('weight', parseFloat(e.target.value) || 1)}
+                                                style={sliderStyle}
+                                            />
+                                            <span style={sliderValueStyle}>{Math.round(editedLocation.weight)}</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label style={labelStyle}>Center X <span style={{ fontWeight: 'normal', opacity: 0.7 }}>(0–1)</span></label>
-                                        <input
-                                            type="number"
-                                            value={editedLocation.centerX}
-                                            min={0}
-                                            max={1}
-                                            step={0.01}
-                                            onChange={(e) => handleInputChange('centerX', clampedCoord(e.target.value))}
-                                            style={numberInputStyle}
-                                        />
+                                        <div style={sliderRowStyle}>
+                                            <input
+                                                type="range"
+                                                value={editedLocation.centerX}
+                                                min={0}
+                                                max={1}
+                                                step={0.01}
+                                                onChange={(e) => handleInputChange('centerX', clampedCoord(e.target.value))}
+                                                style={sliderStyle}
+                                            />
+                                            <span style={sliderValueStyle}>{editedLocation.centerX.toFixed(2)}</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label style={labelStyle}>Center Y <span style={{ fontWeight: 'normal', opacity: 0.7 }}>(0–1)</span></label>
-                                        <input
-                                            type="number"
-                                            value={editedLocation.centerY}
-                                            min={0}
-                                            max={1}
-                                            step={0.01}
-                                            onChange={(e) => handleInputChange('centerY', clampedCoord(e.target.value))}
-                                            style={numberInputStyle}
-                                        />
+                                        <div style={sliderRowStyle}>
+                                            <input
+                                                type="range"
+                                                value={editedLocation.centerY}
+                                                min={0}
+                                                max={1}
+                                                step={0.01}
+                                                onChange={(e) => handleInputChange('centerY', clampedCoord(e.target.value))}
+                                                style={sliderStyle}
+                                            />
+                                            <span style={sliderValueStyle}>{editedLocation.centerY.toFixed(2)}</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label style={labelStyle}>Focal Point X <span style={{ fontWeight: 'normal', opacity: 0.7 }}>(0–1)</span></label>
-                                        <input
-                                            type="number"
-                                            value={editedLocation.focalX}
-                                            min={0}
-                                            max={1}
-                                            step={0.01}
-                                            onChange={(e) => handleInputChange('focalX', clampedCoord(e.target.value))}
-                                            style={numberInputStyle}
-                                        />
+                                        <div style={sliderRowStyle}>
+                                            <input
+                                                type="range"
+                                                value={editedLocation.focalX}
+                                                min={0}
+                                                max={1}
+                                                step={0.01}
+                                                onChange={(e) => handleInputChange('focalX', clampedCoord(e.target.value))}
+                                                style={sliderStyle}
+                                            />
+                                            <span style={sliderValueStyle}>{editedLocation.focalX.toFixed(2)}</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label style={labelStyle}>Focal Point Y <span style={{ fontWeight: 'normal', opacity: 0.7 }}>(0–1)</span></label>
-                                        <input
-                                            type="number"
-                                            value={editedLocation.focalY}
-                                            min={0}
-                                            max={1}
-                                            step={0.01}
-                                            onChange={(e) => handleInputChange('focalY', clampedCoord(e.target.value))}
-                                            style={numberInputStyle}
-                                        />
+                                        <div style={sliderRowStyle}>
+                                            <input
+                                                type="range"
+                                                value={editedLocation.focalY}
+                                                min={0}
+                                                max={1}
+                                                step={0.01}
+                                                onChange={(e) => handleInputChange('focalY', clampedCoord(e.target.value))}
+                                                style={sliderStyle}
+                                            />
+                                            <span style={sliderValueStyle}>{editedLocation.focalY.toFixed(2)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </section>
