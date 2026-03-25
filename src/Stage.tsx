@@ -179,11 +179,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             }
         });
 
-        this.generationPromises['cassiel'] = new Promise(() => {});
-        generateEmotionImage(newSave.actors[`cassiel`], "neutral" as Emotion, this, false, 'default').finally(() => {
-            delete this.generationPromises['cassiel'];
-        });
-
         this.generationPromises['lorebook'] = fetchLorebook().then(loreEntries => {
             newSave.lorebook = loreEntries;
             delete this.generationPromises['lorebook'];
