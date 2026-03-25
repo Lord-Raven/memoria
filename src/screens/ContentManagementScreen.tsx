@@ -2,23 +2,29 @@ import React, { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stage } from '../Stage';
 import { Actor, getEmotionImage } from '../content/Actor';
-import { Close, Person, Groups } from '@mui/icons-material';
+import { Location } from '../content/Location';
+import { Close, Person, Groups, Place } from '@mui/icons-material';
 import { Button, GlassPanel, Title } from './UiComponents';
 import { ActorDetailScreen } from './ActorDetailScreen';
+import { LocationDetailScreen } from './LocationDetailScreen';
 
 interface ContentManagementScreenProps {
     stage: () => Stage;
     onClose: () => void;
 }
 
-type TabType = 'actors' | 'factions';
+type TabType = 'actors' | 'locations';
 
 export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stage, onClose }) => {
     const [activeTab, setActiveTab] = useState<TabType>('actors');
     const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
+    const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
     // Get all actors from the save
     const actors = Object.values(stage().getSave().actors);
+
+    // Get all locations from the save atlas
+    const locations = Object.values(stage().getSave().atlas || {});
 
     const handleActorClick = (actor: Actor) => {
         setSelectedActor(actor);
@@ -26,6 +32,14 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
 
     const handleCloseDetail = () => {
         setSelectedActor(null);
+    };
+
+    const handleLocationClick = (location: Location) => {
+        setSelectedLocation(location);
+    };
+
+    const handleCloseLocationDetail = () => {
+        setSelectedLocation(null);
     };
 
     return (
@@ -130,7 +144,19 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                     <Person />
                                     Actors ({actors.length})
                                 </Button>
-                                {/* Could add locations or other content down the road. */}
+                                <Button
+                                    onClick={() => setActiveTab('locations')}
+                                    variant={activeTab === 'locations' ? 'primary' : 'secondary'}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        opacity: activeTab === 'locations' ? 1 : 0.6,
+                                    }}
+                                >
+                                    <Place />
+                                    Locations ({locations.length})
+                                </Button>
                             </div>
 
                             {/* Content Area */}
@@ -223,6 +249,93 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                         )}
                                     </div>
                                 )}
+
+                                {/* Locations Tab */}
+                                {activeTab === 'locations' && (
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                        gap: '15px',
+                                        padding: '10px',
+                                    }}>
+                                        {locations.length === 0 ? (
+                                            <div style={{
+                                                gridColumn: '1 / -1',
+                                                textAlign: 'center',
+                                                padding: '40px',
+                                                color: 'rgba(224, 240, 255, 0.6)',
+                                                fontSize: '16px',
+                                            }}>
+                                                No locations found in the current save.
+                                            </div>
+                                        ) : (
+                                            locations.map(location => (
+                                                <motion.div
+                                                    key={location.id}
+                                                    whileHover={{ scale: 1.05, y: -5 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => handleLocationClick(location)}
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                        border: `2px solid ${location.themeColor || 'rgba(0, 255, 136, 0.3)'}`,
+                                                        borderRadius: '8px',
+                                                        padding: '15px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        gap: '10px',
+                                                        opacity: location.discovered ? 1 : 0.55,
+                                                    }}
+                                                >
+                                                    {/* Location Thumbnail */}
+                                                    <div
+                                                        style={{
+                                                            width: '120px',
+                                                            height: '80px',
+                                                            borderRadius: '6px',
+                                                            backgroundColor: 'rgba(0, 20, 40, 0.8)',
+                                                            border: `2px solid ${location.themeColor || 'rgba(0, 255, 136, 0.3)'}`,
+                                                            backgroundImage: location.imageUrl ? `url(${location.imageUrl})` : 'none',
+                                                            backgroundSize: 'cover',
+                                                            backgroundPosition: `${(location.focalPoint?.x ?? 0.5) * 100}% ${(location.focalPoint?.y ?? 0.5) * 100}%`,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            overflow: 'hidden',
+                                                        }}
+                                                    >
+                                                        {!location.imageUrl && (
+                                                            <Place style={{ fontSize: '36px', color: 'rgba(0, 255, 136, 0.3)' }} />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Location Name */}
+                                                    <div
+                                                        style={{
+                                                            color: location.themeColor || '#00ff88',
+                                                            fontSize: '14px',
+                                                            fontWeight: 'bold',
+                                                            textAlign: 'center',
+                                                        }}
+                                                    >
+                                                        {location.name}
+                                                    </div>
+
+                                                    {/* Undiscovered badge */}
+                                                    {!location.discovered && (
+                                                        <div style={{
+                                                            fontSize: '11px',
+                                                            color: 'rgba(224, 240, 255, 0.5)',
+                                                        }}>
+                                                            Undiscovered
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </GlassPanel>
                     </motion.div>
@@ -235,6 +348,15 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                     actor={selectedActor}
                     stage={stage}
                     onClose={handleCloseDetail}
+                />
+            )}
+
+            {/* Location Detail Modal */}
+            {selectedLocation && (
+                <LocationDetailScreen
+                    location={selectedLocation}
+                    stage={stage}
+                    onClose={handleCloseLocationDetail}
                 />
             )}
         </>

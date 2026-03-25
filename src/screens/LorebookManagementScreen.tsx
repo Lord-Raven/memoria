@@ -6,6 +6,7 @@ import { Stage } from '../Stage';
 import { createLoreEntry, Lore } from '../content/Lore';
 import { Button, ConfirmDialog, GlassPanel, TextInput, Title } from './UiComponents';
 import { findBestNameMatch } from '../content/Actor';
+import { getLinkedLocationLore, updateLocationDescription } from '../content/Location';
 
 interface LorebookManagementScreenProps {
     stage: () => Stage;
@@ -133,6 +134,17 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
         return !!findBestNameMatch(normalizedTitle, Object.values(stage().getSave().actors) || []);
     }, [selectedLore]);
 
+    const selectedLoreMatchesExistingLocation = useMemo(() => {
+        if (!selectedLore || selectedLore.type !== 'location') {
+            return false;
+        }
+
+        return Object.values(stage().getSave().atlas || {}).some((location) => {
+            const linkedLore = getLinkedLocationLore(location.name, stage());
+            return linkedLore?.id === selectedLore.id;
+        });
+    }, [selectedLore]);
+
     const applyLorebookChange = (updater: (entries: Lore[]) => Lore[]) => {
         setLoreEntries((currentEntries) => {
             const nextEntries = sortLoreEntries(updater(currentEntries));
@@ -214,6 +226,27 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
         applyLorebookChange((entries) => entries.map((entry) => (
             entry.id === selectedLoreId ? { ...entry, ...patch } : entry
         )));
+    };
+
+    const updateSelectedLoreContent = (content: string) => {
+        if (!selectedLore) {
+            return;
+        }
+
+        if (selectedLore.type === 'location') {
+            const linkedLocation = Object.values(stage().getSave().atlas || {}).find((location) => {
+                const linkedLore = getLinkedLocationLore(location.name, stage());
+                return linkedLore?.id === selectedLore.id;
+            });
+
+            if (linkedLocation) {
+                updateLocationDescription(linkedLocation.id, content, stage());
+                setLoreEntries(sortLoreEntries([...(stage().getSave().lorebook || [])]));
+                return;
+            }
+        }
+
+        updateSelectedLore({ content });
     };
 
     const toggleLoreEnabled = (loreId: string) => {
@@ -554,6 +587,22 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             </div>
                                         )}
 
+                                        {selectedLoreMatchesExistingLocation && (
+                                            <div
+                                                style={{
+                                                    color: 'rgba(224, 240, 255, 0.95)',
+                                                    background: 'rgba(90, 163, 216, 0.14)',
+                                                    border: '1px solid rgba(90, 163, 216, 0.4)',
+                                                    borderRadius: '10px',
+                                                    padding: '10px 12px',
+                                                    fontSize: '13px',
+                                                    lineHeight: 1.4,
+                                                }}
+                                            >
+                                                This lore entry is providing the description for a matching location.
+                                            </div>
+                                        )}
+
                                         <div style={{ display: 'grid', gap: '6px' }}>
                                             <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Title</label>
                                             <TextInput
@@ -754,7 +803,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                             <label style={{ color: '#cfe6ff', fontSize: '13px' }}>Content</label>
                                             <textarea
                                                 value={selectedLore.content}
-                                                onChange={(event) => updateSelectedLore({ content: event.target.value })}
+                                                onChange={(event) => updateSelectedLoreContent(event.target.value)}
                                                 className="input-base"
                                                 style={{ width: '100%', flex: 1, minHeight: 0, resize: 'none', overflowY: 'auto' }}
                                             />

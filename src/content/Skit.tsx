@@ -3,6 +3,7 @@ import { v4 as generateUuid } from 'uuid';
 import { Outcome } from "./Outcome";
 import { Stage } from "../Stage";
 import { Actor, findBestNameMatch } from "./Actor";
+import { getLocationDescription } from "./Location";
 import { MAX_ENTRIES } from "./Lore";
 
 export enum SkitType {
@@ -187,7 +188,7 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
                 }
             }).join('') : '') +
         (location ? (`\n\nCurrent Location:\n  The following scene is set in ` +
-            `${location.name || 'Unknown Location'}. ${location.description || 'No description available.'}\n`) : '') +
+            `${location.name || 'Unknown Location'}. ${getLocationDescription(location.id, stage) || 'No description available.'}\n`) : '') +
 
         `\n\nPlayer Profile for ${playerName}:\n  ${stage.getPlayerActor()?.profile || 'No profile available.'}\n` +
         (skit && currentActors.length > 0 ? `\n\nCharacters in this Scene:\n${currentActors.map(actor => {

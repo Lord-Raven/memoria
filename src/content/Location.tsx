@@ -1,5 +1,7 @@
 import { v4 as generateUuid } from 'uuid';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
+import { Stage } from '../Stage';
+import { findBestNameMatch } from './Actor';
 
 const getLocationImage = createImageAssetUrlResolver('locations');
 
@@ -112,7 +114,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         description: "",
         weight: 14,
 		imageUrl: getLocationImage('outside/bleached_earth.png'),
-        center: { x: 0.65, y: 0.8 }, // southeast
+        center: { x: 0.3, y: 0.8 }, // south
         focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#eeeeee",
         themeColor: "#e8e4d1",
@@ -124,7 +126,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		description: "",
 		weight: 10,
 		imageUrl: getLocationImage('outside/blind_spire.png'),
-		center: { x: 0.75, y: 0.3 }, // far east
+		center: { x: 0.7, y: 0.3 }, // far east
 		focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#ff99aa",
 		themeColor: '#ff6699',
@@ -162,9 +164,9 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		description: "",
 		weight: 10,
 		imageUrl: getLocationImage('outside/threshold.png'),
-		center: { x: 0.9, y: 0.1 }, // far northeast
+		center: { x: 0.9, y: 0.2 }, // far northeast
 		focalPoint: { x: 0.5, y: 0.5 },
-		lightColor: "#ddffbb",
+		lightColor: "#eeffcc",
 		themeColor: '#ccffaa',
 		discovered: true,
 	}
@@ -178,6 +180,35 @@ export const createDefaultAtlas = () => {
 	}
 	return atlas;
 };
+
+export function getLinkedLocationLore(locationName: string, stage: Stage) {
+	return findBestNameMatch(locationName, stage.getSave().lorebook ?? [], 'title');
+}
+
+export function getLocationDescription(locationId: string, stage: Stage) {
+	const location = stage.getSave().atlas[locationId];
+	if (!location) {
+		return '';
+	}
+
+	const lore = getLinkedLocationLore(location.name, stage);
+	return lore?.content ?? location.description;
+}
+
+export function updateLocationDescription(locationId: string, description: string, stage: Stage) {
+	const location = stage.getSave().atlas[locationId];
+	if (!location) {
+		return;
+	}
+
+	const lore = getLinkedLocationLore(location.name, stage);
+	if (lore) {
+		lore.content = description;
+		return;
+	}
+
+	location.description = description;
+}
 
 export class Location {
     id: string = '';
