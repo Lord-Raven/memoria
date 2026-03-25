@@ -153,8 +153,10 @@ export const VOICE_MAP: {[key: string]: string} = {
     'animated_male_20s': 'masculine - hip and lively',
 };
 
-const BASE_IMAGE_WIDTH = 880;
-const BASE_IMAGE_HEIGHT = 1176;
+const FULL_IMAGE_WIDTH = 1024;
+const FULL_IMAGE_HEIGHT = 1280;
+const BASE_IMAGE_WIDTH = 944;
+const BASE_IMAGE_HEIGHT = 1180;
 
 async function normalizeBaseSourceImage(imageUrl: string): Promise<string> {
     if (!imageUrl) {
@@ -170,20 +172,34 @@ async function normalizeBaseSourceImage(imageUrl: string): Promise<string> {
     });
 
     const contextCanvas = document.createElement('canvas');
-    contextCanvas.width = BASE_IMAGE_WIDTH;
-    contextCanvas.height = BASE_IMAGE_HEIGHT;
+    contextCanvas.width = FULL_IMAGE_WIDTH;
+    contextCanvas.height = FULL_IMAGE_HEIGHT;
 
     const context = contextCanvas.getContext('2d');
     if (!context) {
         return imageUrl;
     }
 
-    const scale = BASE_IMAGE_HEIGHT / image.naturalHeight;
+    const scale = Math.min(
+        BASE_IMAGE_WIDTH / image.naturalWidth,
+        BASE_IMAGE_HEIGHT / image.naturalHeight
+    );
     const scaledWidth = image.naturalWidth * scale;
-    const offsetX = (BASE_IMAGE_WIDTH - scaledWidth) / 2;
+    const scaledHeight = image.naturalHeight * scale;
 
-    context.clearRect(0, 0, BASE_IMAGE_WIDTH, BASE_IMAGE_HEIGHT);
-    context.drawImage(image, offsetX, 0, scaledWidth, BASE_IMAGE_HEIGHT);
+    const imageOffsetX = (BASE_IMAGE_WIDTH - scaledWidth) / 2;
+    const imageOffsetY = (BASE_IMAGE_HEIGHT - scaledHeight) / 2;
+    const baseOffsetX = (FULL_IMAGE_WIDTH - BASE_IMAGE_WIDTH) / 2;
+    const baseOffsetY = FULL_IMAGE_HEIGHT - BASE_IMAGE_HEIGHT;
+
+    context.clearRect(0, 0, FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT);
+    context.drawImage(
+        image,
+        baseOffsetX + imageOffsetX,
+        baseOffsetY + imageOffsetY,
+        scaledWidth,
+        scaledHeight
+    );
 
     return contextCanvas.toDataURL('image/png');
 }
@@ -348,6 +364,9 @@ function getAppearanceById(actor: Actor, appearanceId: string = ''): Appearance 
 
 export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?: Stage, appearanceId: string = ''): string {
     const targetAppearanceId = appearanceId || actor.appearanceId;
+    if (!actor.appearances || actor.appearances.length === 0) {
+        return '';
+    }
     const emotionKey = typeof emotion === 'string' ? emotion : emotion;
     const emotionPack = getAppearanceById(actor, targetAppearanceId).emotionPack;
     const emotionUrl = emotionPack[emotionKey];
@@ -403,11 +422,11 @@ export async function generateBaseActorImage(
             baseSourceImage = imageUrl || '';
         } else {
             // Need to adjust the base image to the right size/aspect ratio, then send that to the generator (880x1176).
-            /*try {
+            try {
                 baseSourceImage = await normalizeBaseSourceImage(baseSourceImage);
             } catch (error) {
                 console.warn('Failed to normalize base source image, using original source image instead.', error);
-            }*/
+            }
 
             // Use stage.makeImageFromImage to create a base image.
             imageUrl = await stage.makeImageFromImage({
