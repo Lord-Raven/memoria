@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, findBestNameMatch, generateEmotionImage, distillActor, SUPPORTED_CHARACTERS, loadSupportedActor } from "./content/Actor";
+import { Actor, ActorType, findBestNameMatch, SUPPORTED_CHARACTERS, loadSupportedActor } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -172,7 +172,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 3;
 
         // Load Cassiel as the Warden and add to actors
-        loadSupportedActor('cassiel', this).then(cassielActor => {
+        loadSupportedActor('Cassiel', this).then(cassielActor => {
             if (cassielActor) {
                 newSave.actors[`cassiel`] = cassielActor;
                 this.saveGame(); // Save after adding Cassiel so that we have her in the save data when we generate her emotion images and lorebook entry.

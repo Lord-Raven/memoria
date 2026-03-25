@@ -106,34 +106,6 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
 
 ];
 
-export async function loadSupportedActor(name: string, stage: Stage): Promise<Actor|null> {
-    // Canon data within the stage:
-    const newActor = new Actor(SUPPORTED_CHARACTERS.find(char => char.name === name));
-
-    // Retrieve data from Chub to fill in possible gaps:
-    let definition: any = {};
-    try {
-        if (newActor.fullPath) {
-            const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', newActor.fullPath));
-            definition = (await response.json()).node.definition;
-        }
-    } catch (error) {
-        console.warn(`Failed to fetch character details for ${name} at path ${newActor.fullPath}:`, error);
-    }
-
-    // Even if nothing else, use the definition voice ID over whatever is in the stage.
-    if (definition.voice_id && !VOICE_MAP[definition.voice_id]) {
-        newActor.voiceId = definition.voice_id;
-    }
-
-    // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
-    if (definition && (!newActor.profile || !newActor.appearances)) {
-        return await distillActor(newActor, definition, stage);
-    }
-
-    return newActor;
-}
-
 // Mapping of voice IDs to a description of the voice, so the AI can choose an ID based on the character profile.
 export const VOICE_MAP: {[key: string]: string} = {
     '751212e5-a871-45c7-b10b-6f42a5785954': 'feminine - posh and catty',
@@ -203,6 +175,34 @@ async function normalizeBaseSourceImage(imageUrl: string): Promise<string> {
     );
 
     return contextCanvas.toDataURL('image/png');
+}
+
+export async function loadSupportedActor(name: string, stage: Stage): Promise<Actor|null> {
+    // Canon data within the stage:
+    const newActor = new Actor(SUPPORTED_CHARACTERS.find(char => char.name === name));
+
+    // Retrieve data from Chub to fill in possible gaps:
+    let definition: any = null;
+    try {
+        if (newActor.fullPath) {
+            const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', newActor.fullPath));
+            definition = (await response.json()).node.definition;
+        }
+    } catch (error) {
+        console.warn(`Failed to fetch character details for ${name} at path ${newActor.fullPath}:`, error);
+    }
+
+    // Even if nothing else, use the definition voice ID over whatever is in the stage.
+    if (definition && definition.voice_id && !VOICE_MAP[definition.voice_id]) {
+        newActor.voiceId = definition.voice_id;
+    }
+
+    // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
+    if (definition && (!newActor.profile || !newActor.appearances)) {
+        return await distillActor(newActor, definition, stage);
+    }
+
+    return newActor;
 }
 
 export async function distillActor(actor: Actor, definition: any, stage: Stage): Promise<Actor|null> {
