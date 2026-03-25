@@ -5,7 +5,7 @@ import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
 import { createLoreEntry, Lore } from '../content/Lore';
 import { Button, ConfirmDialog, GlassPanel, TextInput, Title } from './UiComponents';
-import { findBestNameMatch } from '../content/Actor';
+import { findBestNameMatch, getLinkedActorLore, updateActorProfile } from '../content/Actor';
 import { getLinkedLocationLore, updateLocationDescription } from '../content/Location';
 
 interface LorebookManagementScreenProps {
@@ -15,12 +15,17 @@ interface LorebookManagementScreenProps {
 
 type LoreCategory = Lore['type'];
 
-const CATEGORY_ORDER: LoreCategory[] = ['character', 'location', 'other'];
+const CORE_CATEGORY_ORDER = ['character', 'location', 'other'] as const;
+const CORE_CATEGORY_SET = new Set<string>(CORE_CATEGORY_ORDER);
 
-const CATEGORY_LABELS: Record<LoreCategory, string> = {
+const CATEGORY_LABELS: Record<(typeof CORE_CATEGORY_ORDER)[number], string> = {
     character: 'Character',
     location: 'Location',
     other: 'Other',
+};
+
+const getCategoryLabel = (category: string) => {
+    return CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] ?? category;
 };
 
 const sortLoreEntries = (entries: Lore[]) => {
@@ -94,30 +99,44 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
     const [editingTriggerIndex, setEditingTriggerIndex] = useState<number | 'new' | null>(null);
     const [editingTriggerValue, setEditingTriggerValue] = useState('');
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-    const [collapsedCategories, setCollapsedCategories] = useState<Record<LoreCategory, boolean>>({
+    const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({
         character: false,
         location: false,
         other: false,
     });
 
+    const categoryOrder = useMemo(() => {
+        const extraCategories = Array.from(new Set(
+            loreEntries
+                .map((entry) => (entry.type || 'other').trim())
+                .filter((type) => type.length > 0)
+                .filter((type) => !CORE_CATEGORY_SET.has(type))
+        )).sort((a, b) => a.localeCompare(b));
+
+        return [...CORE_CATEGORY_ORDER, ...extraCategories];
+    }, [loreEntries]);
+
     const groupedEntries = useMemo(() => {
-        const groups: Record<LoreCategory, Lore[]> = {
-            character: [],
-            location: [],
-            other: [],
-        };
+        const groups: Record<string, Lore[]> = {};
+
+        for (const category of categoryOrder) {
+            groups[category] = [];
+        }
 
         for (const entry of loreEntries) {
-            const category: LoreCategory = entry.type || 'other';
+            const category = (entry.type || 'other').trim() || 'other';
+            if (!groups[category]) {
+                groups[category] = [];
+            }
             groups[category].push(entry);
         }
 
-        for (const category of CATEGORY_ORDER) {
+        for (const category of Object.keys(groups)) {
             groups[category] = sortLoreEntries(groups[category]);
         }
 
         return groups;
-    }, [loreEntries]);
+    }, [loreEntries, categoryOrder]);
 
     const selectedLore = useMemo(() => loreEntries.find((entry) => entry.id === selectedLoreId) || null, [loreEntries, selectedLoreId]);
 
@@ -231,6 +250,19 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
     const updateSelectedLoreContent = (content: string) => {
         if (!selectedLore) {
             return;
+        }
+
+        if (selectedLore.type === 'character') {
+            const linkedActor = Object.values(stage().getSave().actors || {}).find((actor) => {
+                const linkedLore = getLinkedActorLore(actor.name, stage());
+                return linkedLore?.id === selectedLore.id;
+            });
+
+            if (linkedActor) {
+                updateActorProfile(linkedActor.id, content, stage());
+                setLoreEntries(sortLoreEntries([...(stage().getSave().lorebook || [])]));
+                return;
+            }
         }
 
         if (selectedLore.type === 'location') {
@@ -394,8 +426,8 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     overflowY: 'auto',
                                 }}
                             >
-                                {CATEGORY_ORDER.map((category) => {
-                                    const categoryEntries = groupedEntries[category];
+                                {categoryOrder.map((category) => {
+                                    const categoryEntries = groupedEntries[category] || [];
                                     const isCollapsed = collapsedCategories[category];
 
                                     return (
@@ -434,7 +466,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                         cursor: 'pointer',
                                                     }}
                                                 >
-                                                    <span>{CATEGORY_LABELS[category]} ({categoryEntries.length})</span>
+                                                    <span>{getCategoryLabel(category)} ({categoryEntries.length})</span>
                                                     <motion.span
                                                         aria-hidden="true"
                                                         animate={{ rotate: isCollapsed ? 0 : 90 }}
@@ -581,9 +613,7 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                     lineHeight: 1.4,
                                                 }}
                                             >
-                                                {selectedLore.enabled
-                                                    ? 'This character is now being managed by the game; consider disabling this entry.'
-                                                    : 'This entry has been disabled because this character is now being managed by the game.'}
+                                                This lore entry is providing the profile for a matching character.
                                             </div>
                                         )}
 
@@ -620,9 +650,9 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                                 className="input-base"
                                                 style={{ width: '100%' }}
                                             >
-                                                <option value="character">Character</option>
-                                                <option value="location">Location</option>
-                                                <option value="other">Other</option>
+                                                {categoryOrder.map((category) => (
+                                                    <option key={category} value={category}>{getCategoryLabel(category)}</option>
+                                                ))}
                                             </select>
                                         </div>
 

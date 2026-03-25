@@ -1,4 +1,4 @@
-type LoreType = "character" | "location" | "other";
+type LoreType = "character" | "location" | "other" | string;
 import { v4 as generateUuid } from 'uuid';
 
 // Hard-coding entry names to type for character and location:
@@ -13,6 +13,7 @@ const TYPE_MAPPING: Record<LoreType, string[]> = {
         "The Amber Drop", "Mel's Pit", "Yarrow Rest", "7Loaves", "Mira's Miracle Metalworks", "Brightwork Forge",
         "The Pilgrimage", "The Loom", "Slumbering Orchard", "Blind Spire", "Bleached Earth", "The Threshold",
         "Sunken Core", "The Cradle", "The Shells", ""],
+    
     other: [], // Everything else ends up being assigned to this by default.
 }
 

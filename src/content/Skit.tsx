@@ -2,7 +2,7 @@ import { Emotion, EMOTION_MAPPING } from "./Emotion";
 import { v4 as generateUuid } from 'uuid';
 import { Outcome } from "./Outcome";
 import { Stage } from "../Stage";
-import { Actor, findBestNameMatch } from "./Actor";
+import { Actor, findBestNameMatch, getActorProfile } from "./Actor";
 import { getLocationDescription } from "./Location";
 import { MAX_ENTRIES } from "./Lore";
 
@@ -163,6 +163,12 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
     // Run probabilities on triggeredLore, and remove entries that don't pass. For each record, look at the entry's prorobability (100 by default) and run a calculation to determine whether to keep it in the context or not. This adds an element of variability and surprise to the lore that can be included in the context, while still prioritizing important lore with higher probability and insertion order.
     triggeredLore = triggeredLore.filter(lore => Math.random() * 100 <= lore.probability);
 
+    // Remove (if present) lore entry for the current location (which is referenced in detail below):
+    if (location) {
+        const locationLoreId = findBestNameMatch(location.name, triggeredLore, 'title')?.id || '';
+        triggeredLore = triggeredLore.filter(lore => lore.id !== locationLoreId);
+    }
+
     // If triggeredLore has more than MAX_ENTRIES entries, we cut it down to MAX_ENTRIES based on priority (higher priority wins).
     if (triggeredLore.length > MAX_ENTRIES) {
         triggeredLore = triggeredLore.sort((a, b) => b.priority - a.priority).slice(0, MAX_ENTRIES);
@@ -190,13 +196,13 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
         (location ? (`\n\nCurrent Location:\n  The following scene is set in ` +
             `${location.name || 'Unknown Location'}. ${getLocationDescription(location.id, stage) || 'No description available.'}\n`) : '') +
 
-        `\n\nPlayer Profile for ${playerName}:\n  ${stage.getPlayerActor()?.profile || 'No profile available.'}\n` +
+        `\n\nPlayer Profile for ${playerName}:\n  ${getActorProfile(stage.getPlayerActor()?.id || '', stage) || 'No profile available.'}\n` +
         (skit && currentActors.length > 0 ? `\n\nCharacters in this Scene:\n${currentActors.map(actor => {
             const currentApperance = actor.appearances.find(a => a.id === determineAppearance(actor.id, skit, skit.script.length - 1)) ?? actor.appearances[0];
             const otherAppearances = actor.appearances.filter(o => o.id !== currentApperance?.id && o.emotionPack['neutral']);
             return `  ${actor.name}\n    Current Appearance (${currentApperance.name}): ${currentApperance.description}\n` +
                 (otherAppearances.length > 0 ? `    Other Appearances: ${otherAppearances.map(o => o.name).join(', ')}\n` : '') +
-                `    Profile: ${actor.profile}\n    Character Arc: ${actor.characterArc}`}).join('\n')}` : '');
+                `    Profile: ${getActorProfile(actor.id, stage) || 'No profile available.'}\n    Character Arc: ${actor.characterArc}`}).join('\n')}` : '');
 
 
 

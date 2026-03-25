@@ -500,12 +500,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${newActor.fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};
-                        // Disable character lorebook entry with a name match on newActor:
-                        const lore = findBestNameMatch(newActor.name, this.getSave().lorebook || [], 'title');
-                        if (lore) {
-                            lore.enabled = false;
-                        }
-
                         actors = this.getSave().actors || {};
                     } else {
                         console.warn(`Failed to load actor from fullPath ${character.fullPath}`);

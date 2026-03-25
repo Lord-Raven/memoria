@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
-import { Actor, generateBaseActorImage, generateEmotionImage, VOICE_MAP, Appearance } from '../content/Actor';
+import { Actor, generateBaseActorImage, generateEmotionImage, VOICE_MAP, Appearance, getActorProfile, updateActorProfile } from '../content/Actor';
 import { Emotion, EMOTION_PROMPTS } from '../content/Emotion';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
 import { Button, Chip, GlassPanel, TextInput, Title } from './UiComponents';
@@ -47,7 +47,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         themeFontFamily: string;
     }>({
         name: actor.name,
-        profile: actor.profile,
+        profile: getActorProfile(actor.id, stage()),
         characterArc: actor.characterArc || '',
         voiceId: actor.voiceId,
         themeColor: actor.themeColor,
@@ -120,7 +120,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
 
         // Update the actor in the save
         actor.name = editedActor.name;
-        actor.profile = editedActor.profile;
+        updateActorProfile(actor.id, editedActor.profile, stage());
         actor.characterArc = editedActor.characterArc;
         actor.voiceId = editedActor.voiceId;
         actor.themeColor = editedActor.themeColor;

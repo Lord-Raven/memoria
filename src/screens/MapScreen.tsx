@@ -963,6 +963,36 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const portraitScaleCompensationX = uniformPortraitScale / viewportScaleX;
 		const portraitScaleCompensationY = uniformPortraitScale / viewportScaleY;
 
+		const getPortraitPositionOnPolygonEdge = (
+			polygon: number[][],
+			alignToLeft: boolean,
+			radiusX: number,
+			strokeWidth: number,
+		) => {
+			if (polygon.length < 3) {
+				const centroid = getPolygonCentroid(polygon);
+				return { x: centroid[0], y: centroid[1] };
+			}
+
+			// Find extreme X points on the polygon
+			const extremePoints = alignToLeft
+				? polygon.filter((p) => p[0] === Math.min(...polygon.map((pt) => pt[0])))
+				: polygon.filter((p) => p[0] === Math.max(...polygon.map((pt) => pt[0])));
+
+			if (extremePoints.length === 0) {
+				const centroid = getPolygonCentroid(polygon);
+				return { x: centroid[0], y: centroid[1] };
+			}
+
+			// Average Y position of extreme points for stable vertical positioning
+			const avgY = extremePoints.reduce((sum, p) => sum + p[1], 0) / extremePoints.length;
+			const extremeX = extremePoints[0][0];
+			const offset = radiusX + strokeWidth + 2;
+			const positionX = alignToLeft ? extremeX - offset : extremeX + offset;
+
+			return { x: positionX, y: avgY };
+		};
+
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
 			locationId: string;
@@ -996,11 +1026,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const radiusX = radius * portraitScaleCompensationX;
 			const radiusY = radius * portraitScaleCompensationY;
 			const alignsToLeftEdge = cell.point.x >= MAP_WIDTH / 2;
-			const preferredX = alignsToLeftEdge
-				? cell.bounds.x + radiusX + strokeWidth + 2
-				: cell.bounds.x + cell.bounds.width - radiusX - strokeWidth - 2;
-			const cx = clamp(preferredX, radiusX + 1, MAP_WIDTH - radiusX - 1);
-			const cy = clamp(cell.bounds.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1);
+
+			// Position portrait at the actual polygon edge instead of bounding box
+			const edgePosition = getPortraitPositionOnPolygonEdge(cell.polygon, alignsToLeftEdge, radiusX, strokeWidth);
+			const cx = clamp(edgePosition.x, radiusX + 1, MAP_WIDTH - radiusX - 1);
+			const cy = clamp(edgePosition.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1);
 
 			return [{
 				key: `${choice.locationId}-${choice.partnerActorIds.join(',')}`,

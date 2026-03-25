@@ -272,14 +272,18 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
         console.warn(`Failed to fetch character details for ${name} at path ${newActor.fullPath}:`, error);
     }
 
-    // Even if nothing else, use the definition voice ID over whatever is in the stage.
-    if (definition && definition.voice_id && !VOICE_MAP[definition.voice_id]) {
-        newActor.voiceId = definition.voice_id;
-    }
+    if (definition) {
+        console.log(`Loaded character definition for ${name} from Chub:`);
+        console.log(definition);
+        // Even if nothing else, use the definition voice ID over whatever is in the stage.
+        if (definition.voice_id && !VOICE_MAP[definition.voice_id]) {
+            newActor.voiceId = definition.voice_id;
+        }
 
-    // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
-    if (definition && (!newActor.profile || !newActor.appearances)) {
-        return await distillActor(newActor, definition, stage);
+        // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
+        if (!newActor.profile || !newActor.appearances) {
+            return await distillActor(newActor, definition, stage);
+        }
     }
 
     return newActor;
@@ -573,6 +577,35 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         return imageUrl || '';
     }
     return '';
+}
+
+export function getLinkedActorLore(actorName: string, stage: Stage) {
+	return findBestNameMatch(actorName, stage.getSave().lorebook?.filter(lore => lore.type === 'character') ?? [], 'title');
+}
+
+export function getActorProfile(actorId: string, stage: Stage) {
+	const actor = stage.getSave().actors[actorId];
+	if (!actor) {
+		return '';
+	}
+
+	const lore = getLinkedActorLore(actor.name, stage);
+	return lore?.content ?? actor.profile;
+}
+
+export function updateActorProfile(actorId: string, profile: string, stage: Stage) {
+	const actor = stage.getSave().actors[actorId];
+	if (!actor) {
+		return;
+	}
+
+	const lore = getLinkedActorLore(actor.name, stage);
+	if (lore) {
+		lore.content = profile;
+		return;
+	}
+
+	actor.profile = profile;
 }
 
 /**
