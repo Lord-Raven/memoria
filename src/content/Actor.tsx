@@ -113,9 +113,10 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
     // Retrieve data from Chub to fill in possible gaps:
     let definition: any = {};
     try {
-        const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', newActor.fullPath));
-        definition = (await response.json()).node.definition;
-
+        if (newActor.fullPath) {
+            const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', newActor.fullPath));
+            definition = (await response.json()).node.definition;
+        }
     } catch (error) {
         console.warn(`Failed to fetch character details for ${name} at path ${newActor.fullPath}:`, error);
     }
@@ -126,7 +127,7 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
     }
 
     // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
-    if (!newActor.profile || !newActor.appearances) {
+    if (definition && (!newActor.profile || !newActor.appearances)) {
         return await distillActor(newActor, definition, stage);
     }
 
@@ -434,9 +435,9 @@ export async function generateBaseActorImage(
                 image: await getDataUrl(baseSourceImage),
                 prompt: `If necessary, alter this character to match their description:\n` +
                     `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Disregard anything below the waist. This image remains a waist-up portrait. Swap the background to a subtle contrasting gradient.\n` +
+                    `Disregard anything below the waist. This image remains a waist-up portrait. Swap the background to a subtle gradient that contrasts with the character's palette.\n` +
                     `Preserve the messy, anime-inspired concept-art style with painterly brush strokes, lustrous colors, and rich specular highlights.`,
-                remove_background: true,
+                remove_background: false,
                 transfer_type: 'edit'
             }, '');
         }
@@ -495,7 +496,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
 
         const imageUrl = await stage.makeImageFromImage({
             image: baseImageUrl || '',
-            prompt: emotionPrompt,
+            prompt: `${emotionPrompt}\nMaintain their appearance and style: ${getAppearanceById(actor, targetAppearanceId).description}`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
