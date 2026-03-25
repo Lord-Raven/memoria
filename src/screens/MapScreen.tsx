@@ -246,6 +246,116 @@ const isPointInsidePolygon = (x: number, y: number, polygon: number[][]) => {
 	return isInside;
 };
 
+const distancePointToSegment = (
+	px: number,
+	py: number,
+	ax: number,
+	ay: number,
+	bx: number,
+	by: number,
+) => {
+	const abx = bx - ax;
+	const aby = by - ay;
+	const apx = px - ax;
+	const apy = py - ay;
+	const lengthSq = abx * abx + aby * aby;
+	if (lengthSq <= 1e-12) {
+		const dx = px - ax;
+		const dy = py - ay;
+		return Math.hypot(dx, dy);
+	}
+
+	const t = clamp((apx * abx + apy * aby) / lengthSq, 0, 1);
+	const closestX = ax + abx * t;
+	const closestY = ay + aby * t;
+	const dx = px - closestX;
+	const dy = py - closestY;
+	return Math.hypot(dx, dy);
+};
+
+const minDistanceToPolygonEdges = (x: number, y: number, polygon: number[][]) => {
+	if (polygon.length < 2) {
+		return 0;
+	}
+
+	let minDistance = Number.POSITIVE_INFINITY;
+	for (let i = 0; i < polygon.length; i += 1) {
+		const [ax, ay] = polygon[i];
+		const [bx, by] = polygon[(i + 1) % polygon.length];
+		minDistance = Math.min(minDistance, distancePointToSegment(x, y, ax, ay, bx, by));
+	}
+
+	return Number.isFinite(minDistance) ? minDistance : 0;
+};
+
+const getInteriorPortraitAnchor = (
+	polygon: number[][],
+	fallback: { x: number; y: number },
+	radiusX: number,
+	radiusY: number,
+	preferredSideLeft: boolean,
+) => {
+	if (polygon.length < 3) {
+		return fallback;
+	}
+
+	const centroid = getPolygonCentroid(polygon);
+	const interiorPadding = Math.max(4, Math.min(radiusX, radiusY) * 0.42);
+	const minSafeDistance = Math.max(2, Math.min(radiusX, radiusY) * 0.28);
+	const sideBias = preferredSideLeft ? -1 : 1;
+
+	let bestPoint = fallback;
+	let bestScore = Number.NEGATIVE_INFINITY;
+
+	const evaluateCandidate = (candidateX: number, candidateY: number) => {
+		if (!isPointInsidePolygon(candidateX, candidateY, polygon)) {
+			return;
+		}
+
+		const edgeDistance = minDistanceToPolygonEdges(candidateX, candidateY, polygon);
+		if (edgeDistance < minSafeDistance) {
+			return;
+		}
+
+		const sideAlignment = (candidateX - centroid[0]) * sideBias;
+		const score = edgeDistance + sideAlignment * 0.22;
+		if (score > bestScore) {
+			bestScore = score;
+			bestPoint = { x: candidateX, y: candidateY };
+		}
+	};
+
+	evaluateCandidate(centroid[0], centroid[1]);
+
+	const sampleRings = 5;
+	const samplesPerRing = 28;
+	const maxRadius = Math.max(8, Math.min(radiusX, radiusY) * 2.8);
+
+	for (let ring = 1; ring <= sampleRings; ring += 1) {
+		const ringRadius = (ring / sampleRings) * maxRadius;
+		for (let sample = 0; sample < samplesPerRing; sample += 1) {
+			const angle = (sample / samplesPerRing) * Math.PI * 2;
+			const x = centroid[0] + Math.cos(angle) * ringRadius;
+			const y = centroid[1] + Math.sin(angle) * ringRadius;
+			evaluateCandidate(x, y);
+		}
+	}
+
+	if (bestScore === Number.NEGATIVE_INFINITY) {
+		const inwardOffset = interiorPadding * sideBias;
+		const fallbackX = clamp(fallback.x + inwardOffset, radiusX + 1, MAP_WIDTH - radiusX - 1);
+		const fallbackY = clamp(fallback.y, radiusY + 1, MAP_HEIGHT - radiusY - 1);
+		if (isPointInsidePolygon(fallbackX, fallbackY, polygon)) {
+			return { x: fallbackX, y: fallbackY };
+		}
+		if (isPointInsidePolygon(centroid[0], centroid[1], polygon)) {
+			return { x: centroid[0], y: centroid[1] };
+		}
+	}
+
+	return bestPoint;
+};
+
 const lineIntersection = (a: number[], b: number[], c: number[], d: number[]) => {
 	const [x1, y1] = a;
 	const [x2, y2] = b;
@@ -963,36 +1073,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const portraitScaleCompensationX = uniformPortraitScale / viewportScaleX;
 		const portraitScaleCompensationY = uniformPortraitScale / viewportScaleY;
 
-		const getPortraitPositionOnPolygonEdge = (
-			polygon: number[][],
-			alignToLeft: boolean,
-			radiusX: number,
-			strokeWidth: number,
-		) => {
-			if (polygon.length < 3) {
-				const centroid = getPolygonCentroid(polygon);
-				return { x: centroid[0], y: centroid[1] };
-			}
-
-			// Find extreme X points on the polygon
-			const extremePoints = alignToLeft
-				? polygon.filter((p) => p[0] === Math.min(...polygon.map((pt) => pt[0])))
-				: polygon.filter((p) => p[0] === Math.max(...polygon.map((pt) => pt[0])));
-
-			if (extremePoints.length === 0) {
-				const centroid = getPolygonCentroid(polygon);
-				return { x: centroid[0], y: centroid[1] };
-			}
-
-			// Average Y position of extreme points for stable vertical positioning
-			const avgY = extremePoints.reduce((sum, p) => sum + p[1], 0) / extremePoints.length;
-			const extremeX = extremePoints[0][0];
-			const offset = radiusX + strokeWidth + 2;
-			const positionX = alignToLeft ? extremeX - offset : extremeX + offset;
-
-			return { x: positionX, y: avgY };
-		};
-
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
 			locationId: string;
@@ -1026,11 +1106,20 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const radiusX = radius * portraitScaleCompensationX;
 			const radiusY = radius * portraitScaleCompensationY;
 			const alignsToLeftEdge = cell.point.x >= MAP_WIDTH / 2;
-
-			// Position portrait at the actual polygon edge instead of bounding box
-			const edgePosition = getPortraitPositionOnPolygonEdge(cell.polygon, alignsToLeftEdge, radiusX, strokeWidth);
-			const cx = clamp(edgePosition.x, radiusX + 1, MAP_WIDTH - radiusX - 1);
-			const cy = clamp(edgePosition.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1);
+			const sideOffset = (radiusX + strokeWidth + 2) * (alignsToLeftEdge ? -1 : 1);
+			const basePosition = {
+				x: clamp(cell.point.x + sideOffset, radiusX + 1, MAP_WIDTH - radiusX - 1),
+				y: clamp(cell.point.y + radiusY + 5, radiusY + 1, MAP_HEIGHT - radiusY - 1),
+			};
+			const interiorPosition = getInteriorPortraitAnchor(
+				cell.polygon,
+				basePosition,
+				radiusX,
+				radiusY,
+				alignsToLeftEdge,
+			);
+			const cx = clamp(interiorPosition.x, radiusX + 1, MAP_WIDTH - radiusX - 1);
+			const cy = clamp(interiorPosition.y, radiusY + 1, MAP_HEIGHT - radiusY - 1);
 
 			return [{
 				key: `${choice.locationId}-${choice.partnerActorIds.join(',')}`,
