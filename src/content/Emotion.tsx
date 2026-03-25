@@ -76,7 +76,7 @@ export const EMOTION_PROMPTS: EmotionPromptMap = {
     disgust: 'Give this character a disgusted, grossed-out expression and repulsed gesture or pose.',
     embarrassment: 'Give this character an embarrassed expression and awkward gesture or pose.',
     ecstasy: 'Give this character a euphoric expression, eyes rolled back slightly, with an orgasmic, lusty pose.',
-    exhaustion: 'Give this character a tired, weary expression and slumped, drained pose.',
+    exhaustion: 'This character is now exhausted. Give them weary expression and slumped posture.',
     fear: 'Give this character a shocked, terrified expression and defensive or cowering pose.',
     grief: 'Give this character a depressed, sobbing expression and mournful pose.',
     guilt: 'Give this character a remorseful, apologetic expression and diminished, contrite pose.',
