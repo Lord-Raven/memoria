@@ -32,6 +32,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
 
     const handleCloseDetail = () => {
         setSelectedActor(null);
+        stage().saveGame();
     };
 
     const handleLocationClick = (location: Location) => {
@@ -40,6 +41,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
 
     const handleCloseLocationDetail = () => {
         setSelectedLocation(null);
+        stage().saveGame();
     };
 
     return (

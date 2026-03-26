@@ -471,10 +471,10 @@ export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?:
     const fallbackUrl = neutralUrl || actor.sampleImageUrl || '';
 
     // Check if we need to generate the image
-    if (stage && (emotion === 'neutral' /*|| !stage.getSave().disableEmotionImages*/) && (!emotionUrl || emotionUrl === actor.sampleImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
+    //if (stage && (!emotionUrl || emotionUrl === actor.sampleImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
         // Kick off generation in the background (don't wait)
         generateEmotionImage(actor, emotion as Emotion, stage, false, targetAppearanceId);
-    }
+    //}
 
     // Return the emotion image or fallback
     return emotionUrl || fallbackUrl;
@@ -549,6 +549,7 @@ export async function generateBaseActorImage(
         }
     }
     if (currentBaseImageUrl !== getEmotionImage(actor, 'base', stage, targetAppearanceId)) {
+        console.log('Done and base image has changed.');
         await generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
     }
 }
