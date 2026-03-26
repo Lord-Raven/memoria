@@ -1,5 +1,5 @@
 import { v4 as generateUuid } from 'uuid';
-import { Emotion, EmotionPack, EmotionPromptMap } from './Emotion';
+import { Emotion, EMOTION_PROMPTS, EmotionPack, EmotionPromptMap } from './Emotion';
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
@@ -526,17 +526,16 @@ function setOutfitPrompt(outfit: Outfit, emotion: Emotion, prompt: string) {
 }
 
 function buildEmotionPromptGenerationInstruction(actor: Actor, outfit: Outfit, emotion: Emotion): string {
-    const targetMood = emotion === Emotion.neutral ? 'neutral' : emotion;
 
     return `{{messages}}This is a preparatory request for a single image-edit instruction for character art generation.\n\n` +
         `Character core appearance: ${actor.description}\n` +
         `Current outfit: ${outfit.description}\n` +
         `Personality and public persona: ${actor.profile}\n` +
-        `Target mood: ${targetMood}\n\n` +
+        `Target mood: ${emotion} (${EMOTION_PROMPTS[emotion]})\n\n` +
         `Write exactly one concise prompt for an image editing model to revise a base image of this character already in this outfit. ` +
-        `The prompt is intended to describe the target mood by vividly describing this character's expression, posture, gesture, ` +
-        `and demeanor in a way that takes their style and outfit into account where appropriate. ` +
-        `Do not use lists, labels, quotation marks, or explanation. Output only the final prompt text and then #END#\n\n` +
+        `The prompt is intended to describe the target mood by visually describing this character's expression, posture, gesture, ` +
+        `and demeanor in a way that takes their style, personality, and outfit into account where appropriate. ` +
+        `Output only the final prompt text and then #END#\n\n` +
         `Example response:\n` +
         `This character is now in a flirty, playful mood. She smiles and leans forward slightly, with a glint in her half-lidded eyes. She blushes and plays with her hair.\n#END#`;
 }

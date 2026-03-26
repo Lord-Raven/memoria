@@ -12,6 +12,7 @@ export enum Emotion {
     fear = 'fear', // surprised (unpleasant)
     grief = 'grief',
     guilt = 'guilt', // remorse
+    injured = 'injured',
     intrigue = 'intrigue', // curiosity
     joy = 'joy',
     kindness = 'kindness', // caring, gratitude
@@ -42,6 +43,7 @@ export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
     fear: ['shocked', 'terrified', 'terror', 'panic', 'alarm', 'alarmed', 'frightened', 'horror', 'horrified', 'shock'],
     grief: ['sad', 'upset', 'depressed', 'depression', 'sobbing', 'desperation', 'sorrow', 'despair'],
     guilt: ['remorseful', 'remorse', 'repentant', 'regretful', 'regretting', 'guiltridden', 'penitent', 'penitence', 'concern'],
+    injured: ['injured', 'wounded', 'hurt', 'pain', 'pained', 'injury', 'wound', 'harmed'],
     intrigue: ['intrigued', 'curious', 'curiosity', 'interest', 'absorbed', 'absorbing', 'engrossed', 'engrossing', 'mischief', 'mischievous', 'mischievousness'],
     joy: ['happy', 'happiness', 'joyfulness', 'thrilled', 'delighted', 'elated', 'jubilant', 'elation', 'humor', 'playfulness', 'playful', 'fun', 'delight', 'enthusiasm', 'pleasure',
         'cheer', 'cheery', 'jovial', 'joviality', 'wry humor', 'wry', 'humor', 'humorous', 'glee', 'gleeful'],
@@ -67,31 +69,28 @@ export type EmotionPromptMap = {[emotion in Emotion]: string};
 
 // Full image-edit prompt used by Actor.generateEmotionImage.
 export const EMOTION_PROMPTS: EmotionPromptMap = {
-    neutral: 'Give this character a typical, neutral expression and pose.',
-    approval: 'Give this character an approving, pleased expression or gesture.',
-    anger: 'Give this character an angry expression and hostile gesture or pose.',
-    confusion: 'Give this character a stunned, confused expression and uncertain gesture or pose.',
-    desire: 'Give this character a blushing, coy expression and flirty, alluring pose.',
-    disappointment: 'Give this character an unhappy, annoyed expression and deflated pose.',
-    disgust: 'Give this character a disgusted, grossed-out expression and repulsed gesture or pose.',
-    embarrassment: 'Give this character an embarrassed expression and awkward gesture or pose.',
-    ecstasy: 'Give this character a euphoric expression, eyes rolled back slightly, with an orgasmic, lusty pose.',
-    exhaustion: 'This character is now exhausted. Give them weary expression and slumped posture.',
-    fear: 'Give this character a shocked, terrified expression and defensive or cowering pose.',
-    grief: 'Give this character a depressed, sobbing expression and mournful pose.',
-    guilt: 'Give this character a remorseful, apologetic expression and diminished, contrite pose.',
-    intrigue: 'Give this character a curious, intrigued expression and attentive pose.',
-    joy: 'Give this character a happy, smiling expression and joyful, playful gesture or pose.',
-    kindness: 'Give this character a kind, grateful expression and caring gesture or pose.',
-    love: 'Give this character an adoring, lovestruck expression and affectionate gesture or pose.',
-    nervousness: 'Give this character an anxious, uncertain expression and uneasy gesture or pose.',
-    pride: 'Give this character a proud expression and confident, triumphant pose.',
-    sadness: 'Give this character a sad, upset expression and dejected pose.',
-    wonder: 'Give this character an inspired, wondrous expression and amazed or excited gesture or pose.',
+    neutral: 'a typical expression and pose for this character',
+    approval: 'approving or pleased',
+    anger: 'markedly aggravated or hostile',
+    confusion: 'stunned, baffled, or perplexed',
+    desire: 'coy, flirty, or overtly alluring',
+    disappointment: 'unhappy, annoyed, or deflated',
+    disgust: 'disgusted, grossed-out, or repulsed',
+    embarrassment: 'embarrassed, awkward, or self-conscious',
+    ecstasy: 'euphoric, eyes rolled back slightly, with an orgasmic, lusty pose',
+    exhaustion: 'exhausted, weary, or slumped',
+    fear: 'shocked, terrified, or defensive',
+    grief: 'depressed, sobbing, or mournful',
+    guilt: 'remorseful, apologetic, or contrite',
+    injured: 'pained, hurt, or defensive',
+    intrigue: 'curious, intrigued, or attentive',
+    joy: 'happy, smiling, or joyful',
+    kindness: 'kind, grateful, or caring',
+    love: 'adoring, lovestruck, or affectionate',
+    nervousness: 'anxious, uncertain, or uneasy',
+    pride: 'proud, confident, or triumphant',
+    sadness: 'sad, upset, or dejected',
+    wonder: 'inspired, wondrous, or amazed',
 };
-
-export function getDefaultEmotionPromptMap(): EmotionPromptMap {
-    return { ...EMOTION_PROMPTS };
-}
 
 export type EmotionPack = {[key: string]: string};
