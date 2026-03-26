@@ -78,6 +78,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const [emotionPromptDraft, setEmotionPromptDraft] = useState('');
     const [isImageDropActive, setIsImageDropActive] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [appearancesJsonExport, setAppearancesJsonExport] = useState('');
     const [confirmDialog, setConfirmDialog] = useState<{
         open: boolean;
         title: string;
@@ -228,7 +229,33 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         });
     };
 
-    const handleRegenerateEmotion = async (emotion: Emotion) => {
+    const buildAppearancesExport = () => ({
+        appearances: editedOutfits.map((outfit) => ({
+            name: outfit.name,
+            description: outfit.description,
+            prompts: { ...(outfit.prompts || {}) },
+            emotionPack: { ...(outfit.emotionPack || {}) },
+        })),
+    });
+
+    const handleGenerateAppearancesExport = () => {
+        setAppearancesJsonExport(JSON.stringify(buildAppearancesExport(), null, 2));
+    };
+
+    const handleCopyAppearancesExport = async () => {
+        const payload = appearancesJsonExport || JSON.stringify(buildAppearancesExport(), null, 2);
+
+        try {
+            await navigator.clipboard.writeText(payload);
+            setAppearancesJsonExport(payload);
+            stage().showPriorityMessage('Copied appearances JSON to clipboard.');
+        } catch (error) {
+            console.error('Failed to copy appearances JSON:', error);
+            stage().showPriorityMessage('Failed to copy appearances JSON.');
+        }
+    };
+
+    const handleRegenerateEmotion = async (emotion: Emotion, promptDraft: string) => {
         if (regeneratingImages.has(emotion)) return;
         
         setConfirmDialog({
@@ -237,6 +264,11 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
             message: `This will regenerate the ${emotion} emotion image and replace the existing one. Continue?`,
             onConfirm: async () => {
                 setConfirmDialog(prev => ({ ...prev, open: false }));
+
+                if (!await persistEmotionPrompt(emotion, promptDraft)) {
+                    return;
+                }
+
                 setRegeneratingImages(prev => new Set(prev).add(emotion));
                 
                 try {
@@ -910,6 +942,45 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                             }}
                                         />
                                     </div>
+
+                                    <div>
+                                        <label
+                                            style={{
+                                                display: 'block',
+                                                color: '#00ff88',
+                                                fontSize: '14px',
+                                                fontWeight: 'bold',
+                                                marginBottom: '8px',
+                                            }}
+                                        >
+                                            Appearances JSON
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                            <Button onClick={handleGenerateAppearancesExport} variant="secondary">
+                                                Generate JSON
+                                            </Button>
+                                            <Button onClick={handleCopyAppearancesExport}>
+                                                Copy JSON
+                                            </Button>
+                                        </div>
+                                        <textarea
+                                            value={appearancesJsonExport}
+                                            readOnly
+                                            placeholder="Generate JSON to export this actor's appearances"
+                                            style={{
+                                                width: '100%',
+                                                minHeight: '160px',
+                                                padding: '12px',
+                                                fontSize: '13px',
+                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                borderRadius: '5px',
+                                                color: '#e0f0ff',
+                                                fontFamily: 'monospace',
+                                                resize: 'vertical',
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                             </section>
 
@@ -1398,10 +1469,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                     if (target === 'base') {
                                         handleRegenerateBase(baseRegenSource);
                                     } else {
-                                        if (!await persistEmotionPrompt(target, emotionPromptDraft)) {
-                                            return;
-                                        }
-                                        handleRegenerateEmotion(target);
+                                        handleRegenerateEmotion(target, emotionPromptDraft);
                                     }
                                 }}
                                 disabled={!imageDialog.target || isCurrentImageRegenerating}
