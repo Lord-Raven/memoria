@@ -80,7 +80,7 @@ export const EMOTION_PROMPTS: EmotionPromptMap = {
     ecstasy: 'euphoric, orgasmic, or inappropriately lusty',
     exhaustion: 'exhausted, weary, or slumped',
     fear: 'shocked, terrified, or defensive',
-    grief: 'depressed, sobbing, or mournful',
+    grief: 'extremely distressed, sobbing, or mournful',
     guilt: 'remorseful, apologetic, or contrite',
     injury: 'pained, hurt, or defensive',
     intrigue: 'curious, intrigued, or attentive',

@@ -9,7 +9,7 @@ import { MAX_ENTRIES } from "./Lore";
 export enum SkitType {
     INTRO = 'INTRO',
     SOCIAL = 'SOCIAL',
-    ADVENTURE = 'ADVENTURE',
+    EXPEDITION = 'EXPEDITION',
     DISCOVERY = 'DISCOVERY',
 }
 
@@ -104,16 +104,15 @@ export function getCurrentLocation(skit: Skit, upToEntryIndex: number): string {
 }
 
 function buildScriptLog(skit: Skit, additionalEntries: ScriptEntry[] = [], stage?: Stage): string {
-    console.log('Outputting skit.');
+    console.log('Outputting skit:');
     console.log(skit);
     return ((skit.script && skit.script.length > 0) || additionalEntries.length > 0) ?
         [...skit.script, ...additionalEntries].map(e => {
             // Find the best matching emotion key for this speaker
-            const emotionKeys = Object.keys(e.actorEmotions || {});
-            const candidates = emotionKeys.map(key => ({ name: key }));
-            const bestMatch = findBestNameMatch(e.speakerId, candidates);
-            const matchingKey = bestMatch?.name;
-            const emotionText = matchingKey ? ` [${matchingKey} expresses ${e.actorEmotions?.[matchingKey]}]` : '';
+            const emotionText = Object.entries(e.actorEmotions || {}).map(([actorId, emotion]) => {
+                const actor = stage?.getSave().actors?.[actorId];
+                return actor ? ` [${actor.name} expresses ${emotion}]` : '';
+            }).join('');
             const wearsText = Object.entries(e.actorOutfits || {}).map(([actorId, outfitId]) => {
                 const actor = stage?.getSave().actors?.[actorId];
                 const outfit = actor?.outfits.find(o => o.id === outfitId);
@@ -129,7 +128,9 @@ export function buildSkitTypePrompt(skit: Skit, stage: Stage): string {
         case SkitType.INTRO:
             return `This scene introduces the beginning of the story, as the player awakens in Ardeia.`;
         case SkitType.SOCIAL:
-
+            return `This scene primarily focuses on interpersonal dynamics, character development, and social interaction with Prisoners or other characters in Ardeia.`;
+        case SkitType.EXPEDITION:
+            return `This scene primarily focuses on exploration, discovery, and trials as the player ventures into new locations or delves into the mysteries of Ardeia.`;
         default:
             return '';
     }
@@ -137,11 +138,13 @@ export function buildSkitTypePrompt(skit: Skit, stage: Stage): string {
 
 export function buildPremise(playerName: string): string {
     return `This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
-            `The denizens of this world—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. Most have only vague memories of their past lives, ` +
-            `but all have rich and detailed personalities that persist and even new motives driving their existence in a new world. ` +
-            `All prisoners live in the sole populated city of Ardeia and serve its Warden, Cassiel, an eight-foot, angelic woman who oversees the city's operations with a mix of benevolence and authority. ` +
-            `The player of this game, ${playerName}, is one of the many prisoners, bearing the signature bracer that binds them to Ardeia and the Warden. ` +
-            `The prisoners work to keep the city running while also exploring the Outside, beyond the cities walls and Barriers. Some are new arrivals, while others have been here for centuries. ` +
+            `Ever since the end of the world—two centuries ago—the lone, overgrown city of Ardeia has stood as the final bastion of humanity. ` +
+            `The population of Ardeia—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. ` +
+            `Most have only vague memories of their past lives, ` +
+            `but all have rich and detailed personalities and motives driving their existence in a new world. ` +
+            `Prisoners of Ardeia serve its Warden, Cassiel, an eight-foot, angelic woman who oversees the city's operations with a mix of benevolence and authority. ` +
+            `\nThe player of this game, ${playerName}, is one of these many prisoner citizens. ` +
+            `This game revolves around ${playerName}'s journey through this world, as they interact with other prisoners or embark on dangerous or intriguing expeditions. ` +
             `These expeditions discover all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. `;
 }
 
@@ -414,7 +417,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         }
                         
                         if (!finalEmotion) continue;
-                        newEmotionTags[matched.name] = finalEmotion;
+                        newEmotionTags[matched.id] = finalEmotion;
                     }
                 }
 

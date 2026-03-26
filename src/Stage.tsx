@@ -376,7 +376,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             const initialActors = expedition ? expedition.partnerActorIds : [this.pickRandom(potentialInitialActors)?.id].filter(Boolean);
 
             skit = new Skit({
-                skitType: SkitType.ADVENTURE,
+                skitType: SkitType.EXPEDITION,
                 initialLocationId: selectedLocation.id,
                 script: [],
                 initialActors: initialActors,
