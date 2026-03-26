@@ -1,5 +1,5 @@
 import { v4 as generateUuid } from 'uuid';
-import { Emotion, EMOTION_PROMPTS, EmotionPack } from './Emotion';
+import { Emotion, EmotionPack, EmotionPromptMap } from './Emotion';
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
@@ -18,6 +18,7 @@ export type Outfit = {
     id: string;
     name: string;
     description: string;
+    prompts: EmotionPack; // This emotionPack actually contains a map of prompts rather than image URLs. The keys are the same emotion keys, but the values are prompts describing how to alter the character's expression, pose, and overall demeanor to convey that emotion while wearing this outfit. These prompts are used to guide the image generation for each emotion when a character is wearing this outfit.
     emotionPack: EmotionPack;
 }
 
@@ -90,6 +91,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             id: 'default',
             description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
             name: 'Celestial Robes',
+            prompts: {},
             emotionPack: {
                 base: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
                 neutral: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png'
@@ -133,6 +135,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             id: 'default',
             name: 'Tailored Peasant Garb',
             description: 'A tall, fine-boned woman with a severe pale-blonde pixie cut, a thin braid, and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears tailored, practical peasant clothing in earth tones, everything intentional and devoid of decoration.',
+            prompts: {},
             emotionPack: {
                 base: 'https://media.charhub.io/70e3344a-6859-425e-97d8-7f1bb34a4378/c7114535-4ca4-415e-8c81-e93641df3bb8.png',
                 neutral: 'https://media.charhub.io/054cc56b-3e4e-4078-b5a0-6372356a1fdc/c2aa2ee3-6032-4008-a0bb-914eebaa99f7.png',
@@ -148,6 +151,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             id: 'default',
             name: `Healer's Gear`,
             description: '',
+            prompts: {},
             emotionPack: {
                 base: 'https://media.charhub.io/34cef282-aab0-44fd-8d6b-4bf9387174e3/7d419bbe-4ea8-4f06-8a88-613c465d645c.png',
                 neutral: 'https://media.charhub.io/19adc43a-f997-4548-ba80-6e0dbf092898/2bd068ac-eb68-4c21-86af-2c3e55fef34b.png',
@@ -164,6 +168,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             id: 'default',
             name: 'Scavenger Wear',
             description: 'A lithe woman with brilliant blue eyes and white hair tied up at the back. Her most striking features are a pair of expressive, orange-furred fox ears and a matching fox tail. Her clothing is lightweight, practical, and heavily modified with pockets and pouches',
+            prompts: {},
             emotionPack: {
                 base: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png',
                 neutral: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png'
@@ -222,6 +227,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             id: 'default',
             name: 'Scythe Form',
             description: 'A five-foot-long, elegantly curved scythe with a haft of dark, polished wood and a blade of shimmering, silvery metal that seems to drink in the light. The weapon is immaculate and radiates a faint, watchful presence.',
+            prompts: {},
             emotionPack: {
                 base: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png',
                 neutral: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png'
@@ -466,6 +472,7 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             id: generateUuid(),
             name: defaultOutfitName,
             description: defaultOutfitDescription,
+            prompts: {},
             emotionPack: {}, // This will be filled in later when the player views this character and the emotions are generated on demand.
         });
     }
@@ -492,6 +499,7 @@ function getActiveOutfit(actor: Actor): Outfit {
             id: '',
             name: 'Default Outfit',
             description: '',
+            prompts: {},
             emotionPack: {}
         };
     } else if (!actor.outfitId) {
@@ -504,6 +512,61 @@ function getActiveOutfit(actor: Actor): Outfit {
 function getOutfitById(actor: Actor, outfitId: string = ''): Outfit {
     const resolvedOutfitId = outfitId || actor.outfitId;
     return actor.outfits.find((outfit) => outfit.id === resolvedOutfitId) || getActiveOutfit(actor);
+}
+
+function getOutfitPrompt(outfit: Outfit, emotion: Emotion): string {
+    return outfit.prompts?.[emotion] || '';
+}
+
+function setOutfitPrompt(outfit: Outfit, emotion: Emotion, prompt: string) {
+    outfit.prompts = {
+        ...(outfit.prompts || {}),
+        [emotion]: prompt,
+    };
+}
+
+function buildEmotionPromptGenerationInstruction(actor: Actor, outfit: Outfit, emotion: Emotion): string {
+    const targetMood = emotion === Emotion.neutral ? 'neutral' : emotion;
+
+    return `{{messages}}This is a preparatory request for a single image-edit instruction for character art generation.\n\n` +
+        `Character core appearance: ${actor.description}\n` +
+        `Current outfit: ${outfit.description}\n` +
+        `Personality and public persona: ${actor.profile}\n` +
+        `Target mood: ${targetMood}\n\n` +
+        `Write exactly one concise prompt for an image editing model to revise a base image of this character already in this outfit. ` +
+        `The prompt is intended to describe the target mood by vividly describing this character's expression, posture, gesture, ` +
+        `and demeanor in a way that takes their style and outfit into account where appropriate. ` +
+        `Do not use lists, labels, quotation marks, or explanation. Output only the final prompt text and then #END#\n\n` +
+        `Example response:\n` +
+        `This character is now in a flirty, playful mood. She smiles and leans forward slightly, with a glint in her half-lidded eyes. She blushes and plays with her hair.\n#END#`;
+}
+
+export async function generateOutfitEmotionPrompt(actor: Actor, emotion: Emotion, stage: Stage, outfitId: string = ''): Promise<string> {
+    const outfit = getOutfitById(actor, outfitId);
+    const generationKey = `actor-prompt/${actor.id}/${outfit.id}/${emotion}`;
+    const existingGeneration = stage.generationPromises[generationKey];
+    if (existingGeneration) {
+        return existingGeneration as Promise<string>;
+    }
+
+    const promptRequest = stage.generator.textGen({
+        prompt: buildEmotionPromptGenerationInstruction(actor, outfit, emotion),
+        stop: ['#END'],
+        include_history: true,
+        max_tokens: 150,
+    }).then((response: any) => {
+        const generatedPrompt = response?.result?.trim() || '';
+        if (generatedPrompt) {
+            setOutfitPrompt(outfit, emotion, generatedPrompt);
+            stage.saveGame();
+        }
+        return generatedPrompt;
+    }).finally(() => {
+        delete stage.generationPromises[generationKey];
+    });
+
+    stage.generationPromises[generationKey] = promptRequest;
+    return promptRequest;
 }
 
 export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?: Stage, outfitId: string = ''): string {
@@ -625,7 +688,8 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
         stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
 
-        const emotionPrompt = stage.getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
+        const outfit = getOutfitById(actor, targetOutfitId);
+        const emotionPrompt = getOutfitPrompt(outfit, emotion) || await generateOutfitEmotionPrompt(actor, emotion, stage, targetOutfitId);
         console.log(`Using emotion prompt for ${emotion}: ${emotionPrompt}`);
 
         let baseImageUrl = await getDataUrl(getEmotionImage(actor, 'base', stage, targetOutfitId));

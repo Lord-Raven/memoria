@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
-import { Actor, generateBaseActorImage, generateEmotionImage, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
-import { Emotion, EMOTION_PROMPTS } from '../content/Emotion';
+import { Actor, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
+import { Emotion } from '../content/Emotion';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
 import { Button, Chip, GlassPanel, TextInput, Title } from './UiComponents';
 
@@ -22,17 +22,19 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const initialOutfitIdRef = useRef(actor.outfitId);
 
     const getClonedOutfits = (): Outfit[] => {
-        const sourceOutfits = Array.isArray(actor.outfits) && actor.outfits.length > 0
+        const sourceOutfits: Outfit[] = Array.isArray(actor.outfits) && actor.outfits.length > 0
             ? actor.outfits
             : [{
                 id: actor.outfitId || generateUuid(),
                 name: ORIGINAL_OUTFIT_NAME,
                 description: 'This is the default outfit for the actor, generated from their description and avatar. Edit the description or upload a custom avatar to change this outfit.',
+                prompts: {},
                 emotionPack: {},
             }];
 
         return sourceOutfits.map((outfit) => ({
             ...outfit,
+            prompts: { ...(outfit.prompts || {}) },
             emotionPack: { ...(outfit.emotionPack || {}) },
         }));
     };
@@ -95,6 +97,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const syncEditedOutfitsFromActor = () => {
         setEditedOutfits(actor.outfits.map((outfit) => ({
             ...outfit,
+            prompts: { ...(outfit.prompts || {}) },
             emotionPack: { ...(outfit.emotionPack || {}) },
         })));
     };
@@ -102,6 +105,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const handleCloseDetail = () => {
         actor.outfits = initialOutfitsRef.current.map((outfit) => ({
             ...outfit,
+            prompts: { ...(outfit.prompts || {}) },
             emotionPack: { ...(outfit.emotionPack || {}) },
         }));
         actor.outfitId = initialOutfitIdRef.current;
@@ -117,6 +121,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                 id: generateUuid(),
                 name: ORIGINAL_OUTFIT_NAME,
                 description: '',
+                prompts: {},
                 emotionPack: {},
             }];
 
@@ -130,10 +135,12 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.themeFontFamily = editedActor.themeFontFamily;
         actor.outfits = nextOutfits.map((outfit) => ({
             ...outfit,
+            prompts: { ...(outfit.prompts || {}) },
             emotionPack: { ...(outfit.emotionPack || {}) },
         }));
         initialOutfitsRef.current = actor.outfits.map((outfit) => ({
             ...outfit,
+            prompts: { ...(outfit.prompts || {}) },
             emotionPack: { ...(outfit.emotionPack || {}) },
         }));
 
@@ -182,6 +189,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
             id: generateUuid(),
             name: getNextOutfitName(),
             description: '',
+            prompts: {},
             emotionPack: {},
         };
         setEditedOutfits((prev) => [...prev, newOutfit]);
@@ -252,21 +260,51 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     };
 
     const getEmotionPrompt = (emotion: Emotion): string => {
-        return stage().getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
+        return selectedOutfit?.prompts?.[emotion] || '';
     };
 
-    const persistEmotionPrompt = (emotion: Emotion, prompt: string) => {
-        const trimmedPrompt = prompt.trim();
-        if (!trimmedPrompt) {
-            stage().showPriorityMessage('Emotion prompt cannot be empty.');
+    const persistEmotionPrompt = async (emotion: Emotion, prompt: string) => {
+        if (!selectedOutfitId) {
+            stage().showPriorityMessage('Select an outfit before editing prompts.');
             return false;
         }
 
-        const save = stage().getSave();
-        save.emotionPrompts = {
-            ...(save.emotionPrompts || EMOTION_PROMPTS),
-            [emotion]: trimmedPrompt,
-        };
+        const trimmedPrompt = prompt.trim();
+        if (!trimmedPrompt) {
+            try {
+                const generatedPrompt = await generateOutfitEmotionPrompt(actor, emotion, stage(), selectedOutfitId);
+                if (!generatedPrompt) {
+                    stage().showPriorityMessage('Failed to generate an emotion prompt.');
+                    return false;
+                }
+                syncEditedOutfitsFromActor();
+                setEmotionPromptDraft(generatedPrompt);
+                forceUpdate({});
+                return true;
+            } catch (error) {
+                console.error(`Failed to generate ${emotion} prompt:`, error);
+                stage().showPriorityMessage(`Failed to generate ${emotion} prompt. Check console for details.`);
+                return false;
+            }
+        }
+
+        const nextOutfits = editedOutfits.map((outfit) => (
+            outfit.id === selectedOutfitId
+                ? {
+                    ...outfit,
+                    prompts: {
+                        ...(outfit.prompts || {}),
+                        [emotion]: trimmedPrompt,
+                    },
+                }
+                : outfit
+        ));
+        setEditedOutfits(nextOutfits);
+        actor.outfits = nextOutfits.map((outfit) => ({
+            ...outfit,
+            prompts: { ...(outfit.prompts || {}) },
+            emotionPack: { ...(outfit.emotionPack || {}) },
+        }));
         stage().saveGame();
         return true;
     };
@@ -305,6 +343,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                 outfit.id === selectedOutfitId
                     ? {
                         ...outfit,
+                        prompts: { ...(outfit.prompts || {}) },
                         emotionPack: {
                             ...(outfit.emotionPack || {}),
                             [target]: uploadedUrl,
@@ -315,6 +354,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
             setEditedOutfits(nextOutfits);
             actor.outfits = nextOutfits.map((outfit) => ({
                 ...outfit,
+                prompts: { ...(outfit.prompts || {}) },
                 emotionPack: { ...(outfit.emotionPack || {}) },
             }));
             stage().saveGame();
@@ -1352,13 +1392,13 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                 </div>
                             )}
                             <Button
-                                onClick={() => {
+                                onClick={async () => {
                                     const target = imageDialog.target;
                                     if (!target) return;
                                     if (target === 'base') {
                                         handleRegenerateBase(baseRegenSource);
                                     } else {
-                                        if (!persistEmotionPrompt(target, emotionPromptDraft)) {
+                                        if (!await persistEmotionPrompt(target, emotionPromptDraft)) {
                                             return;
                                         }
                                         handleRegenerateEmotion(target);

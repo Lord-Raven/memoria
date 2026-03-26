@@ -7,7 +7,6 @@ import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
-import { Emotion, EmotionPromptMap } from "./content/Emotion";
 import { fetchLorebook, Lore } from "./content/Lore";
 
 type MessageStateType = any;
@@ -33,7 +32,6 @@ export type SaveType = {
     language?: string;
     lorebook?: Lore[];
     expeditionChoices?: ExpeditionChoice[];
-    emotionPrompts?: EmotionPromptMap;
 }
 
 type ExpeditionChoice = {
