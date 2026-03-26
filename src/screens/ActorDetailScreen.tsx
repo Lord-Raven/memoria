@@ -355,6 +355,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
             setRegeneratingImages(prev => new Set(prev).add('base'));
             
             try {
+                console.log('testing');
                 await generateBaseActorImage(
                     actor,
                     stage(),
