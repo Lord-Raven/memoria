@@ -3,7 +3,6 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack } from './Emotion';
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
-import { act } from 'react';
 
 const getBaseImage = createImageAssetUrlResolver('characters');
 
@@ -124,6 +123,16 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Lyra', 
         fullPath: 'Birb_Brain/lyra-scavenger-stray-survivor-fa0621f65589', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png',
+        appearances: [{
+            id: 'default',
+            name: 'Scavenger Wear',
+            description: 'A lithe woman with brilliant blue eyes and white hair tied up at the back. Her most striking features are a pair of expressive, orange-furred fox ears and a matching fox tail. Her clothing is lightweight, practical, and heavily modified with pockets and pouches',
+            emotionPack: {
+                base: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png',
+                neutral: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png'
+            }
+        }],
+        appearanceId: 'default',
     }, { 
         name: 'Mallory', 
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
@@ -473,7 +482,7 @@ export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?:
     // Check if we need to generate the image
     //if (stage && (!emotionUrl || emotionUrl === actor.sampleImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
         // Kick off generation in the background (don't wait)
-        generateEmotionImage(actor, emotion as Emotion, stage, false, targetAppearanceId);
+        // generateEmotionImage(actor, emotion as Emotion, stage, false, targetAppearanceId);
     //}
 
     // Return the emotion image or fallback
@@ -532,7 +541,7 @@ export async function generateBaseActorImage(
                 image: await getDataUrl(baseSourceImage),
                 prompt: `If necessary, alter this character to match their description:\n` +
                     `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Swap the background to a monotone gradient that clashes with the character's palette.\n` +
+                    `Swap the background to a monotone gradient that garishly opposes the character's palette.\n` +
                     `Preserve the messy, anime-inspired concept-art style with painterly brush strokes, lustrous colors, and rich specular highlights.`,
                 remove_background: false,
                 transfer_type: 'edit'
