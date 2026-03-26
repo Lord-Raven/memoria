@@ -531,7 +531,7 @@ export async function generateBaseActorImage(
                 image: await getDataUrl(baseSourceImage),
                 prompt: `If necessary, alter this character to match their description:\n` +
                     `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Disregard anything below the waist. This image remains a waist-up portrait. Swap the background to a monotone gradient that clashes with the character's palette.\n` +
+                    `Swap the background to a monotone gradient that clashes with the character's palette.\n` +
                     `Preserve the messy, anime-inspired concept-art style with painterly brush strokes, lustrous colors, and rich specular highlights.`,
                 remove_background: false,
                 transfer_type: 'edit'
@@ -579,7 +579,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
 
         const imageUrl = await stage.makeImageFromImage({
             image: baseImageUrl || '',
-            prompt: `${emotionPrompt}\nPreserve their outfit and overall appearance, but adjust their facial expression and body language to clearly convey this emotion. `,
+            prompt: `Pictured: ${getAppearanceById(actor, targetAppearanceId).description}\nInstruction: ${emotionPrompt}.`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
