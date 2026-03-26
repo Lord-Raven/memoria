@@ -36,7 +36,7 @@ export class ScriptEntry {
     message: string = ''; // Message content for this script entry
     speechUrl: string = ''; // Optional URL for text-to-speech audio
     actorEmotions: {[key: string]: Emotion} = {}; // Map of emotion changes by actor ID
-    actorAppearances: {[key: string]: string} = {}; // Map of appearance changes by actor ID (e.g. outfit changes)
+    actorOutfits: {[key: string]: string} = {}; // Map of outfit changes by actor ID
     updatedActors?: string[]; // List of Actor IDs now in the skit as of this entry; if undefined, assume same as previous entry
     updatedLocationId?: string; // Updated location for this entry, if any; if undefined, assume same as previous entry
     outcomes: Outcome[] = []; // Optional array of outcomes or consequences resulting from this script entry; can be things like finding an item, maybe a stat or relationship change, etc.
@@ -61,16 +61,16 @@ export const determineEmotion = (actorId: string, skit: Skit, index: number): Em
     return emotion;
 }
 
-export const determineAppearance = (actorId: string, skit: Skit, index: number): string => {
-    let appearanceId = '';
+export const determineOutfit = (actorId: string, skit: Skit, index: number): string => {
+    let outfitId = '';
     for (let i = index; i >= 0; i--) {
         const line = skit.script[i];
-        if (line && line.actorAppearances && line.actorAppearances[actorId]) {
-            appearanceId = line.actorAppearances[actorId];
+        if (line && line.actorOutfits && line.actorOutfits[actorId]) {
+            outfitId = line.actorOutfits[actorId];
             break;
         }
     }
-    return appearanceId;
+    return outfitId;
 }
 
 export function getCurrentActors(skit: Skit, upToEntryIndex: number): string[] {
@@ -84,11 +84,11 @@ export function getCurrentActors(skit: Skit, upToEntryIndex: number): string[] {
     return currentActors;
 }
 
-export function getCurrentAppearances(skit: Skit, stage: Stage, upToEntryIndex: number): {[actorId: string]: string} {
+export function getCurrentOutfits(skit: Skit, stage: Stage, upToEntryIndex: number): {[actorId: string]: string} {
 
-    return getCurrentActors(skit, upToEntryIndex).reduce((appearances, actorId) => {
-        appearances[actorId] = determineAppearance(actorId, skit, upToEntryIndex);
-        return appearances;
+    return getCurrentActors(skit, upToEntryIndex).reduce((outfits, actorId) => {
+        outfits[actorId] = determineOutfit(actorId, skit, upToEntryIndex);
+        return outfits;
     }, {} as {[actorId: string]: string});
 }
 
@@ -112,10 +112,10 @@ function buildScriptLog(skit: Skit, additionalEntries: ScriptEntry[] = [], stage
             const bestMatch = findBestNameMatch(e.speakerId, candidates);
             const matchingKey = bestMatch?.name;
             const emotionText = matchingKey ? ` [${matchingKey} expresses ${e.actorEmotions?.[matchingKey]}]` : '';
-            const wearsText = Object.entries(e.actorAppearances || {}).map(([actorId, appearanceId]) => {
+            const wearsText = Object.entries(e.actorOutfits || {}).map(([actorId, outfitId]) => {
                 const actor = stage?.getSave().actors?.[actorId];
-                const appearance = actor?.appearances.find(o => o.id === appearanceId);
-                return actor && appearance ? ` [${actor.name} wears ${appearance.name}]` : '';
+                const outfit = actor?.outfits.find(o => o.id === outfitId);
+                return actor && outfit ? ` [${actor.name} wears ${outfit.name}]` : '';
             }).join('');
             return `${e.speakerId}:${e.message}${emotionText}${wearsText}`;
         }).join('\n')
@@ -198,10 +198,10 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
 
         `\n\nPlayer Profile for ${playerName}:\n  ${getActorProfile(stage.getPlayerActor()?.id || '', stage) || 'No profile available.'}\n` +
         (skit && currentActors.length > 0 ? `\n\nCharacters in this Scene:\n${currentActors.map(actor => {
-            const currentApperance = actor.appearances.find(a => a.id === determineAppearance(actor.id, skit, skit.script.length - 1)) ?? actor.appearances[0];
-            const otherAppearances = actor.appearances.filter(o => o.id !== currentApperance?.id && o.emotionPack['neutral']);
-            return `  ${actor.name}\n    Current Appearance (${currentApperance.name}): ${currentApperance.description}\n` +
-                (otherAppearances.length > 0 ? `    Other Appearances: ${otherAppearances.map(o => o.name).join(', ')}\n` : '') +
+            const currentOutfit = actor.outfits.find(a => a.id === determineOutfit(actor.id, skit, skit.script.length - 1)) ?? actor.outfits[0];
+            const otherOutfits = actor.outfits.filter(o => o.id !== currentOutfit?.id && o.emotionPack['neutral']);
+            return `  ${actor.name}\n    Current Outfit (${currentOutfit.name}): ${currentOutfit.description}\n` +
+                (otherOutfits.length > 0 ? `    Other Outfits: ${otherOutfits.map(o => o.name).join(', ')}\n` : '') +
                 `    Profile: ${getActorProfile(actor.id, stage) || 'No profile available.'}\n    Character Arc: ${actor.characterArc}`}).join('\n')}` : '');
 
 
@@ -239,9 +239,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `\n\nTag Instruction:\n` +
                 `  Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
                 `\n\n  Emotion tags ("[CHARACTER NAME expresses JOY]") should be used to indicate visible emotional shifts in a character's appearance using a single-word emotion name. ` +
-                `\n\n  Appearance tags ("[CHARACTER NAME wears APPEARANCE NAME]") should be used when a character changes appearance. ` +
+                `\n\n  Outfit tags ("[CHARACTER NAME wears OUTFIT NAME]") should be used when a character changes outfit. ` +
                     `When establishing a character at the beginning of a scene or when moving to this location with a movement tag, give special consideration to the inclusion of a 'wears' tag to explicitly call out an appropriate look. ` +
-                    `APPEARANCE NAME must be found under the specified character—either their current appearance or one of their listed alternatives. ` +
+                    `OUTFIT NAME must be found under the specified character—either their current outfit or one of their listed alternatives. ` +
                 `\n\n  A Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character enters the scene. ` +
                 `\n\n  Character movement tags ("[CHARACTER NAME moves AWAY]") must also be included when a character leaves the scene or moves to another location. ` +
                 `\n\n  A Scene movement tag ("[SCENE moves LOCATION]") may be used when the scene itself transitions to another location. ` +
@@ -250,9 +250,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates. ` +
                 `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. ` +
                 `\n\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments or concrete details which would fundamentally alter or subvert the mechanics of the game. ` +
-                (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current appearance and alternative appearances of each character and use Appearance ("wears") tags to update the characters to the most appropriate outfit for the moment. ' : '') +
+                (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. ' : '') +
                 `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world. ` +
-                ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, appearance, and movement tags continue to use English (these are invisible to the user).` : '');
+                ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, outfit, and movement tags continue to use English (these are invisible to the user).` : '');
 
     let retry = 0;
     while (retry < 3) {
@@ -271,7 +271,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             let summary = '';
             let parsedSceneLocationId = getCurrentLocation(skit, -1);
             let parsedCurrentActors = getCurrentActors(skit, -1);
-            const parsedCurrentAppearances = getCurrentAppearances(skit, stage, -1);
+            const parsedCurrentOutfits = getCurrentOutfits(skit, stage, -1);
 
             // Remove any initial "System:" prefix
             if (text.toLowerCase().startsWith('system:')) {
@@ -281,10 +281,10 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
             const lines = text.split('\n');
             const combinedLines: string[] = [];
-            const combinedTagData: {emotions: {[key: string]: Emotion}, appearanceChanges: {[actorId: string]: string}, updatedActors?: string[], updatedLocationId?: string}[] = [];
+            const combinedTagData: {emotions: {[key: string]: Emotion}, outfitChanges: {[actorId: string]: string}, updatedActors?: string[], updatedLocationId?: string}[] = [];
             let currentLine = '';
             let currentEmotionTags: {[key: string]: Emotion} = {};
-            let currentAppearanceChanges: {[actorId: string]: string} = {};
+            let currentOutfitChanges: {[actorId: string]: string} = {};
             let currentUpdatedActors: string[] | undefined;
             let currentUpdatedLocationId: string | undefined;
 
@@ -298,7 +298,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 if (!trimmed || ![']', '*', '_', ')', '.', '!', '?', '"', '\''].some(end => trimmed.endsWith(end))) continue;
 
                 const newEmotionTags: {[key: string]: Emotion} = {};
-                const newAppearanceChanges: {[actorId: string]: string} = {};
+                const newOutfitChanges: {[actorId: string]: string} = {};
                 let newUpdatedActors: string[] | undefined;
                 let newUpdatedLocationId: string | undefined;
 
@@ -365,25 +365,25 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     }
 
 
-                    // Handle appearance tags:
-                    const appearanceTagRegex = /([^[\]]+)\s+wears\s+([^[\]]+)/gi;
-                    let appearanceMatch = appearanceTagRegex.exec(raw);
-                    if (appearanceMatch) {
-                        const characterName = appearanceMatch[1].trim();
-                        const appearanceName = appearanceMatch[2].trim();
+                    // Handle outfit tags:
+                    const outfitTagRegex = /([^[\]]+)\s+wears\s+([^[\]]+)/gi;
+                    let outfitMatch = outfitTagRegex.exec(raw);
+                    if (outfitMatch) {
+                        const characterName = outfitMatch[1].trim();
+                        const outfitName = outfitMatch[2].trim();
                         // Find matching actor using findBestNameMatch
                         const matched = findBestNameMatch(characterName, allActors);
                         if (!matched) continue;
 
-                        // Find matching appearance for this actor
-                        const matchedAppearance = findBestNameMatch(appearanceName, matched.appearances || []);
-                        if (!matchedAppearance) {
-                            console.warn(`Appearance "${appearanceName}" not found for ${matched.name}; skipping tag.`);
+                        // Find matching outfit for this actor
+                        const matchedOutfit = findBestNameMatch(outfitName, matched.outfits || []);
+                        if (!matchedOutfit) {
+                            console.warn(`Outfit "${outfitName}" not found for ${matched.name}; skipping tag.`);
                             continue;
                         }
 
-                        newAppearanceChanges[matched.id] = matchedAppearance.id;
-                        console.log(`Appearance tag: ${matched.name} wears ${matchedAppearance.name}`);
+                        newOutfitChanges[matched.id] = matchedOutfit.id;
+                        console.log(`Outfit tag: ${matched.name} wears ${matchedOutfit.name}`);
                     }
                     
                     // Look for expresses tags:
@@ -425,21 +425,21 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         combinedLines.push(currentLine.trim());
                         combinedTagData.push({
                             emotions: currentEmotionTags,
-                            appearanceChanges: currentAppearanceChanges,
+                            outfitChanges: currentOutfitChanges,
                             updatedActors: currentUpdatedActors,
                             updatedLocationId: currentUpdatedLocationId
                         });
                     }
                     currentLine = trimmed;
                     currentEmotionTags = newEmotionTags;
-                    currentAppearanceChanges = newAppearanceChanges;
+                    currentOutfitChanges = newOutfitChanges;
                     currentUpdatedActors = newUpdatedActors;
                     currentUpdatedLocationId = newUpdatedLocationId;
                 } else {
                     // Continuation of previous line
                     currentLine += '\n' + trimmed;
                     currentEmotionTags = {...currentEmotionTags, ...newEmotionTags};
-                    currentAppearanceChanges = {...currentAppearanceChanges, ...newAppearanceChanges};
+                    currentOutfitChanges = {...currentOutfitChanges, ...newOutfitChanges};
                     currentUpdatedActors = newUpdatedActors || currentUpdatedActors;
                     currentUpdatedLocationId = newUpdatedLocationId || currentUpdatedLocationId;
                 }
@@ -448,7 +448,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 combinedLines.push(currentLine.trim());
                 combinedTagData.push({
                     emotions: currentEmotionTags,
-                    appearanceChanges: currentAppearanceChanges,
+                    outfitChanges: currentOutfitChanges,
                     updatedActors: currentUpdatedActors,
                     updatedLocationId: currentUpdatedLocationId
                 });
@@ -471,7 +471,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 // Remove any remaining tags
                 message = message.replace(/\[([^\]]+)\]/g, '').trim();
                 
-                const entry: ScriptEntry = { speakerId: speakerId, message, speechUrl: '', actorEmotions: {}, actorAppearances: {}, outcomes: [] };
+                const entry: ScriptEntry = { speakerId: speakerId, message, speechUrl: '', actorEmotions: {}, actorOutfits: {}, outcomes: [] };
                 const tagData = combinedTagData[index];
                 
                 if (tagData.emotions && Object.keys(tagData.emotions).length > 0) {
@@ -480,8 +480,8 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 if (tagData.updatedActors) {
                     entry.updatedActors = [...tagData.updatedActors];
                 }
-                if (tagData.appearanceChanges && Object.keys(tagData.appearanceChanges).length > 0) {
-                    entry.actorAppearances = tagData.appearanceChanges;
+                if (tagData.outfitChanges && Object.keys(tagData.outfitChanges).length > 0) {
+                    entry.actorOutfits = tagData.outfitChanges;
                 }
                 if (tagData.updatedLocationId) {
                     entry.updatedLocationId = tagData.updatedLocationId;
@@ -495,14 +495,14 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 if (!entry.message || entry.message.trim().length === 0) {
                     const updatedActors = entry.updatedActors;
                     const emotions = entry.actorEmotions || {};
-                    const appearanceChanges = entry.actorAppearances || {};
+                    const outfitChanges = entry.actorOutfits || {};
                     const nextEntry = scriptEntries[scriptEntries.indexOf(entry) + 1];
                     if (nextEntry) {
                         if (updatedActors) {
                             nextEntry.updatedActors = [...updatedActors];
                         }
                         nextEntry.actorEmotions = {...(nextEntry.actorEmotions || {}), ...emotions};
-                        nextEntry.actorAppearances = {...(nextEntry.actorAppearances || {}), ...appearanceChanges};
+                        nextEntry.actorOutfits = {...(nextEntry.actorOutfits || {}), ...outfitChanges};
                     }
                     scriptEntries.splice(scriptEntries.indexOf(entry), 1);
                     continue;

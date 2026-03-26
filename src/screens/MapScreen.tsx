@@ -981,7 +981,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			}
 
 			const imageUrl =
-				getEmotionImage(partnerActor, 'neutral', stage(), partnerActor.appearanceId) ||
+				getEmotionImage(partnerActor, 'neutral', stage(), partnerActor.outfitId) ||
 				partnerActor.sampleImageUrl ||
 				'';
 			if (!imageUrl) {
@@ -1444,8 +1444,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										getActorImageUrl={(actor, _script, index) => {
 											const emotion = determineEmotion(actor.id, skit, index);
 											return (
-												getEmotionImage(actor as Actor, emotion, stage(), (actor as Actor).appearanceId) ||
-												getEmotionImage(actor as Actor, 'neutral', stage(), (actor as Actor).appearanceId) ||
+												getEmotionImage(actor as Actor, emotion, stage(), (actor as Actor).outfitId) ||
+												getEmotionImage(actor as Actor, 'neutral', stage(), (actor as Actor).outfitId) ||
 												''
 											);
 										}}

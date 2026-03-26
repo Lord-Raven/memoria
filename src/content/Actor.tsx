@@ -13,8 +13,8 @@ export enum ActorType {
 
 }
 
-// An appearance represents an outfit or physical transformation that can be applied to a specific actor; each appearance comes with a full set of emotions
-export type Appearance = {
+// An outfit represents a set of clothing or physical transformation that can be applied to a specific actor; each outfit comes with a full set of emotions
+export type Outfit = {
     id: string;
     name: string;
     description: string;
@@ -27,9 +27,10 @@ export class Actor {
     name: string = ''; // Display name
     fullPath: string = ''; // Path to original character definition
     sampleImageUrl: string = ''; // Original reference image
+    description: string = ''; // Core physical description—not outfit-oriented
     profile: string = ''; // Personality profile description of character
-    appearanceId: string = ''; // The ID of the current appearance (outfit/description) for this actor; if empty, use the first appearance index
-    appearances: Appearance[] = []; // Sets of appearances representing outfits or transformations for this actor; each appearance has a full set of emotions
+    outfitId: string = ''; // The ID of the current outfit for this actor; if empty, use the first outfit index
+    outfits: Outfit[] = []; // Sets of outfits representing transformations for this actor; each outfit has a full set of emotions
     themeColor: string = ''; // Theme color (hex code)
     themeFontFamily: string = ''; // Font family stack for CSS styling
     voiceId: string = ''; // Voice ID for TTS
@@ -52,6 +53,30 @@ export class Actor {
     }
 }
 
+const DISTILLATION_KEY_MAP: { [key: string]: string } = {
+    name: 'name',
+    description: 'description',
+    profile: 'profile',
+    motive: 'motive',
+    voice: 'voice',
+    color: 'color',
+    font: 'font',
+    outfit: 'outfit',
+    'outfit name': 'outfit_name',
+    'outfit description': 'outfit_description',
+};
+
+function normalizeDistillationKey(rawKey: string): string | null {
+    const normalizedKey = rawKey
+        .replace(/^\d+[.)-]?\s*/, '')
+        .replace(/^[-*]\s*/, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+
+    return DISTILLATION_KEY_MAP[normalizedKey] || null;
+}
+
 
 // extra space temporarily denotes final path.
 export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
@@ -61,7 +86,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         type: ActorType.WARDEN,
         profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
         sampleImageUrl: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
-        appearances: [{
+        outfits: [{
             id: 'default',
             description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
             name: 'Celestial Robes',
@@ -70,7 +95,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 neutral: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png'
             }
         }],
-        appearanceId: 'default',
+        outfitId: 'default',
         fullPath: '',
         characterArc: '',
         themeColor: '#a6e683',
@@ -104,7 +129,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#2C3E50',
         themeFontFamily: '"Times New Roman", serif',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png',
-        appearances: [{
+        outfits: [{
             id: 'default',
             name: 'Tailored Peasant Garb',
             description: 'A tall, fine-boned woman with a severe pale-blonde pixie cut, a thin braid, and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears tailored, practical peasant clothing in earth tones, everything intentional and devoid of decoration.',
@@ -114,16 +139,28 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 exhaustion: 'https://media.charhub.io/183daf13-12c7-4a52-9b96-08961fc65af5/8d5ad846-cc53-4fdf-aad1-38138648fbc3.png'
             }
         }],
-        appearanceId: 'default',
+        outfitId: 'default',
     }, { 
         name: 'Lumi', 
         fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png',
+        outfits: [{
+            id: 'default',
+            name: `Healer's Gear`,
+            description: '',
+            emotionPack: {
+                base: 'https://media.charhub.io/34cef282-aab0-44fd-8d6b-4bf9387174e3/7d419bbe-4ea8-4f06-8a88-613c465d645c.png',
+                neutral: 'https://media.charhub.io/19adc43a-f997-4548-ba80-6e0dbf092898/2bd068ac-eb68-4c21-86af-2c3e55fef34b.png',
+                joy: 'https://media.charhub.io/30bef416-1660-462d-bc20-cb41ee54ddaf/5746d179-db11-4399-a9e0-afe19d84db0b.png',
+                desire: 'https://media.charhub.io/2720745c-0430-4850-bc98-59b88af94b43/62efc531-2ea0-44f4-b8b9-3b40221b2013.png',
+            }
+        }],
+        outfitId: 'default',
     }, {
         name: 'Lyra', 
         fullPath: 'Birb_Brain/lyra-scavenger-stray-survivor-fa0621f65589', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png',
-        appearances: [{
+        outfits: [{
             id: 'default',
             name: 'Scavenger Wear',
             description: 'A lithe woman with brilliant blue eyes and white hair tied up at the back. Her most striking features are a pair of expressive, orange-furred fox ears and a matching fox tail. Her clothing is lightweight, practical, and heavily modified with pockets and pouches',
@@ -132,12 +169,12 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 neutral: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png'
             }
         }],
-        appearanceId: 'default',
+        outfitId: 'default',
     }, { 
         name: 'Mallory', 
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
-        /*appearances: [{
+        /*outfits: [{
             id: 'default',
             name: 'Deceiver Chic',
             description: 'A tall, lean woman with purplish hair fading to orange tied in twintails with a curtain of bangs. Sharp orange eyes dart behind thin, round glasses—a part of her human disguise, which includes a black capelet and purple vest over a white blouse, with black pants and gloves.',
@@ -148,7 +185,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
 
         }],
-        appearanceId: 'default'*/
+        outfitId: 'default'*/
     }, /*{ 
         name: 'Mel', 
         fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', 
@@ -181,7 +218,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Sam',
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png',
-        appearances: [{
+        outfits: [{
             id: 'default',
             name: 'Scythe Form',
             description: 'A five-foot-long, elegantly curved scythe with a haft of dark, polished wood and a blade of shimmering, silvery metal that seems to drink in the light. The weapon is immaculate and radiates a faint, watchful presence.',
@@ -190,7 +227,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 neutral: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png'
             }
         }],
-        appearanceId: 'default'
+        outfitId: 'default'
     },/* {
         name: 'Soren',
         fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37',
@@ -301,8 +338,8 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
             newActor.voiceId = definition.voice_id;
         }
 
-        // if newActor is missing critical fields like personality or appearances, distill these details to fill the gaps
-        if (!newActor.profile || !newActor.appearances) {
+        // if newActor is missing critical fields like personality or outfits, distill these details to fill the gaps
+        if (!newActor.profile || !newActor.outfits) {
             return await distillActor(newActor, definition, stage);
         }
     }
@@ -357,8 +394,9 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => ' - ' + voiceId + ': ' + voiceDesc).join('\n') +
             `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
             `System: NAME: Their simple name\n` +
-            `DESCRIPTION: A vivid description of the character's physical appearance, attire, and any distinguishing features.\n` +
-            `OUTFIT: A one- to two-word name for the character's current outfit that matches the description.\n` +
+            `DESCRIPTION: A vivid description of the character's core physical appearance: elements like gender, build, skin tone, eye color, hair color, ears, tails, or other distinguishing features.\n` +
+            `OUTFIT DESCRIPTION: A detailed description of the character's current outfit, including style, colors, and any notable accessories or features.\n` +
+            `OUTFIT NAME: A one- to two-word name for the character's current outfit that matches the description.\n` +
             `PROFILE: A brief summary of the character's personality traits, mannerisms, and public persona. Focus on what others would notice immediately about them.\n` +
             `MOTIVE: The character's hidden agenda, underlying emotional drive, or what they hope to achieve here. This may align with or differ from their profile. Keep it concise but revealing of their true intentions.\n` +
             `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
@@ -367,8 +405,9 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             `#END#\n\n` +
             `Example Response:\n` +
             `NAME: Jane Doe\n` +
-            `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She wears a simple, utilitarian outfit made from durable materials.\n` +
-            `OUTFIT: Adventurer's Gear\n` +
+            `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She rarely smiles, but when she does, it lights up her face.\n` +
+            `OUTFIT DESCRIPTION: She wears a simple, utilitarian outfit made from durable materials in dark colors. Lots of pockets and zippers.\n` +
+            `OUTFIT NAME: Adventurer's Gear\n` +
             `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention.\n` +
             `MOTIVE: Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
             `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
@@ -395,10 +434,8 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
         line = line.replace(/\*\*/g, '');
         const colonIndex = line.indexOf(':');
         if (colonIndex > 0) {
-            // Find last word before : and use that as the key. Ignore 1., -, *. There might not be a space before the word:
-            const keyMatch = line.substring(0, colonIndex).trim().match(/(\w+)$/);
-            if (!keyMatch) continue;
-            const key = keyMatch[1].toLowerCase();
+            const key = normalizeDistillationKey(line.substring(0, colonIndex));
+            if (!key) continue;
             const value = line.substring(colonIndex + 1).trim();
             // console.log(`Parsed line - Key: ${key}, Value: ${value}`);
             parsedData[key] = value;
@@ -411,70 +448,71 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             ['#788ebdff', '#d3aa68ff', '#75c275ff', '#c28891ff', '#55bbb2ff'][Math.floor(Math.random() * 5)];
 
     // Fill in actor, but favor any current settings:
+    actor.description = actor.description || parsedData['description'] || '';
     actor.profile = actor.profile || parsedData['profile'] || '';
     actor.characterArc = actor.characterArc || parsedData['motive'] || '';
     actor.voiceId = actor.voiceId || parsedData['voice'] || '';
     actor.themeColor = actor.themeColor || themeColor;
     actor.themeFontFamily = actor.themeFontFamily || parsedData['font'] || 'Arial, sans-serif';
-    actor.appearances = actor.appearances.length > 0 ? actor.appearances : [];
+    actor.outfits = actor.outfits.length > 0 ? actor.outfits : [];
 
-    if (actor.appearances.length === 0) {
+    if (actor.outfits.length === 0) {
 
-        const defaultAppearanceName = parsedData['outfit'] || 'Default Outfit';
-        const defaultAppearanceDescription = (parsedData['description'] || '');
+        const defaultOutfitName = parsedData['outfit_name'] || parsedData['outfit'] || 'Default Outfit';
+        const defaultOutfitDescription = parsedData['outfit_description'] || '';
 
-        // Add shell of an initial appearance
-        actor.appearances.push({
+        // Add shell of an initial outfit
+        actor.outfits.push({
             id: generateUuid(),
-            name: defaultAppearanceName,
-            description: defaultAppearanceDescription,
+            name: defaultOutfitName,
+            description: defaultOutfitDescription,
             emotionPack: {}, // This will be filled in later when the player views this character and the emotions are generated on demand.
         });
     }
 
-    if (actor.appearanceId === '') {
-        actor.appearanceId = actor.appearances[0].id;
+    if (actor.outfitId === '') {
+        actor.outfitId = actor.outfits[0].id;
     }
 
-    const currentAppearance = getActiveAppearance(actor);
-    if (!currentAppearance.emotionPack['base']) {
+    const currentOutfit = getActiveOutfit(actor);
+    if (!currentOutfit.emotionPack['base']) {
         // Kick off base image generation:
-        await generateBaseActorImage(actor, stage, false, true, actor.appearanceId, actor.sampleImageUrl);
-    } else if (!currentAppearance.emotionPack['neutral']) {
+        await generateBaseActorImage(actor, stage, false, true, actor.outfitId, actor.sampleImageUrl);
+    } else if (!currentOutfit.emotionPack['neutral']) {
         // Kick off neutral image generation:
-        await generateEmotionImage(actor, Emotion.neutral, stage, false, actor.appearanceId);
+        await generateEmotionImage(actor, Emotion.neutral, stage, false, actor.outfitId);
     }
     return actor;
 }
 
-function getActiveAppearance(actor: Actor): Appearance {
-    if (actor.appearances.length === 0) {
-        // Return a default appearance if none exist to avoid errors; this will be updated with real data when the emotion images are generated.
+function getActiveOutfit(actor: Actor): Outfit {
+    if (actor.outfits.length === 0) {
+        // Return a default outfit if none exist to avoid errors; this will be updated with real data when the emotion images are generated.
         return {
             id: '',
-            name: 'Default Appearance',
+            name: 'Default Outfit',
             description: '',
             emotionPack: {}
         };
-    } else if (!actor.appearanceId) {
-        return actor.appearances[0];
+    } else if (!actor.outfitId) {
+        return actor.outfits[0];
     } else {
-        return actor.appearances.find(appearance => appearance.id === actor.appearanceId) || actor.appearances[0];
+        return actor.outfits.find(outfit => outfit.id === actor.outfitId) || actor.outfits[0];
     }
 }
 
-function getAppearanceById(actor: Actor, appearanceId: string = ''): Appearance {
-    const resolvedAppearanceId = appearanceId || actor.appearanceId;
-    return actor.appearances.find((appearance) => appearance.id === resolvedAppearanceId) || getActiveAppearance(actor);
+function getOutfitById(actor: Actor, outfitId: string = ''): Outfit {
+    const resolvedOutfitId = outfitId || actor.outfitId;
+    return actor.outfits.find((outfit) => outfit.id === resolvedOutfitId) || getActiveOutfit(actor);
 }
 
-export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?: Stage, appearanceId: string = ''): string {
-    const targetAppearanceId = appearanceId || actor.appearanceId;
-    if (!actor.appearances || actor.appearances.length === 0) {
+export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?: Stage, outfitId: string = ''): string {
+    const targetOutfitId = outfitId || actor.outfitId;
+    if (!actor.outfits || actor.outfits.length === 0) {
         return '';
     }
     const emotionKey = typeof emotion === 'string' ? emotion : emotion;
-    const emotionPack = getAppearanceById(actor, targetAppearanceId).emotionPack;
+    const emotionPack = getOutfitById(actor, targetOutfitId).emotionPack;
     const emotionUrl = emotionPack[emotionKey];
     const neutralUrl = emotionPack['neutral'] || emotionPack['base'];
     const fallbackUrl = neutralUrl || actor.sampleImageUrl || '';
@@ -482,16 +520,16 @@ export function getEmotionImage(actor: Actor, emotion: Emotion | string, stage?:
     // Check if we need to generate the image
     //if (stage && (!emotionUrl || emotionUrl === actor.sampleImageUrl || emotionUrl === emotionPack['base'] || (emotionKey !== 'neutral' && emotionUrl === neutralUrl))) {
         // Kick off generation in the background (don't wait)
-        // generateEmotionImage(actor, emotion as Emotion, stage, false, targetAppearanceId);
+        // generateEmotionImage(actor, emotion as Emotion, stage, false, targetOutfitId);
     //}
 
     // Return the emotion image or fallback
     return emotionUrl || fallbackUrl;
 }
 
-function setEmotionImageUrl(actor: Actor, emotion: Emotion | string, appearanceId: string = '', url: string = '') {
-    const targetAppearanceId = appearanceId || actor.appearanceId;
-    const emotionPack = getAppearanceById(actor, targetAppearanceId).emotionPack;
+function setEmotionImageUrl(actor: Actor, emotion: Emotion | string, outfitId: string = '', url: string = '') {
+    const targetOutfitId = outfitId || actor.outfitId;
+    const emotionPack = getOutfitById(actor, targetOutfitId).emotionPack;
     emotionPack[emotion] = url;
 }
 
@@ -500,19 +538,19 @@ export async function generateBaseActorImage(
     stage: Stage,
     force: boolean = false,
     fromAvatar: boolean = true,
-    appearanceId: string = '',
+    outfitId: string = '',
     sourceImageUrl: string = ''
 ): Promise<void> {
-    const targetAppearanceId = appearanceId || actor.appearanceId;
-    const currentBaseImageUrl = getEmotionImage(actor, 'base', stage, targetAppearanceId);
+    const targetOutfitId = outfitId || actor.outfitId;
+    const currentBaseImageUrl = getEmotionImage(actor, 'base', stage, targetOutfitId);
 
     console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
-    if (!getAppearanceById(actor, targetAppearanceId).emotionPack['neutral'] || force) {
+    if (!getOutfitById(actor, targetOutfitId).emotionPack['neutral'] || force) {
         console.log(`Generating base emotion image for actor ${actor.name}`);
         // Want to clear in-progress stuff if forcing
         if (force) {
-            getAppearanceById(actor, targetAppearanceId).emotionPack = {};
+            getOutfitById(actor, targetOutfitId).emotionPack = {};
             delete stage.generationPromises[`actor/${actor.id}`];
         }
         let imageUrl = '';
@@ -523,7 +561,9 @@ export async function generateBaseActorImage(
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
                 prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
-                    `${getAppearanceById(actor, targetAppearanceId).description}. Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background. `,
+                    `Core appearance: ${actor.description}\n` +
+                    `Outfit: ${getOutfitById(actor, targetOutfitId).description}.\n` +
+                    `Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background.`,
                 aspect_ratio: AspectRatio.PHOTO_VERTICAL
             }, '');
             baseSourceImage = imageUrl || '';
@@ -539,10 +579,10 @@ export async function generateBaseActorImage(
             // Use stage.makeImageFromImage to create a base image.
             imageUrl = await stage.makeImageFromImage({
                 image: await getDataUrl(baseSourceImage),
-                prompt: `If necessary, alter this character to match their description:\n` +
-                    `${getAppearanceById(actor, targetAppearanceId).description}\n` +
-                    `Swap the background to a monotone gradient that garishly opposes the character's palette.\n` +
-                    `Preserve the messy, anime-inspired concept-art style with painterly brush strokes, lustrous colors, and rich specular highlights.`,
+                prompt: `If necessary, alter this character to match their physical description:\n` +
+                    `${actor.description}\n` +
+                    `And current outfit:\n${getOutfitById(actor, targetOutfitId).description}\n` +
+                    `Swap the background to a textured gradient that garishly clashes with the character's palette.\n`,
                 remove_background: false,
                 transfer_type: 'edit'
             }, '');
@@ -550,16 +590,16 @@ export async function generateBaseActorImage(
         
         console.log(`Generated base emotion image for actor ${actor.name} from avatar image: ${imageUrl || ''}`);
         
-        setEmotionImageUrl(actor, 'base', targetAppearanceId, imageUrl || '');
+        setEmotionImageUrl(actor, 'base', targetOutfitId, imageUrl || '');
 
         if (force) {
             // Invalidate all other emotions
-            getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
+            getOutfitById(actor, targetOutfitId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetOutfitId)};
         }
     }
-    if (currentBaseImageUrl !== getEmotionImage(actor, 'base', stage, targetAppearanceId)) {
+    if (currentBaseImageUrl !== getEmotionImage(actor, 'base', stage, targetOutfitId)) {
         console.log('Done and base image has changed.');
-        await generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
+        await generateEmotionImage(actor, Emotion.neutral, stage, false, targetOutfitId);
     }
 }
 
@@ -577,10 +617,10 @@ async function getDataUrl(baseImageUrl: string): Promise<string> {
         return baseImageUrl;
 }
 
-export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, appearanceId: string = ''): Promise<string> {
-    const targetAppearanceId = appearanceId || actor.appearanceId;
-    console.log(`Generating ${emotion} emotion image for actor ${actor.name} (ID: ${actor.id}) with appearance ID: ${targetAppearanceId}`);
-    if (getEmotionImage(actor, 'base', stage, targetAppearanceId) && (!stage.generationPromises[`actor/${actor.id}`] || force)) {
+export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage: Stage, force: boolean = false, outfitId: string = ''): Promise<string> {
+    const targetOutfitId = outfitId || actor.outfitId;
+    console.log(`Generating ${emotion} emotion image for actor ${actor.name} (ID: ${actor.id}) with outfit ID: ${targetOutfitId}`);
+    if (getEmotionImage(actor, 'base', stage, targetOutfitId) && (!stage.generationPromises[`actor/${actor.id}`] || force)) {
         console.log(`Generating ${emotion} emotion image for actor ${actor.name}`);
         // Create a dummy promise to prevent duplicate generation while this is in progress; this will be deleted when the generation is complete
         stage.generationPromises[`actor/${actor.id}`] = new Promise(() => {});
@@ -588,17 +628,17 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
         const emotionPrompt = stage.getSave().emotionPrompts?.[emotion] || EMOTION_PROMPTS[emotion];
         console.log(`Using emotion prompt for ${emotion}: ${emotionPrompt}`);
 
-        let baseImageUrl = await getDataUrl(getEmotionImage(actor, 'base', stage, targetAppearanceId));
+        let baseImageUrl = await getDataUrl(getEmotionImage(actor, 'base', stage, targetOutfitId));
 
         const imageUrl = await stage.makeImageFromImage({
             image: baseImageUrl || '',
-            prompt: `Pictured: ${getAppearanceById(actor, targetAppearanceId).description}\nInstruction: ${emotionPrompt}.`,
+            prompt: `Pictured Character: ${actor.description}\nPictured Outfit: ${getOutfitById(actor, targetOutfitId).description}\nCurrent Instruction: ${emotionPrompt}.`,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
         delete stage.generationPromises[`actor/${actor.id}`];
         console.log(`Generated ${emotion} emotion image for actor ${actor.name}: ${imageUrl || ''}`);
-        getAppearanceById(actor, targetAppearanceId).emotionPack[emotion] = imageUrl || '';
+        getOutfitById(actor, targetOutfitId).emotionPack[emotion] = imageUrl || '';
         return imageUrl || '';
     }
     return '';
