@@ -990,7 +990,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 			const targetRadius = targetRadiusById[cell.point.id] ?? cell.point.radius;
 			const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
-			const strokeWidth = 1.8 + emphasis * 0.4;
+			const strokeWidth = 2.4 + emphasis * 0.6;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
 			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.2, 14, 40);
 			const radiusX = radius * portraitScaleCompensationX;
@@ -1250,7 +1250,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						position: "relative",
 						borderRadius: 18,
 						overflow: "hidden",
-						border: "1px solid rgba(255,255,255,0.15)",
+						border: "2px solid rgba(255,255,255,0.15)",
 						boxShadow: "0 10px 40px rgba(0,0,0,0.42)",
 						background: `linear-gradient(180deg, rgba(4, 12, 22, 0.16), rgba(4, 12, 22, 0.34)), url(${MAP_BACKGROUND_IMAGE}) center / cover no-repeat`,
 					}}

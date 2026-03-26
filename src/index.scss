@@ -369,6 +369,7 @@ select.input-base optgroup {
   align-items: flex-start;
   width: var(--gsf-rack-window-width);
   height: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5));
+  padding-top: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5) - var(--gsf-rack-window-height));
   --gsf-gear-highlight: var(--mem-fog);
   --gsf-gear-mid: var(--mem-mist);
   --gsf-gear-shadow: var(--mem-lichen);
