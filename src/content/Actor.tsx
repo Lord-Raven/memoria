@@ -696,7 +696,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
 
         const imageUrl = await stage.makeImageFromImage({
             image: baseImageUrl || '',
-            prompt: `Pictured Character: ${actor.description}\nPictured Outfit: ${getOutfitById(actor, targetOutfitId).description}\nCurrent Instruction: ${emotionPrompt}.`,
+            prompt: emotionPrompt,
             remove_background: true,
             transfer_type: 'edit'
         }, '');
