@@ -495,6 +495,7 @@ export async function generateBaseActorImage(
     sourceImageUrl: string = ''
 ): Promise<void> {
     const targetAppearanceId = appearanceId || actor.appearanceId;
+    const currentBaseImageUrl = getEmotionImage(actor, 'base', stage, targetAppearanceId);
 
     console.log(`Populating images for actor ${actor.name} (ID: ${actor.id})`);
     // If the actor has no neutral emotion image in their emotion pack, generate one based on their description or from the existing avatar image
@@ -547,7 +548,9 @@ export async function generateBaseActorImage(
             getAppearanceById(actor, targetAppearanceId).emotionPack = {'base': getEmotionImage(actor, 'base', stage, targetAppearanceId)};
         }
     }
-    await generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
+    if (currentBaseImageUrl !== getEmotionImage(actor, 'base', stage, targetAppearanceId)) {
+        await generateEmotionImage(actor, Emotion.neutral, stage, false, targetAppearanceId);
+    }
 }
 
 async function getDataUrl(baseImageUrl: string): Promise<string> {
