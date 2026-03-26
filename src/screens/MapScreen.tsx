@@ -992,7 +992,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 			const strokeWidth = 1.8 + emphasis * 0.4;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
-			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.13, 14, 28);
+			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.2, 14, 40);
 			const radiusX = radius * portraitScaleCompensationX;
 			const radiusY = radius * portraitScaleCompensationY;
 			const portraitOnLeft = cell.point.x / MAP_WIDTH > 0.5;
@@ -1008,7 +1008,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			}
 
 			const cx = clamp(
-				portraitOnLeft ? extremeVertex[0] + radius : extremeVertex[0] - radius,
+				portraitOnLeft ? extremeVertex[0] + radiusX : extremeVertex[0] - radiusX,
 				radiusX + 1,
 				MAP_WIDTH - radiusX - 1,
 			);
