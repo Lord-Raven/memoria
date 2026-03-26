@@ -123,12 +123,12 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, {
         name: 'Lyra', 
         fullPath: 'Birb_Brain/lyra-scavenger-stray-survivor-fa0621f65589', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/79b9384b-5a85-4ff9-86b0-0bca7b9a01b3/6d7c9cda-f13e-451a-ac2f-ea17d21c9d83.png',
     }, { 
         name: 'Mallory', 
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
-        appearances: [{
+        /*appearances: [{
             id: 'default',
             name: 'Deceiver Chic',
             description: 'A tall, lean woman with purplish hair fading to orange tied in twintails with a curtain of bangs. Sharp orange eyes dart behind thin, round glasses—a part of her human disguise, which includes a black capelet and purple vest over a white blouse, with black pants and gloves.',
@@ -136,8 +136,10 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 base: 'https://media.charhub.io/fef3dde9-48fb-4ba6-9d54-1606b5f5d926/6b38d1f2-9ad9-440b-91e2-d942eee89b17.png',
                 neutral: 'https://media.charhub.io/3c039253-29f4-45e5-b145-91c9fc96a56c/f89a8cb2-7d62-42ec-9597-8ad2ef4e6bf9.png',
                 approval: 'https://media.charhub.io/4a4d339b-08bf-4c7c-a99b-f4abc4be92b4/5c4d72ad-c8c3-495b-8f3c-6cb12ed61b25.png',
+            }
 
-        }]
+        }],
+        appearanceId: 'default'*/
     }, /*{ 
         name: 'Mel', 
         fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', 
