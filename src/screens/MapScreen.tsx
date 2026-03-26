@@ -996,16 +996,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const radiusX = radius * portraitScaleCompensationX;
 			const radiusY = radius * portraitScaleCompensationY;
 			const portraitOnLeft = cell.point.x / MAP_WIDTH > 0.5;
+			const valueFunction = (vertex: number[]) => {
+				return portraitOnLeft ? (vertex[0] + vertex[1] * 0.0001) : -(vertex[0] - vertex[1] * 0.0001);
+			}
 
 			let extremeVertex = cell.polygon[0];
 			for (const vertex of cell.polygon) {
-				if (portraitOnLeft ? vertex[0] < extremeVertex[0] : vertex[0] > extremeVertex[0]) {
+				if (valueFunction(vertex) < valueFunction(extremeVertex)) {
 					extremeVertex = vertex;
 				}
 			}
 
 			const cx = clamp(
-				portraitOnLeft ? extremeVertex[0] - radius : extremeVertex[0] + radius,
+				portraitOnLeft ? extremeVertex[0] + radius : extremeVertex[0] - radius,
 				radiusX + 1,
 				MAP_WIDTH - radiusX - 1,
 			);
