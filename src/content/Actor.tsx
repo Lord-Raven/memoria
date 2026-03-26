@@ -114,7 +114,38 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, */{
         name: ' Arca-7', 
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png',
+        outfits: [{
+            id: 'default',
+            name: "Belt-Cloak Garb",
+            description: "A plain, sleeveless white dress that falls to mid-thigh, worn without undergarments or shoes. Detachable black sleeves cover her arms. Over this, she wears a unique hooded cloak made entirely of interwoven, prehensile leather belts that attach at her shoulders, waist, and thighs, forming a functional part of her body.",
+            prompts: {},
+            emotionPack: {
+                joy: "https://media.charhub.io/f5ae4f78-c088-435e-8015-294a843f14f5/5479c4e9-4f2c-4645-be0d-22c162ccdd3f.png",
+                base: "https://media.charhub.io/7e8e0308-2310-431e-b70f-8b30c099e3c1/5986ffb6-0a72-47dc-96f2-ac2b5d2aaabc.png",
+                fear: "https://media.charhub.io/9c92f9c3-71f4-4ced-a214-14364e06356a/d2a68b62-f920-472c-946b-d4ef2b183bf8.png",
+                love: "https://media.charhub.io/151bd529-e0c7-496a-8aed-3b9e7e380b8c/c8c09537-b5b4-4488-8516-5ccb1864c88a.png",
+                anger: "https://media.charhub.io/0bcc358f-a0f3-4cee-957d-5b5329d1cd9c/9bdb9c86-b4a7-4664-b3f0-4143fbce7bf6.png",
+                grief: "https://media.charhub.io/c3b40c75-2027-45a8-908f-3533570f4322/714d5f21-c088-4e9e-8c2b-6123e8af2d82.png",
+                guilt: "https://media.charhub.io/4d8df8d0-56e1-4a86-844f-04ca6e0a81d5/63064781-2c37-4f12-bbf9-389d9947a997.png",
+                pride: "https://media.charhub.io/0a6e3cda-d994-4645-953c-0e3e1e7a29b7/060969c2-dcc9-4340-9c30-73b7d09094a3.png",
+                desire: "https://media.charhub.io/3ee49259-f101-4d68-858b-114c54c9a359/e22f39bc-8d1d-4288-b566-5f140fdbdf20.png",
+                wonder: "https://media.charhub.io/c1c82f3d-60a5-4fc6-8d79-ca06a817ff4f/5a28e82d-df07-4951-8369-b242f30fba35.png",
+                disgust: "https://media.charhub.io/fdc13aed-cc7f-4056-9391-c9329f4113cb/90d90c90-8fd1-4ba3-a6c8-0bad8e41387f.png",
+                ecstasy: "https://media.charhub.io/62981c89-749c-4219-927a-636eb24950e5/f2639604-d773-4b3b-b370-a1c408f199b4.png",
+                neutral: "https://media.charhub.io/0bd25a65-f8ae-4c7e-aaab-fda655495a90/bd0b8150-f695-4228-b0a8-11b9b031d5b9.png",
+                sadness: "https://media.charhub.io/36a53dc8-7255-4626-8b8c-f8c52ee9b116/87189cd3-0647-4a36-908f-b46dec681570.png",
+                approval: "https://media.charhub.io/f4676138-a40e-4b92-8879-7357eb696f90/c2bac203-48cd-4633-a6de-0b20ef2e12e7.png",
+                intrigue: "https://media.charhub.io/025062f1-27ef-4cc1-9f21-fa728649e5ee/64f53197-bbc8-4c69-8b28-a72871cf14c7.png",
+                kindness: "https://media.charhub.io/faeae939-718a-4eff-b75d-d2715f3d6cd5/2016ce43-b710-4b0c-a69a-e8d984d80c30.png",
+                confusion: "https://media.charhub.io/18884584-66b2-4546-825f-d981e7c472e3/ecd36381-478f-4115-a742-8d8946df4d58.png",
+                exhaustion: "https://media.charhub.io/6ac6efd7-21d1-443d-a404-4dab467e3617/10d20ab1-542c-4553-87a9-4bdd57d3dee4.png",
+                nervousness: "https://media.charhub.io/332bb85b-608a-4a8f-9748-9028627168d1/b7a29682-841a-46f8-b090-8ffe1f3a37a9.png",
+                embarrassment: "https://media.charhub.io/68a257a5-ef71-42c8-aae0-a07b4d6e74dc/913d0853-3829-4dbe-9505-9ec4387083c2.png",
+                disappointment: "https://media.charhub.io/ec35c154-699c-4efb-8d34-7e49501fee34/4ac448ff-2ac3-4d20-bba4-f19b06d2966e.png",
+                injured: "https://media.charhub.io/d711ecf4-bfa8-4252-8702-43dda284755a/46079bb2-2cad-4653-82a3-7bfa33b17ba8.png"
+            }
+        }]
     }, /*{
         name: 'Astraea', 
         fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', 

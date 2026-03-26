@@ -68,6 +68,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
 
     const [isSaving, setIsSaving] = useState(false);
     const [regeneratingImages, setRegeneratingImages] = useState<Set<string>>(new Set());
+    const [isFillingMissingEmotions, setIsFillingMissingEmotions] = useState(false);
     const [, forceUpdate] = useState({});
     const imageUploadInputRef = useRef<HTMLInputElement>(null);
     const [imageDialog, setImageDialog] = useState<{
@@ -78,7 +79,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const [emotionPromptDraft, setEmotionPromptDraft] = useState('');
     const [isImageDropActive, setIsImageDropActive] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
-    const [appearancesJsonExport, setAppearancesJsonExport] = useState('');
+    const [outfitsObjectExport, setOutfitsObjectExport] = useState('');
     const [confirmDialog, setConfirmDialog] = useState<{
         open: boolean;
         title: string;
@@ -229,8 +230,9 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         });
     };
 
-    const buildAppearancesExport = () => ({
-        appearances: editedOutfits.map((outfit) => ({
+    const buildOutfitsExport = () => ({
+        outfits: editedOutfits.map((outfit) => ({
+            id: outfit.name,
             name: outfit.name,
             description: outfit.description,
             prompts: { ...(outfit.prompts || {}) },
@@ -238,21 +240,42 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         })),
     });
 
-    const handleGenerateAppearancesExport = () => {
-        setAppearancesJsonExport(JSON.stringify(buildAppearancesExport(), null, 2));
+    const formatAsJavascriptObject = (value: unknown, indentLevel = 0): string => {
+        const indent = '  '.repeat(indentLevel);
+        const childIndent = '  '.repeat(indentLevel + 1);
+
+        if (value === null) return 'null';
+        if (typeof value === 'string') return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+        if (Array.isArray(value)) {
+            if (value.length === 0) return '[]';
+            const items = value.map((item) => `${childIndent}${formatAsJavascriptObject(item, indentLevel + 1)}`);
+            return `[
+${items.join(',\n')}
+${indent}]`;
+        }
+
+        if (typeof value === 'object') {
+            const entries = Object.entries(value as Record<string, unknown>);
+            if (entries.length === 0) return '{}';
+
+            const objectEntries = entries.map(([key, entryValue]) => {
+                const isValidIdentifier = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key);
+                const displayKey = isValidIdentifier ? key : `'${key.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+                return `${childIndent}${displayKey}: ${formatAsJavascriptObject(entryValue, indentLevel + 1)}`;
+            });
+
+            return `{
+${objectEntries.join(',\n')}
+${indent}}`;
+        }
+
+        return 'undefined';
     };
 
-    const handleCopyAppearancesExport = async () => {
-        const payload = appearancesJsonExport || JSON.stringify(buildAppearancesExport(), null, 2);
-
-        try {
-            await navigator.clipboard.writeText(payload);
-            setAppearancesJsonExport(payload);
-            stage().showPriorityMessage('Copied appearances JSON to clipboard.');
-        } catch (error) {
-            console.error('Failed to copy appearances JSON:', error);
-            stage().showPriorityMessage('Failed to copy appearances JSON.');
-        }
+    const handleGenerateOutfitsExport = () => {
+        setOutfitsObjectExport(formatAsJavascriptObject(buildOutfitsExport()));
     };
 
     const handleRegenerateEmotion = async (emotion: Emotion, promptDraft: string) => {
@@ -470,6 +493,68 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
 
     // Get all emotions for the grid
     const allEmotions = Object.values(Emotion);
+    const missingEmotionCount = allEmotions.filter((emotion) => !selectedOutfit?.emotionPack?.[emotion]).length;
+
+    const handleFillMissingEmotionImages = async () => {
+        if (!selectedOutfit || !selectedOutfitId) {
+            stage().showPriorityMessage('Select an outfit before filling missing emotion images.');
+            return;
+        }
+
+        if (isFillingMissingEmotions) {
+            return;
+        }
+
+        const missingEmotions = allEmotions.filter((emotion) => !selectedOutfit.emotionPack?.[emotion]);
+        if (missingEmotions.length === 0) {
+            stage().showPriorityMessage(`All emotion images already exist for ${selectedOutfit.name}.`);
+            return;
+        }
+
+        setIsFillingMissingEmotions(true);
+        let generatedCount = 0;
+        let failedCount = 0;
+
+        try {
+            for (const emotion of missingEmotions) {
+                setRegeneratingImages((prev) => new Set(prev).add(emotion));
+
+                try {
+                    const existingPrompt = selectedOutfit.prompts?.[emotion] || '';
+                    if (!existingPrompt.trim()) {
+                        const generatedPrompt = await generateOutfitEmotionPrompt(actor, emotion, stage(), selectedOutfitId);
+                        if (!generatedPrompt) {
+                            throw new Error(`Missing prompt for ${emotion}`);
+                        }
+                    }
+
+                    await generateEmotionImage(actor, emotion, stage(), true, selectedOutfitId);
+                    generatedCount += 1;
+                    syncEditedOutfitsFromActor();
+                    forceUpdate({});
+                } catch (error) {
+                    failedCount += 1;
+                    console.error(`Failed to fill ${emotion} emotion image:`, error);
+                } finally {
+                    setRegeneratingImages((prev) => {
+                        const next = new Set(prev);
+                        next.delete(emotion);
+                        return next;
+                    });
+                }
+            }
+        } finally {
+            setIsFillingMissingEmotions(false);
+        }
+
+        if (generatedCount > 0 && failedCount === 0) {
+            stage().showPriorityMessage(`Generated ${generatedCount} missing emotion image${generatedCount === 1 ? '' : 's'} for ${selectedOutfit.name}.`);
+        } else if (generatedCount > 0 && failedCount > 0) {
+            stage().showPriorityMessage(`Generated ${generatedCount} emotion image${generatedCount === 1 ? '' : 's'}; ${failedCount} failed. Check console for details.`);
+        } else {
+            stage().showPriorityMessage('Failed to generate missing emotion images. Check console for details.');
+        }
+    };
 
     const currentImageUrl = imageDialog.target ? getSelectedOutfitImageUrl(imageDialog.target as Emotion | 'base') : '';
     const isCurrentImageRegenerating = imageDialog.target ? regeneratingImages.has(imageDialog.target) : false;
@@ -636,7 +721,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 marginBottom: '8px',
                                             }}
                                         >
-                                            Appearance Description
+                                            Outfit Description
                                         </label>
                                         <textarea
                                             value={editedActor.description}
@@ -953,20 +1038,17 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                                 marginBottom: '8px',
                                             }}
                                         >
-                                            Appearances JSON
+                                            Outfit Object (for testing and export)
                                         </label>
                                         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                            <Button onClick={handleGenerateAppearancesExport} variant="secondary">
-                                                Generate JSON
-                                            </Button>
-                                            <Button onClick={handleCopyAppearancesExport}>
-                                                Copy JSON
+                                            <Button onClick={handleGenerateOutfitsExport} variant="secondary">
+                                                Generate Object
                                             </Button>
                                         </div>
                                         <textarea
-                                            value={appearancesJsonExport}
+                                            value={outfitsObjectExport}
                                             readOnly
-                                            placeholder="Generate JSON to export this actor's appearances"
+                                            placeholder="Generate object output to export this actor's outfits"
                                             style={{
                                                 width: '100%',
                                                 minHeight: '160px',
@@ -1000,6 +1082,17 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                                     <ImageIcon />
                                     Emotion Images ({selectedOutfit?.name || 'Outfit'})
                                 </h2>
+
+                                <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
+                                    <Button
+                                        onClick={handleFillMissingEmotionImages}
+                                        disabled={!selectedOutfit || isFillingMissingEmotions || missingEmotionCount === 0}
+                                    >
+                                        {isFillingMissingEmotions
+                                            ? 'Filling Missing Emotions...'
+                                            : `Fill Missing Emotions (${missingEmotionCount})`}
+                                    </Button>
+                                </div>
                                 
                                 <div style={{ 
                                     display: 'grid', 

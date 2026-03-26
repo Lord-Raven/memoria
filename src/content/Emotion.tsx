@@ -12,7 +12,7 @@ export enum Emotion {
     fear = 'fear', // surprised (unpleasant)
     grief = 'grief',
     guilt = 'guilt', // remorse
-    injured = 'injured',
+    injury = 'injury',
     intrigue = 'intrigue', // curiosity
     joy = 'joy',
     kindness = 'kindness', // caring, gratitude
@@ -43,7 +43,7 @@ export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
     fear: ['shocked', 'terrified', 'terror', 'panic', 'alarm', 'alarmed', 'frightened', 'horror', 'horrified', 'shock'],
     grief: ['sad', 'upset', 'depressed', 'depression', 'sobbing', 'desperation', 'sorrow', 'despair'],
     guilt: ['remorseful', 'remorse', 'repentant', 'regretful', 'regretting', 'guiltridden', 'penitent', 'penitence', 'concern'],
-    injured: ['injured', 'wounded', 'hurt', 'pain', 'pained', 'injury', 'wound', 'harmed'],
+    injury: ['injured', 'wounded', 'hurt', 'pain', 'pained', 'injury', 'wound', 'harmed'],
     intrigue: ['intrigued', 'curious', 'curiosity', 'interest', 'absorbed', 'absorbing', 'engrossed', 'engrossing', 'mischief', 'mischievous', 'mischievousness'],
     joy: ['happy', 'happiness', 'joyfulness', 'thrilled', 'delighted', 'elated', 'jubilant', 'elation', 'humor', 'playfulness', 'playful', 'fun', 'delight', 'enthusiasm', 'pleasure',
         'cheer', 'cheery', 'jovial', 'joviality', 'wry humor', 'wry', 'humor', 'humorous', 'glee', 'gleeful'],
@@ -77,12 +77,12 @@ export const EMOTION_PROMPTS: EmotionPromptMap = {
     disappointment: 'unhappy, annoyed, or deflated',
     disgust: 'disgusted, grossed-out, or repulsed',
     embarrassment: 'embarrassed, awkward, or self-conscious',
-    ecstasy: 'euphoric, eyes rolled back slightly, with an orgasmic, lusty pose',
+    ecstasy: 'euphoric, orgasmic, or inappropriately lusty',
     exhaustion: 'exhausted, weary, or slumped',
     fear: 'shocked, terrified, or defensive',
     grief: 'depressed, sobbing, or mournful',
     guilt: 'remorseful, apologetic, or contrite',
-    injured: 'pained, hurt, or defensive',
+    injury: 'pained, hurt, or defensive',
     intrigue: 'curious, intrigued, or attentive',
     joy: 'happy, smiling, or joyful',
     kindness: 'kind, grateful, or caring',
