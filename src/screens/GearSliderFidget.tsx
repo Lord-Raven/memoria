@@ -179,7 +179,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 gearControls.start({
                     rotate: [currentRotation, targetRotation + rotationOvershoot, targetRotation],
                     transition: {
-                        duration: 0.36,
+                        duration: 0.5,
                         times: [0, 0.74, 1],
                         ease: 'easeOut',
                     },
@@ -187,7 +187,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 cogControls.start({
                     rotate: [-currentRotation, -(targetRotation + rotationOvershoot), -targetRotation],
                     transition: {
-                        duration: 0.36,
+                        duration: 0.5,
                         times: [0, 0.74, 1],
                         ease: 'easeOut',
                     },
@@ -195,8 +195,8 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 rackControls.start({
                     x: [currentRackX, targetRackX + rackOvershoot, targetRackX],
                     transition: {
-                        duration: 0.4,
-                        times: [0, 0.72, 1],
+                        duration: 0.5,
+                        times: [0, 0.74, 1],
                         ease: 'easeOut',
                     },
                 }),
