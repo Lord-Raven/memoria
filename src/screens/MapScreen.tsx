@@ -4,7 +4,7 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { AutoStories, EditNote, LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
+import { AutoStories, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { ContentManagementScreen } from "./ContentManagementScreen";
@@ -13,7 +13,7 @@ import { useTooltip } from "./TooltipContext";
 import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 import { determineEmotion, generateSkitScript, getCurrentLocation, Skit } from "../content/Skit";
-import { Actor, getEmotionImage } from "../content/Actor";
+import { Actor, clampActorAffinity, getEmotionImage } from "../content/Actor";
 
 export type MapScreenMode = 'management' | 'skit';
 
@@ -120,6 +120,8 @@ const colorWithAlpha = (hexColor: string, alpha: number, fallback: string) => {
 	}
 	return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${clamp(alpha, 0, 1)})`;
 };
+
+const HEART_COUNT = 10;
 
 const getLocationBorderStroke = (themeColor: string) => {
 	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
@@ -1470,6 +1472,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 											if (!actor || actor.id === stage().getPlayerActor().id) return null;
 											const typedActor = actor as Actor;
 											const authorName = typedActor.fullPath?.split('/').filter(Boolean)[0] || '';
+											const affinity = clampActorAffinity(typedActor.affinity);
 											return (
 												<Box
 													sx={{
@@ -1498,6 +1501,24 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 															by {authorName}
 														</Typography>
 													)}
+													<Box
+														sx={{
+															display: 'flex',
+															alignItems: 'center',
+															gap: 0.5,
+															marginBottom: 1,
+															color: '#f2adb8',
+														}}
+													>
+														{Array.from({ length: HEART_COUNT }, (_, index) => (
+															index < affinity
+																? <Favorite key={`heart-filled-${index}`} sx={{ fontSize: 16 }} />
+																: <FavoriteBorder key={`heart-empty-${index}`} sx={{ fontSize: 16, opacity: 0.65 }} />
+														))}
+														<Typography variant="caption" sx={{ color: 'rgba(242, 173, 184, 0.9)', marginLeft: 0.5 }}>
+															{affinity}/{HEART_COUNT}
+														</Typography>
+													</Box>
 													<Box sx={{ color: '#edf2f2', fontSize: '0.9rem', lineHeight: 1.4 }}>
 														{typedActor.profile}
 													</Box>

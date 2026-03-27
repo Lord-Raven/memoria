@@ -144,6 +144,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     outfitId: '', // Ditto.
                     fullPath: '',
                     characterArc: '',
+                    affinity: 0,
                     themeColor: '',
                     themeFontFamily: '',
                     voiceId: ''

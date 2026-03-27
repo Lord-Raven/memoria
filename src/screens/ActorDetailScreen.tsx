@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
-import { Actor, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
+import { Actor, clampActorAffinity, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
 import { Emotion } from '../content/Emotion';
 import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
 import { Button, Chip, GlassPanel, TextInput, Title } from './UiComponents';
@@ -45,6 +45,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         description: string;
         profile: string;
         characterArc: string;
+        affinity: number;
         voiceId: string;
         themeColor: string;
         themeFontFamily: string;
@@ -53,6 +54,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         description: actor.description || '',
         profile: getActorProfile(actor.id, stage()),
         characterArc: actor.characterArc || '',
+        affinity: clampActorAffinity(actor.affinity),
         voiceId: actor.voiceId,
         themeColor: actor.themeColor,
         themeFontFamily: actor.themeFontFamily,
@@ -132,6 +134,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.description = editedActor.description;
         updateActorProfile(actor.id, editedActor.profile, stage());
         actor.characterArc = editedActor.characterArc;
+        actor.affinity = clampActorAffinity(editedActor.affinity);
         actor.voiceId = editedActor.voiceId;
         actor.themeColor = editedActor.themeColor;
         actor.themeFontFamily = editedActor.themeFontFamily;
@@ -158,7 +161,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const handleInputChange = (field: string, value: string | number) => {
         setEditedActor(prev => ({
             ...prev,
-            [field]: value
+            [field]: field === 'affinity' ? clampActorAffinity(Number(value)) : value
         }));
     };
 
@@ -708,6 +711,30 @@ ${indent}}`;
                                             value={editedActor.name}
                                             onChange={(e) => handleInputChange('name', e.target.value)}
                                             placeholder="Character name"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            style={{
+                                                display: 'block',
+                                                color: '#00ff88',
+                                                fontSize: '14px',
+                                                fontWeight: 'bold',
+                                                marginBottom: '8px',
+                                            }}
+                                        >
+                                            Affinity (0-10)
+                                        </label>
+                                        <TextInput
+                                            type="number"
+                                            min={0}
+                                            max={10}
+                                            step={1}
+                                            fullWidth
+                                            value={editedActor.affinity}
+                                            onChange={(e) => handleInputChange('affinity', e.target.value)}
+                                            placeholder="0"
                                         />
                                     </div>
 

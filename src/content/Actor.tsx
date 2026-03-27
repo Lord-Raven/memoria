@@ -36,6 +36,14 @@ export class Actor {
     themeFontFamily: string = ''; // Font family stack for CSS styling
     voiceId: string = ''; // Voice ID for TTS
     characterArc: string = ''; // A character arc summary that is updated after skits, to better reflect changes or developments in the character's personality, motives, or relationships. This is used to inform future skits and interactions with this character, and can be referenced in the script prompts as well.
+    affinity: number = 0; // Trust/reputation with the player, clamped between 0 and 10.
+
+    static clampAffinity(value: number | undefined | null): number {
+        if (!Number.isFinite(value)) {
+            return 0;
+        }
+        return Math.max(0, Math.min(10, Math.round(value as number)));
+    }
 
     /**
      * Rehydrate an Actor from saved data
@@ -43,6 +51,7 @@ export class Actor {
     static fromSave(savedActor: any): Actor {
         const actor = Object.create(Actor.prototype);
         Object.assign(actor, savedActor);
+        actor.affinity = Actor.clampAffinity(actor.affinity);
         return actor;
     }
 
@@ -51,8 +60,11 @@ export class Actor {
         if (!this.id) {
             this.id = generateUuid();
         }
+        this.affinity = Actor.clampAffinity(this.affinity);
     }
 }
+
+export const clampActorAffinity = (value: number | undefined | null): number => Actor.clampAffinity(value);
 
 const DISTILLATION_KEY_MAP: { [key: string]: string } = {
     name: 'name',
@@ -145,7 +157,8 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 disappointment: "https://media.charhub.io/ec35c154-699c-4efb-8d34-7e49501fee34/4ac448ff-2ac3-4d20-bba4-f19b06d2966e.png",
                 injured: "https://media.charhub.io/d711ecf4-bfa8-4252-8702-43dda284755a/46079bb2-2cad-4653-82a3-7bfa33b17ba8.png"
             }
-        }]
+        }],
+        outfitId: 'default',
     }, /*{
         name: 'Astraea', 
         fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', 
@@ -210,18 +223,38 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Mallory', 
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
-        /*outfits: [{
-            id: 'default',
-            name: 'Deceiver Chic',
-            description: 'A tall, lean woman with purplish hair fading to orange tied in twintails with a curtain of bangs. Sharp orange eyes dart behind thin, round glasses—a part of her human disguise, which includes a black capelet and purple vest over a white blouse, with black pants and gloves.',
+        outfits: [{
+            id: 'Deceptive Scholar',
+            name: 'Deceptive Scholar',
+            description: 'A polished, deceptive ensemble of a white blouse under a purple vest, black pants, a black capelet, black gloves, and black loafers. She completes the look with a pair of glasses to sell her "harmless scholar" disguise.',
+            prompts: {},
             emotionPack: {
-                base: 'https://media.charhub.io/fef3dde9-48fb-4ba6-9d54-1606b5f5d926/6b38d1f2-9ad9-440b-91e2-d942eee89b17.png',
-                neutral: 'https://media.charhub.io/3c039253-29f4-45e5-b145-91c9fc96a56c/f89a8cb2-7d62-42ec-9597-8ad2ef4e6bf9.png',
-                approval: 'https://media.charhub.io/4a4d339b-08bf-4c7c-a99b-f4abc4be92b4/5c4d72ad-c8c3-495b-8f3c-6cb12ed61b25.png',
+                base: 'https://media.charhub.io/96eb5829-babf-4f41-983b-efc8d83cf5f0/ac57c889-c905-4a9c-bf8a-1525dabceac1.png',
+                neutral: 'https://media.charhub.io/9338bbe1-dcea-4bce-ad1c-2be57878c9df/e8f80d96-91a5-411f-a845-41969b104715.png',
+                approval: 'https://media.charhub.io/a9e1ec8e-aee5-4650-9470-794dd9348af7/b0bdd24a-39ed-4085-85e3-b7f4569a35cf.png',
+                anger: 'https://media.charhub.io/839f68d0-cc76-40ed-b0e6-66a1cbda399b/5273e25e-ca92-4599-9ead-c7a0ddae0529.png',
+                confusion: 'https://media.charhub.io/0acb974f-9b88-4c6f-842e-c6cc3f621044/063ed151-5514-4cba-8a86-372b5e33552e.png',
+                desire: 'https://media.charhub.io/40bf3e25-ab59-4adf-9cbc-8b7e0869756d/aead9d01-0934-492d-8ec1-29f743f3b38e.png',
+                disappointment: 'https://media.charhub.io/2b7a7592-f76a-466f-995b-b229af8c789f/ac627eb4-a572-4a0e-9ebb-ff419eeb0777.png',
+                disgust: 'https://media.charhub.io/ff2e7e4e-e92c-410f-98ae-4bd2153930de/eb630b25-d44e-4b02-89d9-5b4d0e0853d7.png',
+                embarrassment: 'https://media.charhub.io/208e64ab-a30e-4acc-95ea-2cd755f635e3/47c6e10a-68be-444d-93d6-7a3ea0912ad4.png',
+                ecstasy: 'https://media.charhub.io/541c8e34-1e6c-4041-b7d1-c80094b93b27/89239357-9438-4678-af90-03057853e702.png',
+                exhaustion: 'https://media.charhub.io/cf401cce-e666-43a5-8c64-a5f599523a6b/58f9680d-dfe7-4da7-9612-a258c72cf911.png',
+                fear: 'https://media.charhub.io/ab0d98ad-4e8e-46af-b4a0-741047c011ae/19e1695d-a381-4971-9756-ba84bf91b48a.png',
+                grief: 'https://media.charhub.io/3da5b3cb-bc12-4d43-8934-56c6d689c7c5/b9720f35-daa4-40be-b0a7-82b4e056e459.png',
+                guilt: 'https://media.charhub.io/c9a6a909-ce06-40fc-acbe-92affa99a24f/42c222ee-ccb9-45c3-9d44-906000fe202e.png',
+                injury: 'https://media.charhub.io/b001cea2-cc22-404e-896b-601fb99d6caf/4a3c82d5-3523-4333-bff3-9f0d758a616e.png',
+                intrigue: 'https://media.charhub.io/a692f7d9-af33-404b-8315-81fff4cdc05e/dd2e2fb0-1402-4ad6-bd08-1418cc0cb541.png',
+                joy: 'https://media.charhub.io/856c9642-9ac8-456c-9100-47e9e0c89426/dc035881-7670-46ab-a10a-744fb7279259.png',
+                kindness: 'https://media.charhub.io/159eca08-4dca-4d03-8968-ece5a477e13e/da342186-daa1-4d58-a967-52004a29f295.png',
+                love: 'https://media.charhub.io/890a8749-8949-4237-8fd2-fdb6ca699cdf/7d43435c-ab95-4916-86a1-1569fecb39f7.png',
+                nervousness: 'https://media.charhub.io/d68edd65-d8e6-4258-9ba5-75bf3e02f699/609975f8-218a-45be-82c9-9edc74f9ac50.png',
+                pride: 'https://media.charhub.io/30861658-74be-42ff-8030-a34a19d663ac/b53df81e-54db-43f1-8dd9-50b9ee148e94.png',
+                sadness: 'https://media.charhub.io/293f6c28-f85d-4fc7-a5b5-5cd120a293b8/5d5ba0c9-be9c-49ae-b2fb-6844b8892be8.png',
+                wonder: 'https://media.charhub.io/81091478-2e19-471a-ba8d-8a8b2c53ef7d/d6f3d315-730a-4cd5-ae68-537ccb3fd6bb.png'
             }
-
         }],
-        outfitId: 'default'*/
+        outfitId: 'Deceptive Scholar'
     }, /*{ 
         name: 'Mel', 
         fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', 
@@ -280,7 +313,8 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
                 sadness: 'https://media.charhub.io/68830a50-117b-4019-9383-3a46885a2aea/aae69ab0-6f88-4962-be93-6cd6e3b5aeb6.png',
                 wonder: 'https://media.charhub.io/5d666303-9084-4a00-b656-962bcdb6db5c/b00eaa0e-3c7d-44c2-88e4-68dcc6bb42af.png'
             }
-        }]
+        }],
+        outfitId: 'Utilitarian Jumpsuit'
     }, {
         name: 'Sam',
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',
