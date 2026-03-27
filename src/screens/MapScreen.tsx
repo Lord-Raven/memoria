@@ -1336,7 +1336,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									y={portrait.cy - portrait.radiusY}
 									width={portrait.radiusX * 2}
 									height={portrait.radiusY * 2}
-									preserveAspectRatio="xMidYMin slice"
+									preserveAspectRatio="xMidYMid meet"
 									clipPath={`url(#${portrait.clipPathId})`}
 								/>
 								<ellipse

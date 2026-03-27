@@ -249,7 +249,38 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, {
         name: 'Reitia',
         fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png',
+        outfits: [{
+            id: 'Utilitarian Jumpsuit',
+            name: 'Utilitarian Jumpsuit',
+            description: 'A simple, white, skin-tight jumpsuit with brown leather straps. The outfit is functional and devoid of personal flair, chosen for its efficiency.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/e537a3cf-94f4-4665-9266-92a243ba67f4.png',
+                neutral: 'https://media.charhub.io/1531a486-dd4e-4eb5-b250-6a0adfa673db/bc2f8065-8bfe-40f5-a764-57c26699ad53.png',
+                approval: 'https://media.charhub.io/49eb5170-be79-412d-b88c-afda307b12eb/6501c929-08a1-4fcf-baab-80703bc7aad6.png',
+                anger: 'https://media.charhub.io/82686830-59df-4c87-991e-a60180a14a8b/21343372-660e-46ce-aa32-e3816fea6f43.png',
+                confusion: 'https://media.charhub.io/4286bef1-c77b-4681-bdbb-8e36149eff29/a0a119dd-9442-4cea-9b85-ab2e1684a337.png',
+                desire: 'https://media.charhub.io/2012f17f-9701-473e-a8d9-3950e2ec4251/08230106-93cb-4803-b0cd-e542d75e1ed7.png',
+                disappointment: 'https://media.charhub.io/a66cc138-233c-40fd-8472-b2ee0013a006/3ecfb28b-0064-41c7-9aff-7332d24e1e27.png',
+                disgust: 'https://media.charhub.io/98142cf7-b598-4abb-8e57-d711c912cbb6/8c7059dd-e916-4bac-83af-f008b9d06355.png',
+                embarrassment: 'https://media.charhub.io/58351a93-610e-4e18-812d-54f34deddd4d/72ebfd53-1d3a-43b1-9fb0-6b5319cd810a.png',
+                ecstasy: 'https://media.charhub.io/194ce6ad-12e9-4eb2-89ae-524435aedce4/f31499fe-c505-4a1a-8ed8-8423961d93a2.png',
+                exhaustion: 'https://media.charhub.io/d0861cf4-5488-420a-b782-373922ea6c8d/ff1ae09a-2189-4ca2-838c-e796816af7e4.png',
+                fear: 'https://media.charhub.io/62634659-67c3-4f05-991b-48b6ceca6f1e/4bb4471f-8dd6-4f5a-b818-57b15cce0962.png',
+                grief: 'https://media.charhub.io/17a9dba1-d513-4ab8-8657-d6f763268070/5929b5d1-ff21-4bde-b99a-79f9a03eb0d0.png',
+                guilt: 'https://media.charhub.io/75d92464-ce73-4df4-95a3-cdfe92c10224/f3a7964a-302e-4f57-bf63-21dba576ec5e.png',
+                injury: 'https://media.charhub.io/af9161f2-1d3d-4890-ae3d-e07f115c67ef/e4f15454-2f40-41b4-859f-6af815a89486.png',
+                intrigue: 'https://media.charhub.io/a85396aa-0fb9-4dc9-9bd0-ea48ea4bc514/853cc474-ea06-45ad-9815-a9b3491abd83.png',
+                joy: 'https://media.charhub.io/05530b83-33f7-4c10-8b2f-3e0827194191/71281eb2-835d-49a8-8b2c-f31756546433.png',
+                kindness: 'https://media.charhub.io/094a1899-e66e-4560-98c4-eaf90061b440/dedd22d5-fac9-47ee-8d39-7789a34e29a2.png',
+                love: 'https://media.charhub.io/ee3db6db-dcb2-4333-b5e5-c4a18a9c531b/e16db2d3-18ec-4b3f-9129-af10db92fe9c.png',
+                nervousness: 'https://media.charhub.io/1cea97ee-d4df-4027-808a-d028f856f032/7adc9c7c-1a92-437e-be41-3a571f164c5a.png',
+                pride: 'https://media.charhub.io/2563e440-b042-4183-a879-95a14032c074/d94057c7-2ac4-4642-9d8b-3ae8f3d985f6.png',
+                sadness: 'https://media.charhub.io/68830a50-117b-4019-9383-3a46885a2aea/aae69ab0-6f88-4962-be93-6cd6e3b5aeb6.png',
+                wonder: 'https://media.charhub.io/5d666303-9084-4a00-b656-962bcdb6db5c/b00eaa0e-3c7d-44c2-88e4-68dcc6bb42af.png'
+            }
+        }]
     }, {
         name: 'Sam',
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',

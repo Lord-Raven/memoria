@@ -474,7 +474,8 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     const speakerName = l.slice(0, idx).trim();
                     // Find matching actor using findBestNameMatch
                     const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : []);
-                    speakerId = matched ? matched.id : ''; // Use actor ID if found, otherwise keep original name
+                    console.log(`Processing speaker: "${speakerName}" - Matched Actor: ${matched ? matched.name : 'None'}`);
+                    speakerId = matched ? matched.id : ''; // Use actor ID if found, otherwise empty for narrator.
                     message = l.slice(idx + 1).trim();
                 }
                 
@@ -525,6 +526,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 const actor = entry.speakerId ? save.actors[entry.speakerId] : null;
                 // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
                 if (!actor || !entry.message.includes('"') || !save.textToSpeech) {
+                    console.log(`Skipping TTS: ${!actor ? "No matching actor" : (!entry.message.includes('"') ? "No dialogue in quotes" : "Text-to-speech disabled")}.`);
                     entry.speechUrl = '';
                     return;
                 }

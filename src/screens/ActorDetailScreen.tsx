@@ -721,7 +721,7 @@ ${indent}}`;
                                                 marginBottom: '8px',
                                             }}
                                         >
-                                            Outfit Description
+                                            Physical Description
                                         </label>
                                         <textarea
                                             value={editedActor.description}
