@@ -120,11 +120,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Aeriya', 
         fullPath: 'SilverFlame/aeriya-361950a8a9ba', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8118f416-076c-46c0-b6ec-cd162b928e21/58f1442e-3c03-4740-b138-6c100bcc20bf.png'
-    }, {
+    },*/ {
         name: 'Amat-Ea', 
-        fullPath: 'adelsvard/amat-ea-18df50a603a5', 
+        fullPath: 'adelsvard/amat-ea-profane-warrior-divine-soul-2b25f6bf3572', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6b8ac58-f648-4c87-8d67-3d6c63adefad/527d8308-8594-4254-b4e1-5efde4ad9cc1.png'
-    }, */{
+    }, {
         name: ' Arca-7', 
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png',
@@ -392,6 +392,10 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Persephone', 
         fullPath: 'Sancay/persephone-the-normal-barmaid-a45c371b9af0', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'
+    }, {
+        name: 'Rattle',
+        fullPath: 'Chunchunmaru/rattle-a-derranged-menace-with-love-for-explosives-7b7fc8717a05',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/ba33f89a-53e6-4120-8411-021679dd0ce3/84bb1209-5aec-4eee-829b-2132f076ce8b.png',
     }, {
         name: 'Reitia',
         fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef',

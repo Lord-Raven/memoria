@@ -74,7 +74,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
     
 
-    readonly INITIAL_ACTORS = 6;
+    readonly INITIAL_ACTORS = 8;
 
     saveData: ChatStateType;
     primaryUser: User;
