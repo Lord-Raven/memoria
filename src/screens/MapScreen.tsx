@@ -962,8 +962,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const viewportScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
 		const viewportScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
 		const uniformPortraitScale = Math.min(viewportScaleX, viewportScaleY);
-		const portraitScaleCompensationX = uniformPortraitScale / viewportScaleX;
-		const portraitScaleCompensationY = uniformPortraitScale / viewportScaleY;
 
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
@@ -995,8 +993,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const strokeWidth = 2.4 + emphasis * 0.6;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
 			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.2, 14, 40);
-			const radiusX = radius * portraitScaleCompensationX;
-			const radiusY = radius * portraitScaleCompensationY;
+			const radiusX = radius;
+			const radiusY = radius;
 			const portraitOnLeft = cell.point.x / MAP_WIDTH > 0.5;
 			const valueFunction = (vertex: number[]) => {
 				return portraitOnLeft ? (vertex[0] + vertex[1] * 0.0001) : -(vertex[0] - vertex[1] * 0.0001);
