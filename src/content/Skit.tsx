@@ -158,6 +158,10 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
 
     // For lorebook context, we go through lorebook entries and add them 
     let triggeredLore = lorebook.filter(lore => lore.enabled && (lore.constant || lore.triggers.some(trigger => {
+        // If lore is of a non character/location/other type, it is owned by a parciular character; if that character isn't active right now, discard this lore entry:
+        if (!['character', 'location', 'other'].includes(lore.type) && !currentActors.some(actor => actor.name.toLowerCase() === lore.type.toLowerCase())) {
+            return false;
+        }
         // Scan lore.scanDepth entries of the current skit for details that match this trigger
         for (let i = skit ? skit.script.length - 1 : 0; i >= Math.max(0, (skit ? skit.script.length - lore.scanDepth : 0)); i--) {
             return (skit?.script[i]?.message || '').toLowerCase().includes(trigger.toLowerCase());

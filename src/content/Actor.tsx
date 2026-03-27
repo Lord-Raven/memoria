@@ -3,6 +3,7 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack, EmotionPromptMap } from './Emoti
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createImageAssetUrlResolver } from './imageAssetUrl';
+import { createLoreEntry } from './Lore';
 
 const getBaseImage = createImageAssetUrlResolver('characters');
 
@@ -127,6 +128,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: ' Arca-7', 
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png',
+        description: `A petite, female-presenting mechanoid with soft, silky skin and a smug resting expression. She has a short pink bob cut and blank, eyeless sockets, always covered by a black blindfold. Her build is slight, with average height and proportions.`,
         outfits: [{
             id: 'default',
             name: "Belt-Cloak Garb",
@@ -174,20 +176,41 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, */{ 
         name: 'Elowen', 
         fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', 
+        description: `A tall, fine-boned woman with fair skin and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears her pale-blonde hair in a severe pixie cut with a thin braid over her shoulder.`,
         profile: 'Calm, controlled, and intellectually precise. She observes and analyzes before speaking in a measured, deliberate tone. Publicly, she is a composed reformist who values systems, efficiency, and moral clarity over sentiment or chaos.',
         characterArc: 'To seize ideological leadership within Ardeia and shape its future direction. She accepts the system but believes it must aim higher than mere survival, and she intends to be the one to guide it there.',
         themeColor: '#2C3E50',
         themeFontFamily: '"Times New Roman", serif',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png',
         outfits: [{
-            id: 'default',
+            id: 'Tailored Peasant Garb',
             name: 'Tailored Peasant Garb',
-            description: 'A tall, fine-boned woman with a severe pale-blonde pixie cut, a thin braid, and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears tailored, practical peasant clothing in earth tones, everything intentional and devoid of decoration.',
+            description: 'She wears tailored, practical peasant clothing in whites and earth tones, everything intentional and devoid of decoration. She has an earth-tone skirt.',
             prompts: {},
             emotionPack: {
-                base: 'https://media.charhub.io/70e3344a-6859-425e-97d8-7f1bb34a4378/c7114535-4ca4-415e-8c81-e93641df3bb8.png',
-                neutral: 'https://media.charhub.io/054cc56b-3e4e-4078-b5a0-6372356a1fdc/c2aa2ee3-6032-4008-a0bb-914eebaa99f7.png',
-                exhaustion: 'https://media.charhub.io/183daf13-12c7-4a52-9b96-08961fc65af5/8d5ad846-cc53-4fdf-aad1-38138648fbc3.png'
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/0b6d41e6-9db0-432e-aea8-9ac26d0cd3c0.png',
+                neutral: 'https://media.charhub.io/92147106-c6c2-4b25-8d4b-80ac706e237d/bbee3afd-90e7-418f-a4fb-27b51802f2cb.png',
+                approval: 'https://media.charhub.io/8843fd2c-a693-4314-bed9-adf79853c6a2/f65a2fdf-1dfe-4322-b955-39569b1ec5d3.png',
+                anger: 'https://media.charhub.io/f2286217-49fb-4832-8d68-cdb946828ded/ef77bee9-210e-434c-92b3-b01700cdd405.png',
+                confusion: 'https://media.charhub.io/5ea712d7-3aa4-49b0-be99-a0c8b05ea4d3/ae430765-ee9c-4a43-ad00-6dec1b199d3e.png',
+                desire: 'https://media.charhub.io/b1e57f84-b092-4063-92c7-d96227161511/bd05d4e2-1fb2-4a83-aad6-8a34473bebbb.png',
+                disappointment: 'https://media.charhub.io/7f2776c9-2200-4beb-ad68-92179308d16b/91833f07-65d4-435c-8e5a-132647ab2a78.png',
+                disgust: 'https://media.charhub.io/076d1e70-4d07-4410-8981-a70b4a7f23ad/1a3fa1bc-b821-4355-b6a6-40a5770e97ac.png',
+                embarrassment: 'https://media.charhub.io/e283dce5-0c46-4067-b4f4-dffb4482fbe7/8a237b87-d330-4e78-adae-062a249742e6.png',
+                ecstasy: 'https://media.charhub.io/57056f7f-a836-473e-8fda-a7642d48b698/8179a801-5451-4b8e-b13b-02a1cf529a11.png',
+                exhaustion: 'https://media.charhub.io/61d724d3-bd70-4ccd-a304-1d9562335369/26df588d-40e8-4893-9514-f1735fa983bb.png',
+                fear: 'https://media.charhub.io/3e8d9913-f46b-42f2-bbff-fba19c88f744/9bab6857-e693-4fa7-8cf5-7e0b520c3929.png',
+                grief: 'https://media.charhub.io/baea6048-4be7-4ad2-bc0c-f1862e52364a/40a3ca7f-eea9-424f-b303-480fec84f56a.png',
+                guilt: 'https://media.charhub.io/be64ead1-a04d-4717-9608-dae6646a2674/caddc890-cfe5-46be-a5f5-2c0ba3e34f73.png',
+                injury: 'https://media.charhub.io/af78e7d1-0467-4e63-b33f-a0cacce217f1/3aacccf3-6f8a-48a8-88f6-2078214309cb.png',
+                intrigue: 'https://media.charhub.io/82c09a68-fbdb-4fa3-916c-6b31c7332331/9e0eeaab-d303-4a53-980c-db205fd4eba9.png',
+                joy: 'https://media.charhub.io/04e8099f-3983-4a9b-8fe0-0ee01651e846/ae6dd360-b25d-4513-b0d5-cc137514d875.png',
+                kindness: 'https://media.charhub.io/4216ba69-7277-42b8-b5b8-f9f621e4a7c7/1f3c799f-4291-47bf-a8f5-aef72df52bb1.png',
+                love: 'https://media.charhub.io/36a2c965-19c0-4f6e-9bb5-dd9f809aa5b5/6a613b54-dce8-445d-bb90-053943a882a3.png',
+                nervousness: 'https://media.charhub.io/1093d481-9ca7-49bd-80f2-07bc9d28231e/3db4719d-54c4-47b8-a7de-56ce52f57b9c.png',
+                pride: 'https://media.charhub.io/70156f92-7e09-41b3-9573-511ff4e116e7/e119e9cb-8abb-4a86-be0f-68e6c05a24b7.png',
+                sadness: 'https://media.charhub.io/c1d864c2-3725-47c7-b349-3ab1a089b6fd/cbd31899-2764-4975-a7e9-fe7a6d7307c8.png',
+                wonder: 'https://media.charhub.io/8bf29171-3c2d-4361-aaed-1543d945bb80/10da01b1-05e0-492d-bac9-87b8b01e3196.png'
             }
         }],
         outfitId: 'default',
@@ -246,6 +269,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Mallory', 
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
+        description: `A tall, lean woman with a deceptively slim build. She has long, purplish hair with an orange gradient, typically styled in twin-tails, and sharp orange eyes. Her right eye is partially obscured by her bangs.`,
         outfits: [{
             id: 'Deceptive Scholar',
             name: 'Deceptive Scholar',
@@ -292,8 +316,41 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png'
     },*/ {
         name: 'Mira', 
+        description: `A 5'3" rat-girl with a slender, toned build, chin-length brown hair, and expressive amber eyes. She has a pair of fuzzy rat ears atop her head and a long, prehensile rat tail tipped with a mechanical drill. Her left arm is missing from the elbow down, replaced by a custom-made mechanical prosthetic.`,
         fullPath: 'Derpnomicon/mira-the-tomboy-mechanic-c77eb7d4c86e', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/39a4bd46-60f0-486e-9127-72470ef82c17/cd3a5df1-96c2-4621-9246-6e0145e990a3.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/39a4bd46-60f0-486e-9127-72470ef82c17/cd3a5df1-96c2-4621-9246-6e0145e990a3.png',
+        outfits: [{
+            id: 'Mechanic\'s Kit',
+            name: 'Mechanic\'s Kit',
+            description: 'A sleeveless white work vest with four jingling pockets filled with hardware, worn over a black tank top. She wears durable, dark-colored work pants and gloves. Red-lensed welding goggles rest atop her head.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://media.charhub.io/8028fd4a-5a30-4aa6-97c6-6c41c8d55c9a/96b18e51-3413-47b1-ac9d-e0553005e66f.png',
+                neutral: 'https://media.charhub.io/bb3bb8ca-f7fd-43e8-b4e2-236b802d217a/cae4f924-bfe6-47c3-9c2c-9002ae224f2a.png',
+                approval: 'https://media.charhub.io/c0c544ef-c6f3-41fa-a0c1-10528517ba6a/f0950892-0efb-4d21-b610-4df83d2b7849.png',
+                anger: 'https://media.charhub.io/ad180dcf-3069-465b-bcd0-583e91160be2/cc17c37b-f6ca-4178-af5b-13e9d56120b6.png',
+                confusion: 'https://media.charhub.io/9702f4d8-af5a-47f0-8f47-16835c5ed039/5fd279ac-d48a-4881-ae94-012ab8dcc7fe.png',
+                desire: 'https://media.charhub.io/d2a69edf-4912-43ef-8913-74c6826f6406/c400d312-2170-4c12-96e2-859c22baa6c6.png',
+                disappointment: 'https://media.charhub.io/591355f5-19c3-4703-a96a-27f88424db12/2a56d005-3df9-4a54-9acc-15aafa290daa.png',
+                disgust: 'https://media.charhub.io/e646d8ae-dab9-4221-b215-3ca6e517a1f7/36fa62ff-62b4-4d73-a105-73095c504b7e.png',
+                embarrassment: 'https://media.charhub.io/2ecef071-c143-45aa-a8b4-680f351779c7/af43c273-aa92-48d6-8084-ce281fd3aaf0.png',
+                ecstasy: 'https://media.charhub.io/20712b18-f7e0-44e2-84d8-d59fb5031f62/0448ed4a-cb43-4246-9cc7-208d0ce558d2.png',
+                exhaustion: 'https://media.charhub.io/643821e3-03d7-4dbc-93cd-d5bc24f6768a/d4f515df-4ae0-45e0-9f27-ab8e64ce404a.png',
+                fear: 'https://media.charhub.io/66fe7a96-6f87-4b8f-ab07-5b811cff4c5f/f07506ee-40c6-454f-9179-bad845821775.png',
+                grief: 'https://media.charhub.io/901e97e0-66a4-4d65-9f71-6bcc88c393fb/a5877f53-2c47-479e-9e3d-561ecfcf3409.png',
+                guilt: 'https://media.charhub.io/5b97acba-c74a-41d5-beba-00f04aef3fa2/62ee4f8e-183f-4234-ab25-85e0b996aebf.png',
+                injury: 'https://media.charhub.io/67507d38-66a6-47f4-93a0-dd5cb35fb59e/91f38b84-1a8e-4f02-b86c-0410ddde37b7.png',
+                intrigue: 'https://media.charhub.io/27f7bb7d-546b-4007-8b6f-6979bad244ca/33717074-9a8e-46ee-aab1-621c14979bed.png',
+                joy: 'https://media.charhub.io/03710358-5d33-4f03-a26f-49d5978843c6/1d0bc29a-1f33-490e-8ebf-de780708abcc.png',
+                kindness: 'https://media.charhub.io/4bcc6cc8-0867-4a77-af76-d097408ab343/dde2bfb9-b814-4765-99e4-b8265b8773ca.png',
+                love: 'https://media.charhub.io/635439b4-b0c5-406c-8fb0-ec1ed44fe045/28ecb9ca-f9d0-458f-9cc6-a9521a172689.png',
+                nervousness: 'https://media.charhub.io/69d4aee9-9c96-4e51-9e0b-d0e4ebe3f86d/9a8f6988-0413-4743-870b-2a9d2f398aaa.png',
+                pride: 'https://media.charhub.io/e67398b9-167f-45a7-aa17-842401a8c4be/ddada800-8ad2-48a5-ba27-485739c45bfa.png',
+                sadness: 'https://media.charhub.io/3b231d00-0d39-4670-922b-e4d048a4a521/7e77039c-41bd-4b28-8366-fad85eced33c.png',
+                wonder: 'https://media.charhub.io/2c4ea61c-e5c4-424e-842e-0b7f46c26d2d/8c7cb991-dc83-4905-92ac-45f9bf423b6d.png'
+            }
+        }],
+        outfitId: 'Mechanic\'s Kit',
     }, /*{
         name: 'Nadiya', 
         fullPath: 'xsenn/nadiya-18576a12939e', 
@@ -393,57 +450,6 @@ export const VOICE_MAP: {[key: string]: string} = {
     'animated_male_20s': 'masculine - hip and lively',
 };
 
-const FULL_IMAGE_WIDTH = 1024;
-const FULL_IMAGE_HEIGHT = 1280;
-const BASE_IMAGE_WIDTH = 944;
-const BASE_IMAGE_HEIGHT = 1180;
-
-async function normalizeBaseSourceImage(imageUrl: string): Promise<string> {
-    if (!imageUrl) {
-        return imageUrl;
-    }
-
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const loadedImage = new Image();
-        loadedImage.crossOrigin = 'anonymous';
-        loadedImage.onload = () => resolve(loadedImage);
-        loadedImage.onerror = () => reject(new Error(`Failed to load base source image: ${imageUrl}`));
-        loadedImage.src = imageUrl;
-    });
-
-    const contextCanvas = document.createElement('canvas');
-    contextCanvas.width = FULL_IMAGE_WIDTH;
-    contextCanvas.height = FULL_IMAGE_HEIGHT;
-
-    const context = contextCanvas.getContext('2d');
-    if (!context) {
-        return imageUrl;
-    }
-
-    const scale = Math.min(
-        BASE_IMAGE_WIDTH / image.naturalWidth,
-        BASE_IMAGE_HEIGHT / image.naturalHeight
-    );
-    const scaledWidth = image.naturalWidth * scale;
-    const scaledHeight = image.naturalHeight * scale;
-
-    const imageOffsetX = (BASE_IMAGE_WIDTH - scaledWidth) / 2;
-    const imageOffsetY = (BASE_IMAGE_HEIGHT - scaledHeight) / 2;
-    const baseOffsetX = (FULL_IMAGE_WIDTH - BASE_IMAGE_WIDTH) / 2;
-    const baseOffsetY = FULL_IMAGE_HEIGHT - BASE_IMAGE_HEIGHT;
-
-    context.clearRect(0, 0, FULL_IMAGE_WIDTH, FULL_IMAGE_HEIGHT);
-    context.drawImage(
-        image,
-        baseOffsetX + imageOffsetX,
-        baseOffsetY + imageOffsetY,
-        scaledWidth,
-        scaledHeight
-    );
-
-    return contextCanvas.toDataURL('image/png');
-}
-
 export async function loadSupportedActor(name: string, stage: Stage): Promise<Actor|null> {
     // Canon data within the stage:
     const newActor = new Actor(SUPPORTED_CHARACTERS.find(char => char.name === name));
@@ -465,6 +471,24 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
         // Even if nothing else, use the definition voice ID over whatever is in the stage.
         if (definition.voice_id && !VOICE_MAP[definition.voice_id]) {
             newActor.voiceId = definition.voice_id;
+        }
+
+        if (definition.embedded_lorebook) {
+            // Create lore entries with this character name as the category:
+            const loreEntries = definition.embedded_lorebook.entries.map((entry: any) => {
+                return createLoreEntry({
+                    type: name,
+                    title: entry.name,
+                    content: entry.content,
+                    triggers: entry.keys,
+                    enabled: entry.enabled,
+                    constant: entry.constant,
+                    insertionOrder: entry.insertion_order,
+                    priority: entry.priority,
+                    probability: entry.probability
+                });
+            });
+            stage.getSave().lorebook?.push(...loreEntries);
         }
 
         // if newActor is missing critical fields like personality or outfits, distill these details to fill the gaps
