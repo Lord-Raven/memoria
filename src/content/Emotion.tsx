@@ -24,11 +24,11 @@ export enum Emotion {
 }
 
 // Map these emotions to base emotions
-//  detachment = 
+//  focus = 
 
 export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
     neutral: ['calm', 'placid', 'serene', 'tranquil', 'stoic', 'neutrality', 'composed', 'composure', 'unemotional', 'impassive', 'impassivity', 'detached', 'detachment',
-        'indifferent', 'indifference', 'apathy', 'dispassionate', 'dispassion'],
+        'indifferent', 'indifference', 'apathy', 'dispassionate', 'dispassion', 'unaffected', 'unaffectedness', 'resignation', 'resigned'],
     approval: ['content', 'amusement', 'pleased', 'appreciative', 'appreciation', 'satisfaction', 'satisfied', 'enjoyment', 'enjoying', 'content', 
         'contentedness', 'contentment', 'cheerfulness', 'cheerful'],
     anger: ['angry', 'furious', 'fury', 'enraged', 'livid', 'wrath', 'wrathful', 'frustration', 'ire', 'rage'],
@@ -51,7 +51,7 @@ export const EMOTION_SYNONYMS: {[key in Emotion]: string[]} = {
     love: ['lovestruck', 'adoration', 'adoring', 'devotion', 'devoted', 'infatuated', 'infatuation', 'romantic', 'romance', 'affection', 'affectionate'],
     nervousness: ['anxious', 'uncertain', 'jittery', 'uneasy', 'unease', 'worry', 'worrying', 'vulnerability', 'vulnerable', 'hesitance', 'anxiety', 'caution', 'apprehension'],
     pride: ['proud', 'pridefulness', 'challenge', 'arrogance', 'arrogant', 'self-confidence', 'triumph', 'triumphant', 'confidence', 'confident', 'ego', 'egotism', 
-        'egotistical', 'smug', 'smugness', 'determination', 'determined'],
+        'egotistical', 'smug', 'smugness', 'determination', 'determined', 'collected', 'cool', 'composed', 'composure', 'focus'],
     sadness: ['sad', 'upset', 'distress', 'sorrow', 'unhappiness', 'melancholy', 'gloom', 'dejection'],
     wonder: ['excited', 'optimistic', 'surprised', 'surprise', 'realization', 'excitement', 'relief', 'hope', 'fascinated', 'fascination', 'awe', 'awe-struck',
         'amazement', 'amazed', 'inspired', 'inspiration', 'anticipation', 'admiration', 'reverence'],

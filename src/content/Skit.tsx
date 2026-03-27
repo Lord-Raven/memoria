@@ -173,6 +173,11 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
         const locationLoreId = findBestNameMatch(location.name, triggeredLore, 'title')?.id || '';
         triggeredLore = triggeredLore.filter(lore => lore.id !== locationLoreId);
     }
+    // Remove (if present) lore entries for current actors (which are referenced in detail below):
+    if (currentActors.length > 0) {
+        const currentActorLoreIds = currentActors.map(actor => findBestNameMatch(actor.name, triggeredLore.filter(lore => lore.type === 'character'), 'title')?.id || '');
+        triggeredLore = triggeredLore.filter(lore => !currentActorLoreIds.includes(lore.id));
+    }
 
     // If triggeredLore has more than MAX_ENTRIES entries, we cut it down to MAX_ENTRIES based on priority (higher priority wins).
     if (triggeredLore.length > MAX_ENTRIES) {
