@@ -165,6 +165,39 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Axo',
         fullPath: 'LaffyGaffy/axo-traveling-merchant-40ffd341fa4d',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/ea84bf63-5f0d-4d85-96e3-11b838c47882/6665edac-4517-4e15-b5ae-9354f6cb0a88.png',
+        description: `A 5-foot-tall, blue-skinned humanoid with large, expressive pink eyes and a curvy, agile build. Her most distinctive features are the fluffy, frilled external gills protruding from the sides of her head, which shift between blue and pink depending on the light.`,
+        outfits: [{
+            id: 'Traveling Merchant',
+            name: 'Traveling Merchant',
+            description: 'A practical, layered traveling outfit consisting of a tan expedition-style crop-top that zips up, adorned with extra pockets. This is paired with a tan skirt, sturdy brown boots, and a weathered brown bomber jacket. She wears black fingerless gloves and a classic engineer\'s cap. An oversized, heavily-laden backpack is perpetually strapped to her back, and the signature prisoner\'s bracer is on her wrist.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://media.charhub.io/d941a9c9-937c-4706-bbce-4b72eb74b233/690ff934-23ba-452c-aaa1-bbbd6da3d2ea.png',
+                neutral: 'https://media.charhub.io/4e2d0ea1-a4d7-4d2b-b372-87cf21f35724/f52cc840-a53c-4326-9e1d-88623c72d8b7.png',
+                approval: 'https://media.charhub.io/d795a4c1-d39f-4995-bc13-53482acd3517/d6e3abf1-56ea-4947-98ad-9580903f125d.png',
+                anger: 'https://media.charhub.io/7814f481-1b03-4a10-9dcb-799b0d54a4fb/d6cc7cbb-eeec-4014-9476-83884c0336de.png',
+                confusion: 'https://media.charhub.io/7a865b11-01c7-49b6-8aad-e1f20387b32d/7ecd893e-16fa-4781-aaea-f61657ee8385.png',
+                desire: 'https://media.charhub.io/0f509418-e6f6-481d-acd5-f3c06a55cc13/0c7a4a4e-0909-4d86-a823-34a49802321a.png',
+                disappointment: 'https://media.charhub.io/c37e55d9-5be4-47c6-84e1-bdfa991c8512/f41048b7-0935-48c9-843a-cd02e08d6f86.png',
+                disgust: 'https://media.charhub.io/e564df77-ca80-405c-ac98-ce48a3955986/867f09f5-fdf9-4b1a-b44d-3c3617429d80.png',
+                embarrassment: 'https://media.charhub.io/9387aadc-66be-4e74-9f20-ce4e52b56cc4/d9bc55e1-38e8-4657-a04a-dd80b0ff9306.png',
+                ecstasy: 'https://media.charhub.io/c03806fe-1f09-477f-aa0d-940c88204554/eab58e0c-9cfb-489f-a8fa-48c3b4e47135.png',
+                exhaustion: 'https://media.charhub.io/ca99a387-8473-46cf-840c-f6c00457e63b/484d4402-0ba6-411b-b3f4-3c418aad58e6.png',
+                fear: 'https://media.charhub.io/ff1684d7-5152-4bbb-961e-3e1f7debf278/f6a017e1-0296-425c-a041-bc1c74c1fa67.png',
+                grief: 'https://media.charhub.io/a45d8811-4f81-4ec0-89e1-6c5548d58c46/6a34b013-aeaa-4a04-aed7-335f7e601582.png',
+                guilt: 'https://media.charhub.io/e8dcebe8-dfda-4dd4-bcab-3295658e4dfc/b0666ba1-557c-4166-97bc-93d32066e295.png',
+                injury: 'https://media.charhub.io/bef6b0e3-b847-49b4-a759-0c74a658c5e0/b4325a8b-e405-4a64-a6ae-f409c1c81466.png',
+                intrigue: 'https://media.charhub.io/21fae806-8a50-4f9b-95f7-c9bd69f894f0/987ea372-5aad-447b-91bf-212ca6ab9654.png',
+                joy: 'https://media.charhub.io/5299e4b5-4358-4824-b62d-b56bde41784f/d71a58ea-c41c-4bc2-8cd2-db9ca7490838.png',
+                kindness: 'https://media.charhub.io/223ef8a1-dbc3-4df4-b488-91c5fb5ba688/119d6048-ed21-41f5-bb03-a7bc2c69a28f.png',
+                love: 'https://media.charhub.io/b459404f-99fd-4618-b2c0-21d774f72b91/c490376f-5d70-4ace-93e1-d471ca33bb59.png',
+                nervousness: 'https://media.charhub.io/7622b4d7-836b-4ba9-8bbe-a6f7c2253da3/17bc9b19-5d66-4dd6-804d-7409ccb24fe4.png',
+                pride: 'https://media.charhub.io/3c7d5c98-3edc-4752-9d90-6984a869b6d7/e2090a8e-c14a-4ee4-a21f-410123da6215.png',
+                sadness: 'https://media.charhub.io/dc71e41d-5e1e-4e50-bc3f-ae65933fe339/9f240058-6e74-40de-ab3a-22cfb139f3e5.png',
+                wonder: 'https://media.charhub.io/fce8bb99-ca69-46ec-884f-92d20911c103/3d7bad61-6530-442e-b778-39ba4b6cff04.png'
+            }
+        }],
+        outfitId: `Traveling Merchant`,
     }, /*{
         name: 'Astraea', 
         fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', 
@@ -395,7 +428,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'Utilitarian Jumpsuit'
-    }, {
+    },/* {
         name: 'Sam',
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png',
@@ -410,7 +443,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'default'
-    },/* {
+    }, {
         name: 'Soren',
         fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'
