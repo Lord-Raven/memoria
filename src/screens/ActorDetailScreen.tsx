@@ -5,7 +5,7 @@ import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
 import { Actor, clampActorAffinity, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
 import { Emotion } from '../content/Emotion';
-import { Close, Save, Image as ImageIcon } from '@mui/icons-material';
+import { Close, Save, Image as ImageIcon, ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import { Button, Chip, GlassPanel, TextInput, Title } from './UiComponents';
 
 interface ActorDetailScreenProps {
@@ -494,9 +494,75 @@ ${indent}}`;
         });
     };
 
+    const handleDeleteEmotionImage = (emotion: Emotion) => {
+        if (!selectedOutfitId) {
+            stage().showPriorityMessage('Select an outfit before deleting emotion images.');
+            return;
+        }
+
+        if (!selectedOutfit?.emotionPack?.[emotion]) {
+            stage().showPriorityMessage(`No ${emotion} image to delete.`);
+            return;
+        }
+
+        setConfirmDialog({
+            open: true,
+            title: `Delete ${emotion} Image`,
+            message: `This will remove the ${emotion} image for ${selectedOutfit?.name || 'the selected outfit'}. Continue?`,
+            actions: [
+                {
+                    label: 'Delete Image',
+                    onClick: () => {
+                        setConfirmDialog((prev) => ({ ...prev, open: false }));
+                        const nextOutfits = editedOutfits.map((outfit) => (
+                            outfit.id === selectedOutfitId
+                                ? {
+                                    ...outfit,
+                                    prompts: { ...(outfit.prompts || {}) },
+                                    emotionPack: {
+                                        ...(outfit.emotionPack || {}),
+                                        [emotion]: '',
+                                    },
+                                }
+                                : outfit
+                        ));
+
+                        setEditedOutfits(nextOutfits);
+                        actor.outfits = nextOutfits.map((outfit) => ({
+                            ...outfit,
+                            prompts: { ...(outfit.prompts || {}) },
+                            emotionPack: { ...(outfit.emotionPack || {}) },
+                        }));
+                        stage().saveGame();
+                        forceUpdate({});
+                    },
+                    variant: 'primary',
+                },
+            ],
+        });
+    };
+
     // Get all emotions for the grid
     const allEmotions = Object.values(Emotion);
     const missingEmotionCount = allEmotions.filter((emotion) => !selectedOutfit?.emotionPack?.[emotion]).length;
+
+    const cycleDialogEmotion = (direction: -1 | 1) => {
+        const target = imageDialog.target;
+        if (!target || target === 'base' || allEmotions.length < 2) {
+            return;
+        }
+
+        const currentIndex = allEmotions.indexOf(target);
+        if (currentIndex < 0) {
+            return;
+        }
+
+        const nextIndex = (currentIndex + direction + allEmotions.length) % allEmotions.length;
+        const nextEmotion = allEmotions[nextIndex];
+        setImageDialog({ open: true, target: nextEmotion });
+        setEmotionPromptDraft(getEmotionPrompt(nextEmotion));
+        setIsImageDropActive(false);
+    };
 
     const handleFillMissingEmotionImages = async () => {
         if (!selectedOutfit || !selectedOutfitId) {
@@ -563,6 +629,8 @@ ${indent}}`;
     const isCurrentImageRegenerating = imageDialog.target ? regeneratingImages.has(imageDialog.target) : false;
     const imageTargetLabel = imageDialog.target || '';
     const imageTargetOutfitName = selectedOutfit?.name || 'Outfit';
+    const isDialogEmotionTarget = !!imageDialog.target && imageDialog.target !== 'base';
+    const dialogEmotionIndex = isDialogEmotionTarget ? allEmotions.indexOf(imageDialog.target as Emotion) : -1;
     const baseRegenOutfitOptions = editedOutfits.filter((outfit) => !!outfit.emotionPack?.base);
     const baseRegenOptions: Array<{ value: BaseRegenSource; label: string }> = [
         ...(actor.sampleImageUrl ? [{ value: 'original sample' as BaseRegenSource, label: 'Original Sample Image' }] : []),
@@ -1432,6 +1500,84 @@ ${indent}}`;
                                     overflow: 'hidden',
                                 }}
                             >
+                                {isDialogEmotionTarget && allEmotions.length > 1 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                cycleDialogEmotion(-1);
+                                            }}
+                                            style={{
+                                                position: 'absolute',
+                                                left: '10px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                width: '38px',
+                                                height: '38px',
+                                                borderRadius: '999px',
+                                                border: '1px solid rgba(0, 255, 136, 0.45)',
+                                                backgroundColor: 'rgba(0, 10, 20, 0.78)',
+                                                color: '#00ff88',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                zIndex: 3,
+                                            }}
+                                            aria-label="Previous emotion image"
+                                        >
+                                            <ArrowBackIosNew style={{ fontSize: '16px' }} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                cycleDialogEmotion(1);
+                                            }}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '10px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                width: '38px',
+                                                height: '38px',
+                                                borderRadius: '999px',
+                                                border: '1px solid rgba(0, 255, 136, 0.45)',
+                                                backgroundColor: 'rgba(0, 10, 20, 0.78)',
+                                                color: '#00ff88',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                zIndex: 3,
+                                            }}
+                                            aria-label="Next emotion image"
+                                        >
+                                            <ArrowForwardIos style={{ fontSize: '16px' }} />
+                                        </button>
+                                    </>
+                                )}
+
+                                {isDialogEmotionTarget && dialogEmotionIndex >= 0 && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: '10px',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        padding: '4px 10px',
+                                        borderRadius: '999px',
+                                        border: '1px solid rgba(0, 255, 136, 0.35)',
+                                        backgroundColor: 'rgba(0, 10, 20, 0.78)',
+                                        color: '#00ff88',
+                                        fontSize: '12px',
+                                        letterSpacing: '0.4px',
+                                        zIndex: 3,
+                                    }}>
+                                        {dialogEmotionIndex + 1} / {allEmotions.length}
+                                    </div>
+                                )}
+
                                 {!currentImageUrl && (
                                     <div style={{
                                         color: 'rgba(0, 255, 136, 0.5)',
@@ -1531,6 +1677,7 @@ ${indent}}`;
                                         onChange={(e) => setBaseRegenSource(e.target.value as BaseRegenSource)}
                                         style={{
                                             width: '100%',
+                                            boxSizing: 'border-box',
                                             padding: '12px',
                                             fontSize: '14px',
                                             backgroundColor: 'rgba(0, 20, 40, 0.6)',
@@ -1568,6 +1715,7 @@ ${indent}}`;
                                         placeholder="Describe the character's expression, gesture, or pose for this emotion; leave blank to have a prompt generated for you."
                                         style={{
                                             width: '100%',
+                                            boxSizing: 'border-box',
                                             minHeight: '120px',
                                             padding: '12px',
                                             fontSize: '13px',
@@ -1582,21 +1730,31 @@ ${indent}}`;
                                     />
                                 </div>
                             )}
-                            <Button
-                                onClick={async () => {
-                                    const target = imageDialog.target;
-                                    if (!target) return;
-                                    if (target === 'base') {
-                                        handleRegenerateBase(baseRegenSource);
-                                    } else {
-                                        handleRegenerateEmotion(target, emotionPromptDraft);
-                                    }
-                                }}
-                                disabled={!imageDialog.target || isCurrentImageRegenerating}
-                                style={{ alignSelf: 'flex-start' }}
-                            >
-                                {isCurrentImageRegenerating ? 'Generating...' : 'Regenerate Image'}
-                            </Button>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', alignSelf: 'flex-start' }}>
+                                <Button
+                                    onClick={async () => {
+                                        const target = imageDialog.target;
+                                        if (!target) return;
+                                        if (target === 'base') {
+                                            handleRegenerateBase(baseRegenSource);
+                                        } else {
+                                            handleRegenerateEmotion(target, emotionPromptDraft);
+                                        }
+                                    }}
+                                    disabled={!imageDialog.target || isCurrentImageRegenerating}
+                                >
+                                    {isCurrentImageRegenerating ? 'Generating...' : 'Regenerate Image'}
+                                </Button>
+                                {imageDialog.target && imageDialog.target !== 'base' && (
+                                    <Button
+                                        onClick={() => handleDeleteEmotionImage(imageDialog.target as Emotion)}
+                                        disabled={!currentImageUrl || isCurrentImageRegenerating || isUploadingImage}
+                                        variant="secondary"
+                                    >
+                                        Delete Image
+                                    </Button>
+                                )}
+                            </div>
                             <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button onClick={handleCloseImageDialog} variant="secondary">
                                     Close

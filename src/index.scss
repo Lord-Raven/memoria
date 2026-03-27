@@ -364,12 +364,8 @@ select.input-base optgroup {
 
 .gear-slider-fidget {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
   width: var(--gsf-rack-window-width);
-  height: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5));
-  padding-top: calc(var(--gsf-gear-size) + (var(--gsf-rack-height) * 0.5) - var(--gsf-rack-window-height));
+  height: calc(var(--gsf-gear-size) + var(--gsf-rack-height));
   --gsf-gear-highlight: var(--mem-fog);
   --gsf-gear-mid: var(--mem-mist);
   --gsf-gear-shadow: var(--mem-lichen);
@@ -380,7 +376,11 @@ select.input-base optgroup {
 }
 
 .gear-slider-rack-window {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--gsf-rack-height) * 0.25);
+  margin: 0 auto;
   width: var(--gsf-rack-window-width);
   height: var(--gsf-rack-window-height);
   overflow: hidden;
@@ -526,7 +526,7 @@ select.input-base optgroup {
 
 .gear-slider-loading-icon {
   position: absolute;
-  top: calc(var(--gsf-gear-size) * 0.5);
+  top: calc((var(--gsf-rack-height) * 0.25) + (var(--gsf-gear-size) * 0.5));
   left: 50%;
   width: calc(var(--gsf-gear-size) * 0.5);
   height: calc(var(--gsf-gear-size) * 0.5);

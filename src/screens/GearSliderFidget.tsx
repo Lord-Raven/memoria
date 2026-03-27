@@ -372,7 +372,7 @@ export const GearSliderFidget: FC<GearSliderFidgetProps> = ({
                 animate={gearIdleControls}
                 style={{
                     position: 'absolute',
-                    top: 0,
+                    top: 'calc(var(--gsf-rack-height) * 0.25)',
                     left: `calc(50% - (${gearSize}px / 2))`,
                     width: `${gearSize}px`,
                     height: `${gearSize}px`,
