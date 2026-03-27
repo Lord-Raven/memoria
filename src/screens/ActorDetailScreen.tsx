@@ -1565,7 +1565,7 @@ ${indent}}`;
                                     <textarea
                                         value={emotionPromptDraft}
                                         onChange={(e) => setEmotionPromptDraft(e.target.value)}
-                                        placeholder="Give this character ..."
+                                        placeholder="Describe the character's expression, gesture, or pose for this emotion; leave blank to have a prompt generated for you."
                                         style={{
                                             width: '100%',
                                             minHeight: '120px',

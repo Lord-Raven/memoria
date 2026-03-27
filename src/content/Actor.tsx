@@ -159,6 +159,10 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'default',
+    }, {
+        name: 'Axo',
+        fullPath: 'LaffyGaffy/axo-traveling-merchant-40ffd341fa4d',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/ea84bf63-5f0d-4d85-96e3-11b838c47882/6665edac-4517-4e15-b5ae-9354f6cb0a88.png',
     }, /*{
         name: 'Astraea', 
         fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', 
@@ -192,18 +196,37 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png',
         outfits: [{
-            id: 'default',
-            name: `Healer's Gear`,
-            description: '',
+            id: 'Healer\'s Gear',
+            name: 'Healer\'s Gear',
+            description: 'Lumi wears large tortoiseshell glasses and practical healer\'s gear: a cream button-up blouse, fitted dark canvas pants, and pack of supplies strapped to her back. She has dark leather gloves and additional pouches strapped to her belt.',
             prompts: {},
             emotionPack: {
-                base: 'https://media.charhub.io/34cef282-aab0-44fd-8d6b-4bf9387174e3/7d419bbe-4ea8-4f06-8a88-613c465d645c.png',
-                neutral: 'https://media.charhub.io/19adc43a-f997-4548-ba80-6e0dbf092898/2bd068ac-eb68-4c21-86af-2c3e55fef34b.png',
-                joy: 'https://media.charhub.io/30bef416-1660-462d-bc20-cb41ee54ddaf/5746d179-db11-4399-a9e0-afe19d84db0b.png',
-                desire: 'https://media.charhub.io/2720745c-0430-4850-bc98-59b88af94b43/62efc531-2ea0-44f4-b8b9-3b40221b2013.png',
+                base: 'https://media.charhub.io/c782b467-3996-4f7a-a5bc-760305cdaba0/81d6247d-f292-432b-b483-f4a84196754a.png',
+                neutral: 'https://media.charhub.io/b3ee1b3f-b565-49fc-a389-dc157cb30009/43d27ad4-ebd2-4267-8848-3f0669879f1f.png',
+                approval: 'https://media.charhub.io/1324d90b-9ccf-4f60-8ecf-6a944d8bebf8/5b277466-5c65-493e-918a-bca378196368.png',
+                anger: 'https://media.charhub.io/45327c9b-bd17-49a9-bc7a-9a5b8d7479de/db2970e3-a300-44b6-9cab-e5c016eaca89.png',
+                confusion: 'https://media.charhub.io/217ed2f9-4e71-48cb-bbda-e390c1d3d029/1854c292-1dba-4f2c-8e53-9e00231037cc.png',
+                desire: 'https://media.charhub.io/10b518d0-61f6-41da-a1d5-cf9d6cf5206a/914e5c7f-9449-456e-b7c2-7cc8ac2fc0f1.png',
+                disappointment: 'https://media.charhub.io/d5c2227a-132c-49ce-93e5-62295c7205b2/23a209dd-1e08-4709-a0a9-5ed43b90fcf2.png',
+                disgust: 'https://media.charhub.io/92c37685-4d78-42e4-897c-a254de5d93d7/d3dc2055-f162-48ac-8519-0b1dcca96efd.png',
+                embarrassment: 'https://media.charhub.io/87bd5a24-dd6f-4ed1-8d5c-fdfe5c19a9d0/9b5ee495-c0a7-41ef-85af-c98a4de190a1.png',
+                ecstasy: 'https://media.charhub.io/2942dc9a-40e3-43fd-8040-967f84e337e3/5f31d27b-371e-4fc9-b919-23ed7146b46a.png',
+                exhaustion: 'https://media.charhub.io/62c0cc71-3457-47ec-86b3-15458e2cd3ed/b97c39da-6bb5-4a0a-ba58-c4f2af7a3763.png',
+                fear: 'https://media.charhub.io/53bda33a-b805-45bd-a6b3-bed00491a377/01afe565-de51-4314-b709-c2fcf56fcda9.png',
+                grief: 'https://media.charhub.io/1933b4d1-56e6-4abf-98b2-fdca03bfe45c/b2537dc6-fd27-41ba-938d-08b5f0cc48db.png',
+                guilt: 'https://media.charhub.io/338c58b5-e91b-4c03-8762-06ba026f4b9d/a1a515da-f4d0-4bdd-a1fc-47776c2282b7.png',
+                injury: 'https://media.charhub.io/650d2ba7-ae3f-45ad-878a-98e14afa8337/fee4ff99-5cda-4dae-988d-8bdb0f30af4b.png',
+                intrigue: 'https://media.charhub.io/bddebeb4-e068-426e-9430-adc65e05beee/e59c0f61-271d-4393-8edc-2a7be038e8a6.png',
+                joy: 'https://media.charhub.io/51a96d7f-8287-4005-894a-8bd0bb7e8689/cdb5e211-53fe-4896-bdf7-ec29afd9bc0e.png',
+                kindness: 'https://media.charhub.io/6615ab7c-af47-48f8-916f-309b222db3a6/3bc89a4c-3b7a-416b-8dd0-0e6af146ee8b.png',
+                love: 'https://media.charhub.io/8ee80890-143b-4a76-a891-3cc6619a598c/f0bc7a68-28d5-4ae1-bcbd-f8075067b22b.png',
+                nervousness: 'https://media.charhub.io/f63e9e0f-cc9f-41cb-9412-f12e6bda1348/36d48a16-226f-4116-b653-9d067109bf0c.png',
+                pride: 'https://media.charhub.io/303f947d-f65a-4431-a892-4b47b88ef0dc/4384b8a9-ac07-423f-ba1a-6453564853a7.png',
+                sadness: 'https://media.charhub.io/64342aea-84ba-4235-937e-89374c7cc65d/acd486ac-d03b-4ed4-b3c5-2e9013e85b42.png',
+                wonder: 'https://media.charhub.io/0eabb19e-d231-4abc-bb19-d6a2266a94bc/953d0807-4c33-4325-8f16-f6466913dda6.png'
             }
         }],
-        outfitId: 'default',
+        outfitId: 'Healer\'s Gear',
     }, {
         name: 'Lyra', 
         fullPath: 'Birb_Brain/lyra-scavenger-stray-survivor-fa0621f65589', 
@@ -334,7 +357,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Soren',
         fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'
-    }, {
+    },*/ {
+        name: 'Tawamure Rei',
+        fullPath: 'Aremmm/tawamure-rei-198f3ef9daf6',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/380138d4-d341-4f97-934d-a846c004c179/85127082-bcd5-4feb-99a6-4f7a73cb89d1.png',
+    },/* {
         name: 'Thessaly',
         fullPath: 'Forgotten_Stories/thessaly-the-unbidden-8c09bb62bf58',
         sampleImageUrl: ''
