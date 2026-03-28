@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
-import { Actor, clampActorAffinity, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
+import { Actor, ActorState, clampActorAffinity, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
 import { Emotion } from '../content/Emotion';
 import { Close, Save, Image as ImageIcon, ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import { Button, Chip, GlassPanel, TextInput, Title } from './UiComponents';
@@ -44,8 +44,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: string;
         description: string;
         profile: string;
-        characterArc: string;
         affinity: number;
+        state: ActorState;
         voiceId: string;
         themeColor: string;
         themeFontFamily: string;
@@ -53,8 +53,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: actor.name,
         description: actor.description || '',
         profile: getActorProfile(actor.id, stage()),
-        characterArc: actor.characterArc || '',
         affinity: clampActorAffinity(actor.affinity),
+        state: actor.state || ActorState.AVAILABLE,
         voiceId: actor.voiceId,
         themeColor: actor.themeColor,
         themeFontFamily: actor.themeFontFamily,
@@ -133,8 +133,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         actor.name = editedActor.name;
         actor.description = editedActor.description;
         updateActorProfile(actor.id, editedActor.profile, stage());
-        actor.characterArc = editedActor.characterArc;
         actor.affinity = clampActorAffinity(editedActor.affinity);
+        actor.state = editedActor.state;
         actor.voiceId = editedActor.voiceId;
         actor.themeColor = editedActor.themeColor;
         actor.themeFontFamily = editedActor.themeFontFamily;
@@ -807,6 +807,41 @@ ${indent}}`;
                                     </div>
 
                                     <div>
+                                        <label
+                                            style={{
+                                                display: 'block',
+                                                color: '#00ff88',
+                                                fontSize: '14px',
+                                                fontWeight: 'bold',
+                                                marginBottom: '8px',
+                                            }}
+                                        >
+                                            State
+                                        </label>
+                                        <select
+                                            value={editedActor.state}
+                                            onChange={(e) => handleInputChange('state', e.target.value as ActorState)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                fontSize: '14px',
+                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                borderRadius: '5px',
+                                                color: '#e0f0ff',
+                                                fontFamily: 'inherit',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {Object.values(ActorState).map((state) => (
+                                                <option key={state} value={state}>
+                                                    {state}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
                                         <label 
                                             style={{
                                                 display: 'block',
@@ -857,38 +892,6 @@ ${indent}}`;
                                             style={{
                                                 width: '100%',
                                                 minHeight: '100px',
-                                                padding: '12px',
-                                                fontSize: '14px',
-                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                border: '2px solid rgba(0, 255, 136, 0.3)',
-                                                borderRadius: '5px',
-                                                color: '#e0f0ff',
-                                                fontFamily: 'inherit',
-                                                resize: 'vertical',
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* Character Arc */}
-                                    <div>
-                                        <label 
-                                            style={{
-                                                display: 'block',
-                                                color: '#00ff88',
-                                                fontSize: '14px',
-                                                fontWeight: 'bold',
-                                                marginBottom: '8px',
-                                            }}
-                                        >
-                                            Character Arc
-                                        </label>
-                                        <textarea
-                                            value={editedActor.characterArc}
-                                            onChange={(e) => handleInputChange('characterArc', e.target.value)}
-                                            placeholder="Character arc over this narrative"
-                                            style={{
-                                                width: '100%',
-                                                minHeight: '80px',
                                                 padding: '12px',
                                                 fontSize: '14px',
                                                 backgroundColor: 'rgba(0, 20, 40, 0.6)',

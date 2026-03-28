@@ -1,7 +1,7 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, findBestNameMatch, SUPPORTED_CHARACTERS, loadSupportedActor } from "./content/Actor";
+import { Actor, ActorType, findBestNameMatch, SUPPORTED_CHARACTERS, loadSupportedActor, ActorState } from "./content/Actor";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -137,13 +137,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     id: this.primaryUser.anonymizedId,
                     name: playerData.name,
                     type: ActorType.PLAYER,
+                    state: ActorState.AVAILABLE,
                     description: '',
                     profile: playerData.personality,
                     sampleImageUrl: '', // Unneeded; the player is never seen.
                     outfits: [], // Ditto.
                     outfitId: '', // Ditto.
                     fullPath: '',
-                    characterArc: '',
                     affinity: 0,
                     themeColor: '',
                     themeFontFamily: '',
@@ -289,16 +289,20 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         );
     }
 
-    private getPrisonerActorsFromSave(save: SaveType): Actor[] {
-        return Object.values(save.actors || {}).filter(actor => actor.type === ActorType.PRISONER);
+    private getEligibleExpeditionActorsFromSave(save: SaveType): Actor[] {
+        return Object.values(save.actors || {}).filter(actor =>
+            actor.state === ActorState.AVAILABLE &&
+            actor.type !== ActorType.PLAYER &&
+            actor.type !== ActorType.WARDEN,
+        );
     }
 
     private rebuildExpeditionChoices(save: SaveType = this.getSave()): ExpeditionChoice[] {
         
         const discoveredOutsideLocations = this.getDiscoveredOutsideLocations(save);
-        const prisonerActors = this.getPrisonerActorsFromSave(save);
+        const eligibleActors = this.getEligibleExpeditionActorsFromSave(save);
 
-        if (discoveredOutsideLocations.length === 0 || prisonerActors.length === 0) {
+        if (discoveredOutsideLocations.length === 0 || eligibleActors.length === 0) {
             save.expeditionChoices = [];
             return save.expeditionChoices;
         }
@@ -308,11 +312,22 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             Math.min(3, discoveredOutsideLocations.length),
         );
 
+        const requiredPartnerCount = selectedLocations.length;
+        const partnerActors: Actor[] = [];
+        let actorPool = this.takeRandomDistinct(eligibleActors, eligibleActors.length);
+
+        while (partnerActors.length < requiredPartnerCount && actorPool.length > 0) {
+            partnerActors.push(actorPool.shift() as Actor);
+            if (actorPool.length === 0 && partnerActors.length < requiredPartnerCount) {
+                actorPool = this.takeRandomDistinct(eligibleActors, eligibleActors.length);
+            }
+        }
+
         save.expeditionChoices = selectedLocations.map((location, index) => ({
             id: generateUuid(),
             locationId: location.id,
             description: `Expedition to ${location.name}`,
-            partnerActorIds: [this.pickRandom(prisonerActors)?.id || ''].filter(id => id !== ''),
+            partnerActorIds: [partnerActors[index]?.id || ''].filter(id => id !== ''),
         }));
 
         this.saveGame(); // Save the rough expedition options.
@@ -321,7 +336,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.generator.textGen({
             prompt: generateContext(undefined, this, 5) +
                 `\n\nRepeat each of the following three expedition descriptions, but with revised, vivid and compelling one-line descriptions that briefly relate to ongoing plotlines or hint at an intriguing new angle:\n\n` +
-                save.expeditionChoices.map(choice => `${choice.id} - ${save.atlas[choice.locationId]?.name || 'unknown location'}: ${choice.description}`).join('\n'),
+                save.expeditionChoices.map(choice => `${choice.id} - ${save.atlas[choice.locationId]?.name || 'unknown location'} with ${choice.partnerActorIds.map(id => save.actors[id]?.name || 'unknown actor').join(', ')}: ${choice.description}`).join('\n'),
             min_tokens: 10,
             max_tokens: 500,
             include_history: true
@@ -372,7 +387,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             });
         } else {
             // if there's an expedition, the initial actors should be the partner IDs from the expedition:
-            const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && actor.type !== 'WARDEN');
+            const potentialInitialActors = this.getEligibleExpeditionActorsFromSave(save);
             const expedition = save.expeditionChoices?.find(choice => choice.locationId === selectedLocation.id);
             const initialActors = expedition ? expedition.partnerActorIds : [this.pickRandom(potentialInitialActors)?.id].filter(Boolean);
 

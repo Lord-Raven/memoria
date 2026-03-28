@@ -216,7 +216,7 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
             const otherOutfits = actor.outfits.filter(o => o.id !== currentOutfit?.id && o.emotionPack['neutral']);
             return `  ${actor.name}\n    Current Outfit (${currentOutfit.name}): ${currentOutfit.description}\n` +
                 (otherOutfits.length > 0 ? `    Other Outfits: ${otherOutfits.map(o => o.name).join(', ')}\n` : '') +
-                `    Profile: ${getActorProfile(actor.id, stage) || 'No profile available.'}\n    Character Arc: ${actor.characterArc}`}).join('\n')}` : '');
+                `    Profile: ${getActorProfile(actor.id, stage) || 'No profile available.'}`}).join('\n')}` : '');
 
 
 

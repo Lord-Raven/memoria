@@ -2,16 +2,20 @@ import { v4 as generateUuid } from 'uuid';
 import { Emotion, EMOTION_PROMPTS, EmotionPack, EmotionPromptMap } from './Emotion';
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
-import { createImageAssetUrlResolver } from './imageAssetUrl';
 import { createLoreEntry } from './Lore';
-
-const getBaseImage = createImageAssetUrlResolver('characters');
 
 export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
     WARDEN = 'WARDEN', // Cassiel, special role that needs to be treated distinctly
     PRISONER = 'PRISONER', // Most characters
+}
 
+export enum ActorState {
+    AVAILABLE = 'AVAILABLE', // Actor is available for interaction and can be included in skits
+    FORMA = 'FORMA', // Actor is currently in a forma and unavailable for SOCIAL interactions or as an expedition partner, but they can be encountered in skits in their forma state.
+    SHADE = 'SHADE', // Ill-defined at this time; unavailable for anything for now.
+    RECOVERING = 'RECOVERING', // Actor is recovering from an injury or trauma; unavailable for SOCIAL or EXPEDITION interactions, but could be added mid-skit, if the narrative calls for it.
+    TIMEOUT = 'TIMEOUT', // Actor has been placed in timeout by Cassiel; they are available for SOCIAL interactions, but they will not receive a bracer and are barred from EXPEDITION interactions.
 }
 
 // An outfit represents a set of clothing or physical transformation that can be applied to a specific actor; each outfit comes with a full set of emotions
@@ -26,6 +30,7 @@ export type Outfit = {
 export class Actor {
     id: string = ''; // UUID
     type: ActorType = ActorType.PRISONER; // Default to PRISONER
+    state: ActorState = ActorState.AVAILABLE; // Default to AVAILABLE
     name: string = ''; // Display name
     fullPath: string = ''; // Path to original character definition
     sampleImageUrl: string = ''; // Original reference image
@@ -36,7 +41,6 @@ export class Actor {
     themeColor: string = ''; // Theme color (hex code)
     themeFontFamily: string = ''; // Font family stack for CSS styling
     voiceId: string = ''; // Voice ID for TTS
-    characterArc: string = ''; // A character arc summary that is updated after skits, to better reflect changes or developments in the character's personality, motives, or relationships. This is used to inform future skits and interactions with this character, and can be referenced in the script prompts as well.
     affinity: number = 0; // Trust/reputation with the player, clamped between 0 and 10.
 
     static clampAffinity(value: number | undefined | null): number {
@@ -53,6 +57,7 @@ export class Actor {
         const actor = Object.create(Actor.prototype);
         Object.assign(actor, savedActor);
         actor.affinity = Actor.clampAffinity(actor.affinity);
+        actor.state = savedActor.state || ActorState.AVAILABLE;
         return actor;
     }
 
@@ -71,7 +76,6 @@ const DISTILLATION_KEY_MAP: { [key: string]: string } = {
     name: 'name',
     description: 'description',
     profile: 'profile',
-    motive: 'motive',
     voice: 'voice',
     color: 'color',
     font: 'font',
@@ -112,7 +116,6 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         }],
         outfitId: 'default',
         fullPath: '',
-        characterArc: '',
         themeColor: '#a6e683',
         themeFontFamily: 'Georgia, serif',
         voiceId: 'calm_female_20s'
@@ -211,7 +214,6 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', 
         description: `A tall, fine-boned woman with fair skin and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears her pale-blonde hair in a severe pixie cut with a thin braid over her shoulder.`,
         profile: 'Calm, controlled, and intellectually precise. She observes and analyzes before speaking in a measured, deliberate tone. Publicly, she is a composed reformist who values systems, efficiency, and moral clarity over sentiment or chaos.',
-        characterArc: 'To seize ideological leadership within Ardeia and shape its future direction. She accepts the system but believes it must aim higher than mere survival, and she intends to be the one to guide it there.',
         themeColor: '#2C3E50',
         themeFontFamily: '"Times New Roman", serif',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/4a2fa754-83d7-423b-af96-1154857d6872/c7a6af54-16ed-45db-bbd0-243867d111a3.png',
@@ -400,6 +402,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Reitia',
         fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png',
+        state: ActorState.FORMA,
         outfits: [{
             id: 'Utilitarian Jumpsuit',
             name: 'Utilitarian Jumpsuit',
@@ -587,8 +590,7 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             `DESCRIPTION: A vivid description of the character's core physical appearance: elements like gender, build, skin tone, eye color, hair color, ears, tails, or other distinguishing features.\n` +
             `OUTFIT DESCRIPTION: A detailed description of the character's current outfit, including style, colors, and any notable accessories or features.\n` +
             `OUTFIT NAME: A one- to two-word name for the character's current outfit that matches the description.\n` +
-            `PROFILE: A brief summary of the character's personality traits, mannerisms, and public persona. Focus on what others would notice immediately about them.\n` +
-            `MOTIVE: The character's hidden agenda, underlying emotional drive, or what they hope to achieve here. This may align with or differ from their profile. Keep it concise but revealing of their true intentions.\n` +
+            `PROFILE: A brief summary of the character's personality traits, mannerisms, history, and motives.\n` +
             `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
@@ -598,8 +600,7 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She rarely smiles, but when she does, it lights up her face.\n` +
             `OUTFIT DESCRIPTION: She wears a simple, utilitarian outfit made from durable materials in dark colors. Lots of pockets and zippers.\n` +
             `OUTFIT NAME: Adventurer's Gear\n` +
-            `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention.\n` +
-            `MOTIVE: Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
+            `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention. Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
             `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
             `COLOR: #666666\n` +
             `FONT: Calibri, sans-serif\n` +
@@ -640,7 +641,6 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
     // Fill in actor, but favor any current settings:
     actor.description = actor.description || parsedData['description'] || '';
     actor.profile = actor.profile || parsedData['profile'] || '';
-    actor.characterArc = actor.characterArc || parsedData['motive'] || '';
     actor.voiceId = actor.voiceId || parsedData['voice'] || '';
     actor.themeColor = actor.themeColor || themeColor;
     actor.themeFontFamily = actor.themeFontFamily || parsedData['font'] || 'Arial, sans-serif';
@@ -809,7 +809,7 @@ export async function generateBaseActorImage(
             console.log(`Generating new image for actor ${actor.name} from description`);
             // Use stage.makeImage to create a neutral expression based on the description
             imageUrl = await stage.makeImage({
-                prompt: `Illustrate this character in a rough, messy, anime-inspired concept-art style with thick brush strokes. ` +
+                prompt: `Illustrate this character in a rich, vibrant, anime-inspired concept-art style with thick brush strokes. ` +
                     `Core appearance: ${actor.description}\n` +
                     `Outfit: ${getOutfitById(actor, targetOutfitId).description}.\n` +
                     `Create a waist-up portrait of this character with a neutral expression and pose, placed on a light gray background.`,

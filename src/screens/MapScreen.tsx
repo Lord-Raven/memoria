@@ -4,7 +4,7 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { AutoStories, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send } from "@mui/icons-material";
+import { AutoStories, Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, ShieldOutlined, TravelExplore } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { ContentManagementScreen } from "./ContentManagementScreen";
@@ -127,6 +127,8 @@ const getLocationBorderStroke = (themeColor: string) => {
 	const normalizedThemeColor = asHexColor(themeColor) || "#d7be7a";
 	return colorWithAlpha(normalizedThemeColor, 0.86, "rgba(215, 190, 122, 0.86)");
 };
+
+const isArdeiaLocationId = (locationId: string) => locationId.startsWith("ardeia-");
 
 const getRadiusFromWeight = (baseRadiusVmin: number) => {
 	const normalizedBaseRadiusVmin = clamp(baseRadiusVmin, MIN_LOCATION_RADIUS_VMIN, MAX_LOCATION_RADIUS_VMIN);
@@ -339,6 +341,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		name: string;
 		isArdeia: boolean;
 		locationId: string;
+		expeditionPartnerName?: string;
+		expeditionDescription?: string;
 	} | null>(null);
 	const [mapMode, setMapMode] = useState<MapScreenMode>(stage().getCurrentSkit() ? 'skit' : 'management');
 	const [skitLocationId, setSkitLocationId] = useState<string | null>(null);
@@ -535,6 +539,27 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		}>;
 		return new Map(choices.map((choice) => [choice.locationId, choice]));
 	}, [expeditionChoiceSignature, stage]);
+
+	const getExpeditionPartnerName = useCallback((choice: { partnerActorIds: string[] } | undefined) => {
+		if (!choice?.partnerActorIds?.length) {
+			return "Unknown partner";
+		}
+
+		const partnerActor = stage().getSave().actors?.[choice.partnerActorIds[0]];
+		return partnerActor?.name?.trim() || "Unknown partner";
+	}, [stage]);
+
+	const isSelectableLocationId = useCallback((locationId: string) => {
+		if (mapMode !== 'management') {
+			return true;
+		}
+
+		if (isArdeiaLocationId(locationId)) {
+			return true;
+		}
+
+		return expeditionChoiceByLocationId.has(locationId);
+	}, [expeditionChoiceByLocationId, mapMode]);
 
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
@@ -768,12 +793,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		}
 
 		const expeditionChoice = expeditionChoiceByLocationId.get(hoveredPoint.id);
-		const tooltipMessage = expeditionChoice?.description?.trim() || hoveredPoint.name;
+		const tooltipIcon = expeditionChoice
+			? TravelExplore
+			: isArdeiaLocationId(hoveredPoint.id)
+				? ShieldOutlined
+				: Close;
+		const tooltipMessage = expeditionChoice
+			? `Expedition to ${hoveredPoint.name} with ${getExpeditionPartnerName(expeditionChoice)}`
+			: hoveredPoint.name;
 		const tooltipExpiryMs = expeditionChoice ? EXPEDITION_TOOLTIP_LIFESPAN_MS : undefined;
 
-		setTooltip(tooltipMessage, undefined, tooltipExpiryMs);
+		setTooltip(tooltipMessage, tooltipIcon, tooltipExpiryMs);
 		lastMapTooltipRef.current = tooltipMessage;
-	}, [hoveredCellId, targetPoints, expeditionChoiceByLocationId, setTooltip, clearTooltip]);
+	}, [hoveredCellId, targetPoints, expeditionChoiceByLocationId, getExpeditionPartnerName, setTooltip, clearTooltip]);
 
 	const pulsedPoints = useMemo(() => {
 		const timeSeconds = pulseClock / 1000;
@@ -913,10 +945,14 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		[fullScreenProgress, fullScreenTransitionCellId, targetPoints],
 	);
 
-	const getCellAtCoordinates = useCallback((x: number, y: number) => {
+	const getSelectableCellAtCoordinates = useCallback((x: number, y: number) => {
 		let hitCell: VoronoiCell | null = null;
 
 		for (const cell of voronoiCells) {
+			if (!isSelectableLocationId(cell.point.id)) {
+				continue;
+			}
+
 			if (isPointInsidePolygon(x, y, cell.polygon)) {
 				hitCell = cell;
 				break;
@@ -929,6 +965,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		let bestMatch: { cell: VoronoiCell; distanceSq: number } | null = null;
 		for (const cell of voronoiCells) {
+			if (!isSelectableLocationId(cell.point.id)) {
+				continue;
+			}
+
 			const dx = x - cell.point.x;
 			const dy = y - cell.point.y;
 			const distanceSq = dx * dx + dy * dy;
@@ -941,7 +981,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		}
 
 		return bestMatch?.cell ?? null;
-	}, [voronoiCells]);
+	}, [isSelectableLocationId, voronoiCells]);
 
 	const expeditionPortraitMarkers = useMemo(() => {
 		if (mapMode !== 'management') {
@@ -1030,18 +1070,23 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [expeditionChoiceSignature, mapMode, mapViewportSize.height, mapViewportSize.width, stage, targetRadiusById, voronoiCells]);
 
 	const selectMapLocation = useCallback((x: number, y: number) => {
-		const clickedCell = getCellAtCoordinates(x, y);
+		const clickedCell = getSelectableCellAtCoordinates(x, y);
 
 		if (clickedCell) {
 			const isArdeia = clickedCell.point.id.startsWith("ardeia-");
 			const locationName = targetPoints.find((p) => p.id === clickedCell!.point.id)?.name ?? clickedCell.point.id;
+			const expeditionChoice = expeditionChoiceByLocationId.get(clickedCell.point.id);
+			const expeditionPartnerName = !isArdeia ? getExpeditionPartnerName(expeditionChoice) : undefined;
+			const expeditionDescription = !isArdeia ? expeditionChoice?.description?.trim() : undefined;
 			setPendingLocation({
 				name: locationName,
 				isArdeia,
 				locationId: clickedCell.point.id,
+				expeditionPartnerName,
+				expeditionDescription,
 			});
 		}
-	}, [getCellAtCoordinates, targetPoints]);
+	}, [expeditionChoiceByLocationId, getExpeditionPartnerName, getSelectableCellAtCoordinates, targetPoints]);
 
 	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
 		if (hasFullScreenCell) {
@@ -1093,36 +1138,15 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const eventTarget = event.target as Element | null;
 		const targetCellId = eventTarget?.getAttribute("data-cell-id") ?? null;
 
-		if (targetCellId) {
+		if (targetCellId && isSelectableLocationId(targetCellId)) {
 			setHoveredCellId((current) => (current === targetCellId ? current : targetCellId));
 			return;
 		}
 
-		let hoveredCell: VoronoiCell | null = null;
-
-		for (const cell of voronoiCells) {
-			if (isPointInsidePolygon(x, y, cell.polygon)) {
-				hoveredCell = cell;
-				break;
-			}
-		}
+		const hoveredCell = getSelectableCellAtCoordinates(x, y);
 
 		if (!hoveredCell) {
-			let bestMatch: { id: string; distanceSq: number } | null = null;
-			for (const cell of voronoiCells) {
-				const dx = x - cell.point.x;
-				const dy = y - cell.point.y;
-				const distanceSq = dx * dx + dy * dy;
-				const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
-				if (distanceSq <= targetRadius * targetRadius) {
-					if (!bestMatch || distanceSq < bestMatch.distanceSq) {
-						bestMatch = { id: cell.point.id, distanceSq };
-					}
-				}
-			}
-
-			const nextHoveredCellId = bestMatch?.id ?? null;
-			setHoveredCellId((current) => (current === nextHoveredCellId ? current : nextHoveredCellId));
+			setHoveredCellId((current) => (current ? null : current));
 			return;
 		}
 
@@ -1141,6 +1165,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 	const handleCellPointerEnter = (cellId: string) => {
 		if (hasFullScreenCell && fullScreenTransitionCellId && fullScreenTransitionCellId !== cellId) {
+			return;
+		}
+
+		if (!isSelectableLocationId(cellId)) {
 			return;
 		}
 
@@ -1297,6 +1325,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							const isFullScreenPoint = fullScreenTransitionCellId === cell.point.id;
 							const isOutsideArdeia = !cell.point.id.startsWith("ardeia-");
 							const isExpeditionOption = expeditionChoiceByLocationId.has(cell.point.id);
+							const isSelectable = isSelectableLocationId(cell.point.id);
 							const backgroundDimOpacity = mapMode === 'management' && isOutsideArdeia && !isExpeditionOption
 								? UNAVAILABLE_EXPEDITION_DIM_OPACITY
 								: 0;
@@ -1315,7 +1344,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									onPointerEnter={handleCellPointerEnter}
 									onPointerLeave={handleMapPointerLeave}
 									opacity={cellOpacity}
-									isInteractive={!hasFullScreenCell || isFullScreenPoint}
+									isInteractive={isSelectable && (!hasFullScreenCell || isFullScreenPoint)}
 									lockBackgroundToTargetRadius={!isFullScreenPoint}
 								/>
 							);
@@ -1537,7 +1566,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						pendingLocation
 							? pendingLocation.isArdeia
 								? `Visit ${pendingLocation.name}?`
-								: `Journey to ${pendingLocation.name}?`
+								: pendingLocation.expeditionDescription ||
+									`Expedition to ${pendingLocation.name} with ${pendingLocation.expeditionPartnerName || "Unknown partner"}?`
 							: ""
 					}
 					message=""
