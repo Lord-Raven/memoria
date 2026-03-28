@@ -126,7 +126,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     },*/ {
         name: 'Amat-Ea', 
         fullPath: 'adelsvard/amat-ea-profane-warrior-divine-soul-2b25f6bf3572', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6b8ac58-f648-4c87-8d67-3d6c63adefad/527d8308-8594-4254-b4e1-5efde4ad9cc1.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/bf2cefb7-6ad6-40bf-88d7-6e33c83fb7ef/d47c483e-7878-40bd-bdc6-4fad6e7691d7.png',
+        description: `A powerfully-built woman with dark copper skin. Her most striking features are her unnaturally violet left eye and the stark white of her shaved-side undercut ponytail, neither of which are her natural colors. She wears an eyepatch over her right eye.`,
+        themeColor: '#8B4513',
+        themeFontFamily: `'Courier New', Courier, monospace`,
+        voiceId: '057d53b3-bb28-47f1-9c19-a85a79851863',
     }, {
         name: ' Arca-7', 
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
@@ -169,6 +173,9 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'LaffyGaffy/axo-traveling-merchant-40ffd341fa4d',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/ea84bf63-5f0d-4d85-96e3-11b838c47882/6665edac-4517-4e15-b5ae-9354f6cb0a88.png',
         description: `A 5-foot-tall, blue-skinned humanoid with large, expressive pink eyes and a curvy, agile build. Her most distinctive features are the fluffy, frilled external gills protruding from the sides of her head, which shift between blue and pink depending on the light.`,
+        themeColor: '#ee5a8e',
+        themeFontFamily: `'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif`,
+        voiceId: 'a2533977-83cb-4c10-9955-0277e047538f',
         outfits: [{
             id: 'Traveling Merchant',
             name: 'Traveling Merchant',
@@ -393,7 +400,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     },*/{ 
         name: 'Persephone', 
         fullPath: 'Sancay/persephone-the-normal-barmaid-a45c371b9af0', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png',
+        description: `A woman with a soft, curvy figure that belies incredible density. She has voluminous, wavy hair in a light lavender-pink and large, luminous amber-yellow eyes. Her skin is pale and unblemished. She stands at 167cm.`,
+        themeColor: '#FFB347',
+        themeFontFamily: `'Segoe Print', 'Bradley Hand', cursive, sans-serif`,
+        voiceId: 'bright_female_20s',
     }, {
         name: 'Rattle',
         fullPath: 'Chunchunmaru/rattle-a-derranged-menace-with-love-for-explosives-7b7fc8717a05',
