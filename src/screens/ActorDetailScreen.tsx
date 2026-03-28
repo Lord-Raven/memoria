@@ -91,6 +91,12 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     }>({ open: false, title: '', message: '' });
     const initialOutfitsRef = useRef<Outfit[]>(getClonedOutfits());
 
+    const cloneOutfits = (outfits: Outfit[]) => outfits.map((outfit) => ({
+        ...outfit,
+        prompts: { ...(outfit.prompts || {}) },
+        emotionPack: { ...(outfit.emotionPack || {}) },
+    }));
+
     useEffect(() => {
         actor.outfits = editedOutfits;
     }, [actor, editedOutfits]);
@@ -99,11 +105,34 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     const getSelectedOutfitImageUrl = (emotion: Emotion | 'base'): string => selectedOutfit?.emotionPack?.[emotion] || '';
 
     const syncEditedOutfitsFromActor = () => {
-        setEditedOutfits(actor.outfits.map((outfit) => ({
-            ...outfit,
-            prompts: { ...(outfit.prompts || {}) },
-            emotionPack: { ...(outfit.emotionPack || {}) },
-        })));
+        setEditedOutfits(cloneOutfits(actor.outfits));
+    };
+
+    const replaceOutfits = (nextOutfits: Outfit[]) => {
+        setEditedOutfits(nextOutfits);
+        actor.outfits = cloneOutfits(nextOutfits);
+    };
+
+    const updateEmotionPrompt = (emotion: Emotion, prompt: string): string => {
+        if (!selectedOutfitId) {
+            return prompt.trim();
+        }
+
+        const trimmedPrompt = prompt.trim();
+        const nextOutfits = editedOutfits.map((outfit) => (
+            outfit.id === selectedOutfitId
+                ? {
+                    ...outfit,
+                    prompts: {
+                        ...(outfit.prompts || {}),
+                        [emotion]: trimmedPrompt,
+                    },
+                }
+                : outfit
+        ));
+
+        replaceOutfits(nextOutfits);
+        return trimmedPrompt;
     };
 
     const handleCloseDetail = () => {
@@ -346,25 +375,18 @@ ${indent}}`;
             }
         }
 
-        const nextOutfits = editedOutfits.map((outfit) => (
-            outfit.id === selectedOutfitId
-                ? {
-                    ...outfit,
-                    prompts: {
-                        ...(outfit.prompts || {}),
-                        [emotion]: trimmedPrompt,
-                    },
-                }
-                : outfit
-        ));
-        setEditedOutfits(nextOutfits);
-        actor.outfits = nextOutfits.map((outfit) => ({
-            ...outfit,
-            prompts: { ...(outfit.prompts || {}) },
-            emotionPack: { ...(outfit.emotionPack || {}) },
-        }));
+        updateEmotionPrompt(emotion, trimmedPrompt);
         stage().saveGame();
         return true;
+    };
+
+    const handleEmotionPromptDraftChange = (value: string) => {
+        setEmotionPromptDraft(value);
+
+        const target = imageDialog.target;
+        if (target && target !== 'base') {
+            updateEmotionPrompt(target, value);
+        }
     };
 
     const handleOpenImageDialog = (target: ImageTarget) => {
@@ -1714,7 +1736,7 @@ ${indent}}`;
                                     </label>
                                     <textarea
                                         value={emotionPromptDraft}
-                                        onChange={(e) => setEmotionPromptDraft(e.target.value)}
+                                        onChange={(e) => handleEmotionPromptDraftChange(e.target.value)}
                                         placeholder="Describe the character's expression, gesture, or pose for this emotion; leave blank to have a prompt generated for you."
                                         style={{
                                             width: '100%',
