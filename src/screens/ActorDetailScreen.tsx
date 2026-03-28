@@ -130,6 +130,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
                 }
                 : outfit
         ));
+        console.log('Should have saved');
 
         replaceOutfits(nextOutfits);
         return trimmedPrompt;
@@ -385,6 +386,7 @@ ${indent}}`;
 
         const target = imageDialog.target;
         if (target && target !== 'base') {
+            console.log('Should be updating prompt to ' + value);
             updateEmotionPrompt(target, value);
         }
     };
