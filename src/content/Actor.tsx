@@ -8,6 +8,7 @@ export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
     WARDEN = 'WARDEN', // Cassiel, special role that needs to be treated distinctly
     PRISONER = 'PRISONER', // Most characters
+    ITEM = 'ITEM', // Some "characters" are souls trapped in items
 }
 
 export enum ActorState {
@@ -119,11 +120,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#a6e683',
         themeFontFamily: 'Georgia, serif',
         voiceId: 'calm_female_20s'
-    }, /*{
+    }, {
         name: 'Aeriya', 
-        fullPath: 'SilverFlame/aeriya-361950a8a9ba', 
+        fullPath: 'SilverFlame/aeriya-small-charms-quiet-instinct-6994d84502bc', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8118f416-076c-46c0-b6ec-cd162b928e21/58f1442e-3c03-4740-b138-6c100bcc20bf.png'
-    },*/ {
+    }, {
         name: 'Amat-Ea', 
         fullPath: 'adelsvard/amat-ea-profane-warrior-divine-soul-2b25f6bf3572', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/bf2cefb7-6ad6-40bf-88d7-6e33c83fb7ef/d47c483e-7878-40bd-bdc6-4fad6e7691d7.png',
@@ -131,6 +132,38 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#8B4513',
         themeFontFamily: `'Courier New', Courier, monospace`,
         voiceId: '057d53b3-bb28-47f1-9c19-a85a79851863',
+        outfits: [{
+            id: 'Worn Warrior',
+            name: 'Worn Warrior',
+            description: 'She wears a set of rough but meticulously maintained expeditionary gear: heavy-duty violet and white pants, a battered breastplate, and a tattered violet cape, all showing signs of extreme wear and tear. She wears a heavy bracer on her wrist.',
+            prompts: {},
+            emotionPack: {
+                joy: 'https://media.charhub.io/ae9cc1d0-275c-4df3-9303-141975b165a6/ba0068d8-85b2-43a6-b1da-3821297fb111.png',
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/4f2c521a-f0e3-4111-a237-448727267f03.png',
+                fear: 'https://media.charhub.io/2981f9ed-fa5f-474f-939a-d99687db3468/ca69f5bc-44a7-4fc1-8846-7e11773568b0.png',
+                love: 'https://media.charhub.io/c72fae92-c056-44fb-9d8b-5921b75a7f7a/f6a37f1a-1332-4684-9ee9-93b0bf147d4b.png',
+                anger: 'https://media.charhub.io/4682e8cd-0cef-4c12-9611-f5cf70a95d93/46987184-4196-487d-a3bc-1fda379bd92c.png',
+                grief: 'https://media.charhub.io/94bcfaab-d3f6-4b14-9403-1b176e23f0eb/17168eac-5db1-42d2-9729-9da81292a2c4.png',
+                guilt: 'https://media.charhub.io/ea9ea58a-f646-4aaa-b4b2-8f16f5918e6a/2ee274ea-cfed-4835-8995-ff3f5bd3dab6.png',
+                pride: 'https://media.charhub.io/dc92ed81-043e-40fe-b8e1-210afb23cfd7/ac742566-c4ae-4398-9dae-2c4fec05b008.png',
+                desire: 'https://media.charhub.io/0af39cc4-f703-46a6-830b-6834e54a0b51/1ba46272-d0b2-4bd0-a43d-eb4eff28719b.png',
+                injury: 'https://media.charhub.io/2d5fa4b1-71c9-4904-b638-796a9caf8466/17e0e899-3a46-47bc-9e42-322e18212b2b.png',
+                wonder: 'https://media.charhub.io/8b03a7b6-8ffe-46f2-935f-67f9679dacba/ba978145-cf92-46a6-97b6-5cfb0837ba2a.png',
+                disgust: 'https://media.charhub.io/94b40aec-e914-4321-9005-47217afbb528/65f67888-d2e7-4f1c-807a-2266a7491b78.png',
+                ecstasy: 'https://media.charhub.io/ddf64d72-acaf-4cf0-99fa-bd06a0b94e9e/85eb6ea9-1f2f-4fc4-9794-aa04dc42fb75.png',
+                neutral: 'https://media.charhub.io/dcf2abbb-c1b0-48ce-8082-b01d55026987/432db147-d2a2-4e3a-ae09-aa7a92d0047f.png',
+                sadness: 'https://media.charhub.io/2160631d-eb73-4622-8f55-5ea5ef036c97/08063c27-50c0-4cc2-b727-ce7e78e62048.png',
+                approval: 'https://media.charhub.io/2c6404a4-aac1-46c6-af13-d46a4ef1a5b0/b29e0470-035d-4aec-af47-29de7a3d3fb3.png',
+                intrigue: 'https://media.charhub.io/1b96a74d-8d84-4666-92c8-ee8960c81479/25f39f14-ec68-41ef-b32f-db1a0409a4af.png',
+                kindness: 'https://media.charhub.io/20264d0d-7bb1-4f18-a21b-302e9bf0d4a5/2ef5fc84-041a-438b-a730-e6b3ad56ebb7.png',
+                confusion: 'https://media.charhub.io/5e22d476-5bb4-45b9-a118-a3b06ac09610/665e17fd-82aa-4b8e-bb41-03d4eb9f8f96.png',
+                exhaustion: 'https://media.charhub.io/569b2dab-b4cf-4577-af98-b88047562479/c846a228-5d00-42bc-8cef-33098bd1267d.png',
+                nervousness: 'https://media.charhub.io/339d4a97-a816-46c7-84e7-fe8dc060bbb9/17ac9818-4f9a-4548-a098-66ff7c30aa75.png',
+                embarrassment: 'https://media.charhub.io/54b2a2e2-42ff-4756-86f2-7f862a359bbd/bc1a8899-5bbf-4791-a4b3-0b8727c9161e.png',
+                disappointment: 'https://media.charhub.io/fc82486c-4e59-4849-a779-df7192685a00/971e297c-8069-43bf-8088-19107013c05c.png'
+            }
+        }],
+        outfitId: 'Worn Warrior',
     }, {
         name: ' Arca-7', 
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
@@ -208,11 +241,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: `Traveling Merchant`,
-    }, /*{
-        name: 'Astraea', 
-        fullPath: 'SteakedGamer/astraea-1e7f9aeca6e1', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'
     }, {
+        name: 'Astraea', 
+        fullPath: 'SteakedGamer/astraea-the-caged-wolf-a5473fd9c150', 
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'
+    }, /*{
         name: 'Caedmon', 
         fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6a6deed-e2e1-47a8-a4f6-439a6b011749/d0292798-e93f-4824-87c3-4d5205d99afa.png'
@@ -344,19 +377,19 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'Deceptive Scholar'
-    }, /*{ 
+    }, { 
         name: 'Mel', 
-        fullPath: 'ashen1n/melina-mel-argyra-68a8d1c1c55a', 
+        fullPath: 'ashen1n/mel-your-kuudere-duo-773487aac133', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a02ae02e-b798-4ef5-bd6f-2f26c47593e4/16d1ad89-ae10-43c0-bc16-eaed773849ce.png'
     }, {
         name: 'Millia', 
-        fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2', 
+        fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png'
     }, {
         name: 'Milliette',
-        fullPath: 'Not_Lex/millia-milliette-test-af10f9b806b2',
+        fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png'
-    },*/ {
+    }, {
         name: 'Mira', 
         description: `A 5'3" rat-girl with a slender, toned build, chin-length brown hair, and expressive amber eyes. She has a pair of fuzzy rat ears atop her head and a long, prehensile rat tail tipped with a mechanical drill. Her left arm is missing from the elbow down, replaced by a custom-made mechanical prosthetic.`,
         fullPath: 'Derpnomicon/mira-the-tomboy-mechanic-c77eb7d4c86e', 
@@ -405,6 +438,38 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#FFB347',
         themeFontFamily: `'Segoe Print', 'Bradley Hand', cursive, sans-serif`,
         voiceId: 'bright_female_20s',
+        outfits: [{
+            id: 'Barmaid\'s Garb',
+            name: 'Barmaid\'s Garb',
+            description: 'A rustic, cozy ensemble of a soft white peasant blouse under a sturdy brown leather corset-dress. A practical apron with pockets is tied over it, completing her warm, tavern-keep look.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://media.charhub.io/28d0db70-3ee2-4ca9-a72a-e3ed0cbecc1a/ab593aa0-02dc-4d9d-9cb4-c451d5bebde9.png',
+                neutral: 'https://media.charhub.io/01d69a9a-51a6-4a35-8112-06dec1cefaa5/ec9658c7-bdd8-442b-a4b9-b4fe7e0d317e.png',
+                approval: 'https://media.charhub.io/21d18968-d3e0-4b23-bf79-f8231d83ed06/fd812d4a-b9b4-4d3e-9240-e3d4446869cf.png',
+                anger: 'https://media.charhub.io/00680381-687e-4457-8520-57048fd9820e/6d5cddf5-9200-4001-98ae-24870adc01b6.png',
+                confusion: 'https://media.charhub.io/f60d65bf-d13c-494b-b75b-e9dee95c9437/a38bf836-e2ea-4d9e-bec1-2c222f058d13.png',
+                desire: 'https://media.charhub.io/654e62d9-68de-4070-a8aa-faaab44c9dc2/996baf88-7c26-4637-9813-6012402ec1fb.png',
+                disappointment: 'https://media.charhub.io/95a2a1c1-a0dd-4bd8-8122-7ed2060f099d/39e530cb-8bb2-46fd-b523-02a0311b8fe0.png',
+                disgust: 'https://media.charhub.io/7b045eb4-4952-48db-ad03-a1a3ce0d001d/c1a28007-d20d-40ba-8bfd-ccaa303fc704.png',
+                embarrassment: 'https://media.charhub.io/8aaf99bf-1f28-4799-9dac-0e62147a50b5/f71a03a8-15e7-4599-8591-590d7d63f97b.png',
+                ecstasy: 'https://media.charhub.io/d0790912-8628-480c-bec9-14cf0841e176/0a96fbdd-e136-468d-b83c-727e6b855b82.png',
+                exhaustion: 'https://media.charhub.io/2823a41a-fe89-46e4-9f27-463133d64459/b030c67f-9cab-436b-bb05-e36b9d077e46.png',
+                fear: 'https://media.charhub.io/b08147c0-86bb-4770-bafa-b81037a352fb/08cbcb2b-2ac8-4d20-bb47-68070361c5c5.png',
+                grief: 'https://media.charhub.io/e676806f-fa1d-4184-95f0-d507573bcad3/4fb27a40-2a7a-48c9-9589-9f90236fbdb5.png',
+                guilt: 'https://media.charhub.io/f3b6e53a-642f-4b33-b7ac-69e1517543c9/31f3b2b4-68fb-4345-8235-83df4b54a3cd.png',
+                injury: 'https://media.charhub.io/20a10626-33c4-468a-a36d-7b0e636c976a/17b4e186-097b-4eeb-9b60-e6d59300b33f.png',
+                intrigue: 'https://media.charhub.io/5628479f-983f-4e9a-bbcf-2bd57d2f9192/e3bd2e7e-b202-4805-a0e5-0520620b71c9.png',
+                joy: 'https://media.charhub.io/9a70db1a-68f0-4691-a16b-aea3fc355092/53a00323-54fa-46fe-ab65-88e2143dc474.png',
+                kindness: 'https://media.charhub.io/7e6986d8-b7e2-4e52-bee4-7a7d2d095c0a/778dc8f8-8713-4ab1-8547-f19c7dca6629.png',
+                love: 'https://media.charhub.io/317886a7-6877-4ccd-8d86-97016bff2232/0b84684c-9532-4893-9d76-3052b779159c.png',
+                nervousness: 'https://media.charhub.io/5c1f2616-31de-48ad-98d8-fd924a7f0469/09825f5c-cf21-4b6c-a014-c29ba75b8934.png',
+                pride: 'https://media.charhub.io/f1b232d9-ed6a-405e-83eb-d51306c1825d/7656fef6-8398-4124-8ef9-88cf4fbaa042.png',
+                sadness: 'https://media.charhub.io/9659ad0a-621c-455d-b69e-9f6f5cd3c6ef/e55e041c-7153-418b-8dd5-3d16c83285e1.png',
+                wonder: 'https://media.charhub.io/da90cca8-0933-43a5-99dc-09ee9ce72475/5717dc25-1dd3-4a4c-b973-2af185e340db.png'
+            }
+        }],
+        outfitId: 'Barmaid\'s Garb',
     }, {
         name: 'Rattle',
         fullPath: 'Chunchunmaru/rattle-a-derranged-menace-with-love-for-explosives-7b7fc8717a05',
@@ -446,10 +511,11 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'Utilitarian Jumpsuit'
-    },/* {
+    }, {
         name: 'Sam',
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png',
+        type: ActorType.ITEM,
         outfits: [{
             id: 'default',
             name: 'Scythe Form',
@@ -461,7 +527,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'default'
-    }, {
+    },/* {
         name: 'Soren',
         fullPath: 'Ruranel/soren-rokhe-d7bcedc04e37',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a772b885-a21f-4d65-80dd-c164e4a163e1/f342e5bb-a80c-4e20-9fdd-0753bf07d7e7.png'

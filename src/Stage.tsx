@@ -292,8 +292,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     private getEligibleExpeditionActorsFromSave(save: SaveType): Actor[] {
         return Object.values(save.actors || {}).filter(actor =>
             actor.state === ActorState.AVAILABLE &&
-            actor.type !== ActorType.PLAYER &&
-            actor.type !== ActorType.WARDEN,
+            actor.type == ActorType.PRISONER
         );
     }
 
