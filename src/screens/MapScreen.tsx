@@ -4,7 +4,7 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { AutoStories, Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, ShieldOutlined, TravelExplore } from "@mui/icons-material";
+import { AutoStories, Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, Home, TravelExplore } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { ContentManagementScreen } from "./ContentManagementScreen";
@@ -796,7 +796,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const tooltipIcon = expeditionChoice
 			? TravelExplore
 			: isArdeiaLocationId(hoveredPoint.id)
-				? ShieldOutlined
+				? Home
 				: Close;
 		const tooltipMessage = expeditionChoice
 			? `Expedition to ${hoveredPoint.name} with ${getExpeditionPartnerName(expeditionChoice)}`
@@ -983,6 +983,36 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		return bestMatch?.cell ?? null;
 	}, [isSelectableLocationId, voronoiCells]);
 
+	const getHoverableCellAtCoordinates = useCallback((x: number, y: number) => {
+		let hitCell: VoronoiCell | null = null;
+
+		for (const cell of voronoiCells) {
+			if (isPointInsidePolygon(x, y, cell.polygon)) {
+				hitCell = cell;
+				break;
+			}
+		}
+
+		if (hitCell) {
+			return hitCell;
+		}
+
+		let bestMatch: { cell: VoronoiCell; distanceSq: number } | null = null;
+		for (const cell of voronoiCells) {
+			const dx = x - cell.point.x;
+			const dy = y - cell.point.y;
+			const distanceSq = dx * dx + dy * dy;
+			const targetRadius = cell.point.radius + HOVER_TARGET_RADIUS_PAD;
+			if (distanceSq <= targetRadius * targetRadius) {
+				if (!bestMatch || distanceSq < bestMatch.distanceSq) {
+					bestMatch = { cell, distanceSq };
+				}
+			}
+		}
+
+		return bestMatch?.cell ?? null;
+	}, [voronoiCells]);
+
 	const expeditionPortraitMarkers = useMemo(() => {
 		if (mapMode !== 'management') {
 			return [] as Array<{
@@ -1001,7 +1031,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		const viewportScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
 		const viewportScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
-		const uniformPortraitScale = Math.min(viewportScaleX, viewportScaleY);
+		const portraitRadiusPx = 0.02 * Math.max(mapViewportSize.width, mapViewportSize.height);
+		const portraitRadiusMapX = portraitRadiusPx / viewportScaleX;
+		const portraitRadiusMapY = portraitRadiusPx / viewportScaleY;
 
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
@@ -1032,9 +1064,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 			const strokeWidth = 2.4 + emphasis * 0.6;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
-			const radius = clamp(Math.min(cell.bounds.width, cell.bounds.height) * 0.2, 14, 40);
-			const radiusX = radius;
-			const radiusY = radius;
+			const radius = portraitRadiusPx;
+			const radiusX = portraitRadiusMapX;
+			const radiusY = portraitRadiusMapY;
 			const portraitOnLeft = cell.point.x / MAP_WIDTH > 0.5;
 			const valueFunction = (vertex: number[]) => {
 				return portraitOnLeft ? (vertex[0] + vertex[1] * 0.0001) : -(vertex[0] - vertex[1] * 0.0001);
@@ -1143,7 +1175,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			return;
 		}
 
-		const hoveredCell = getSelectableCellAtCoordinates(x, y);
+		const hoveredCell = getHoverableCellAtCoordinates(x, y);
 
 		if (!hoveredCell) {
 			setHoveredCellId((current) => (current ? null : current));

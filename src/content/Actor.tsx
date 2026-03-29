@@ -248,7 +248,7 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, {
         name: 'Caedmon', 
         fullPath: 'Lellan/caedmon-the-brightwork-smith-4b8d931f2dad', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/06b08b78-3075-4686-9c11-e78fc01cebb9/4bea077d-6523-4e13-a818-f29381759c62.png'
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/fbfcfcaa-2a23-47c4-b47b-0ffbe1ada0af/269487f7-658f-4fae-a69e-08776a0e28ee.png'
     }, { 
         name: 'Elowen', 
         fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', 
