@@ -244,12 +244,12 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
     }, {
         name: 'Astraea', 
         fullPath: 'SteakedGamer/astraea-the-caged-wolf-a5473fd9c150', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'
-    }, /*{
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/dd36869a-e4d8-4092-9955-69544ed77752/64ced2d8-235f-41a3-80c5-36b7f640ca7f.png', //'https://avatars.charhub.io/avatars/uploads/images/gallery/file/33805aff-79d6-46ab-bc2c-3eb74b859084/9b010521-17bc-4a68-93a4-38446eafba47.png'
+    }, {
         name: 'Caedmon', 
-        fullPath: 'Lellan/caedmon-the-brightwork-smith-af9d71cfe8ba', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e6a6deed-e2e1-47a8-a4f6-439a6b011749/d0292798-e93f-4824-87c3-4d5205d99afa.png'
-    }, */{ 
+        fullPath: 'Lellan/caedmon-the-brightwork-smith-4b8d931f2dad', 
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/06b08b78-3075-4686-9c11-e78fc01cebb9/4bea077d-6523-4e13-a818-f29381759c62.png'
+    }, { 
         name: 'Elowen', 
         fullPath: 'Richarrd/elowen-bridgewater-f2bfac00b888', 
         description: `A tall, fine-boned woman with fair skin and glacial blue eyes. Her subtle elfin features are sharp and analytical. She wears her pale-blonde hair in a severe pixie cut with a thin braid over her shoulder.`,
@@ -289,6 +289,10 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
             }
         }],
         outfitId: 'default',
+    }, {
+        name: 'Keri',
+        fullPath: 'UsurperKing/keri-ardent-misremembering-archivist-ff1797a9a12a',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/56bb6798-c93a-4c70-955b-69661c5faf54/e44298a9-3b66-4f23-b375-73d3c746954b.png',
     }, { 
         name: 'Lumi', 
         fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
@@ -474,6 +478,41 @@ export const SUPPORTED_CHARACTERS: Partial<Actor>[] = [
         name: 'Rattle',
         fullPath: 'Chunchunmaru/rattle-a-derranged-menace-with-love-for-explosives-7b7fc8717a05',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/ba33f89a-53e6-4120-8411-021679dd0ce3/84bb1209-5aec-4eee-829b-2132f076ce8b.png',
+        themeColor: '#5cbde8',
+        themeFontFamily: `'Courier New', Courier, monospace`,
+        description: 'A young woman in her mid-twenties with a lean, lithe build, fair skin, and striking green eyes. Her most distinctive feature is her medium-length, bluish hair.',
+        outfits: [{
+            id: 'Stray\'s Kit',
+            name: 'Stray\'s Kit',
+            description: 'A practical, worn-in ensemble consisting of a threadbare black top, brown pants, and a beige cloak. She wears fingerless gloves and multiple utility belts laden with pouches and tools.',
+            prompts: {},
+            emotionPack: {
+                joy: 'https://media.charhub.io/49e76b58-3498-42ec-bd2f-d39890ab4618/5553d552-46a9-42cf-8b3e-1ac08a4629bd.png',
+                base: 'https://media.charhub.io/dd76364d-22db-4768-8060-1a40415ac2b1/b3efb902-f818-4fb5-b50b-d5eb19d5c49f.png',
+                fear: 'https://media.charhub.io/764b5e17-44ed-47a1-af2b-7b802f455cc6/5cda8d6c-4590-4139-83ac-221a46ef2f0c.png',
+                love: 'https://media.charhub.io/940601da-01b6-4eca-a7d5-ec266e5c7c33/bdd7c1e3-c61a-49dd-863c-dd3e667543ab.png',
+                anger: 'https://media.charhub.io/1a9952a0-a611-4887-8221-e22fe0b37c7b/0d6e023f-e2df-4140-9180-abc37d513fae.png',
+                grief: 'https://media.charhub.io/c56dcf84-499c-42dd-a81b-0008310da568/d2508420-f3a9-4305-94a3-86a1804c5eba.png',
+                guilt: 'https://media.charhub.io/761b26a6-0a86-4561-90a5-5d83af45c5eb/05708c51-86ff-4662-b9eb-4a5a816468ba.png',
+                pride: 'https://media.charhub.io/80009b68-4f92-4f94-8da4-0f89cc935652/da457040-3ac3-4770-a26e-ae8ad513b539.png',
+                desire: 'https://media.charhub.io/ae9b6753-3836-46e2-b2ee-82d1c7863f2e/4dcc051a-9b71-4f54-9af2-dc8b5c578122.png',
+                injury: 'https://media.charhub.io/4513baf5-9384-4b37-a7da-fc4bad18b21c/633f5be1-c696-4832-a8f7-7c7d785343ad.png',
+                wonder: 'https://media.charhub.io/f5ba4207-bed6-44f3-a4a6-51ecd2fc9c1b/e24f058e-ef9c-421d-9236-b7ee5554cd47.png',
+                disgust: 'https://media.charhub.io/bef4a8f3-f638-4892-b284-3f50fdda50fe/8b4d4dd6-59b0-4a2c-83a3-c06e4d96f463.png',
+                ecstasy: 'https://media.charhub.io/e6df75ae-2f2c-4272-b38f-e8e362f30223/f1e50240-b94b-42e6-ae6d-4fd60622b5bc.png',
+                neutral: 'https://media.charhub.io/ea35117a-db1f-4b3f-924d-d7082c28373d/585ee388-a0c9-41c8-8808-41c88ef73ee1.png',
+                sadness: 'https://media.charhub.io/52511a96-9c23-4529-889e-20654dce812c/a17d3d98-9fc8-4382-92e8-1539c8363b98.png',
+                approval: 'https://media.charhub.io/80f547ee-eaca-46db-a68c-a06dfc6aa655/2de5bfd9-5d12-43b7-8cd4-83afb8327d97.png',
+                intrigue: 'https://media.charhub.io/c3d7f236-f6d8-4f18-8080-75e4169cfdfb/1a4a3044-f367-49ca-81ca-65848d153525.png',
+                kindness: 'https://media.charhub.io/7f1e7588-839c-49f3-ae09-8c8876a871e9/20f2e5ec-3abd-4293-ac44-3cd40df0e8a3.png',
+                confusion: 'https://media.charhub.io/a292f106-79a2-430f-8920-93bc27079e6f/156040ae-be9a-458c-93a7-2c7bd81c886b.png',
+                exhaustion: 'https://media.charhub.io/2e895961-7117-4845-a805-6429fa67448e/3fd9b2f2-8d1a-4909-86df-63e01b3c99b1.png',
+                nervousness: 'https://media.charhub.io/5371f50c-6820-4724-8bc7-62164bee6475/00959186-bcc9-411c-a3a1-219ea7081878.png',
+                embarrassment: 'https://media.charhub.io/2209bbfb-2e8d-4b67-badb-833e569a2595/f7fdd2f2-6531-4e5a-8f40-be24719bcd53.png',
+                disappointment: 'https://media.charhub.io/f0c82822-0796-4c59-ac2a-715bdc902a7b/b3b647ba-430a-4b07-9f00-26aefba661ef.png'
+            }
+        }],
+        outfitId: 'Stray\'s Kit'
     }, {
         name: 'Reitia',
         fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef',
