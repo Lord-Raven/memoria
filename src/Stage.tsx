@@ -174,7 +174,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 3;
 
         // Load Cassiel as the Warden and add to actors
-        loadSupportedActor('Cassiel', this).then(cassielActor => {
+        loadSupportedActor(COMPLETE_CHARACTERS.find(char => char.name === 'Cassiel') || {}, this).then(cassielActor => {
             if (cassielActor) {
                 newSave.actors[`cassiel`] = cassielActor;
                 this.saveGame(); // Save after adding Cassiel so that we have her in the save data when we generate her emotion images and lorebook entry.
@@ -512,7 +512,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     } else if (!character.name || !character.fullPath) {
                         continue;
                     }
-                    const newActor = await loadSupportedActor(character.name, this);
+                    const newActor = await loadSupportedActor(character, this);
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${newActor.fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};

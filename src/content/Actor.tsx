@@ -3,7 +3,6 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack, EmotionPromptMap } from './Emoti
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createLoreEntry } from './Lore';
-import { COMPLETE_CHARACTERS } from './Characters';
 
 export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
@@ -117,9 +116,9 @@ export const VOICE_MAP: {[key: string]: string} = {
     'animated_male_20s': 'masculine - hip and lively',
 };
 
-export async function loadSupportedActor(name: string, stage: Stage): Promise<Actor|null> {
+export async function loadSupportedActor(data: Partial<Actor>, stage: Stage): Promise<Actor|null> {
     // Canon data within the stage:
-    const newActor = new Actor(COMPLETE_CHARACTERS.find(char => char.name === name));
+    const newActor = new Actor(data);
 
     // Retrieve data from Chub to fill in possible gaps:
     let definition: any = null;
@@ -129,11 +128,11 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
             definition = (await response.json()).node.definition;
         }
     } catch (error) {
-        console.warn(`Failed to fetch character details for ${name} at path ${newActor.fullPath}:`, error);
+        console.warn(`Failed to fetch character details for ${data.name} at path ${newActor.fullPath}:`, error);
     }
 
     if (definition) {
-        console.log(`Loaded character definition for ${name} from Chub:`);
+        console.log(`Loaded character definition for ${data.name} from Chub:`);
         console.log(definition);
         // Even if nothing else, use the definition voice ID over whatever is in the stage.
         if (definition.voice_id && !VOICE_MAP[definition.voice_id]) {
@@ -144,7 +143,7 @@ export async function loadSupportedActor(name: string, stage: Stage): Promise<Ac
             // Create lore entries with this character name as the category:
             const loreEntries = definition.embedded_lorebook.entries.map((entry: any) => {
                 return createLoreEntry({
-                    type: name,
+                    type: data.name,
                     title: entry.name,
                     content: entry.content,
                     triggers: entry.keys,
