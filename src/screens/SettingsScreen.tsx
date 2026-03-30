@@ -49,22 +49,26 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
 
     const handleSave = () => {
         console.log('Saving settings:', settings);
-
-        const saveData = stage().getSave() || {};
-
-        saveData.textToSpeech = settings.textToSpeech;
-        saveData.betaMode = settings.betaMode;
-        saveData.language = settings.language;
         
         if (isNewGame) {
             console.log('Starting new game with settings');
             stage().startNewGame({
                 name: settings.playerName,
+                data: {
+                    textToSpeech: settings.textToSpeech,
+                    betaMode: settings.betaMode,
+                    language: settings.language,
+                },
                 personality: settings.playerDescription,
             });
             setScreenType(ScreenType.LOADING);
         } else {
             console.log('Updating settings');
+            const saveData = stage().getSave() || {};
+
+            saveData.textToSpeech = settings.textToSpeech;
+            saveData.betaMode = settings.betaMode;
+            saveData.language = settings.language;
             const player = stage().getPlayerActor();
             player.name = settings.playerName;
             player.profile = settings.playerDescription;

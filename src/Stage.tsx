@@ -160,7 +160,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
-    startNewGame(playerData: {name: string, personality: string}) {
+    startNewGame(playerData: {name: string, data: Partial<SaveType>, personality: string}) {
         // Insert a dummy promise into generationPromises to ensure the loading screen shows until we manually clear it after the initial actors are loaded.
         this.generationPromises['newGame'] = new Promise(() => {});
 
@@ -170,6 +170,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Create new save data structure
         const newSave: SaveType = this.generateFreshSave(playerData);
+        Object.assign(newSave, playerData.data);
 
         this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 3;
 
@@ -501,6 +502,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             try {
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 console.log(this.getSave().actors);
+                console.log(this.getSave().betaMode);
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
