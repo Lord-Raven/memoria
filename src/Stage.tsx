@@ -1,7 +1,8 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, findBestNameMatch, SUPPORTED_CHARACTERS, loadSupportedActor, ActorState } from "./content/Actor";
+import { Actor, ActorType, findBestNameMatch, loadSupportedActor, ActorState } from "./content/Actor";
+import { BETA_CHARACTERS, COMPLETE_CHARACTERS } from "./content/Characters";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, Location } from "./content/Location";
@@ -32,6 +33,7 @@ export type SaveType = {
     language?: string;
     lorebook?: Lore[];
     expeditionChoices?: ExpeditionChoice[];
+    betaMode?: boolean;
 }
 
 type ExpeditionChoice = {
@@ -501,9 +503,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(this.getSave().actors);
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
-                    // Load one random actor from a hardcoded whitelist of fullPaths (SUPPORTED_CHARACTERS); filter out characters that are already in actors
+                    // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');
-                    const character = this.pickRandom(SUPPORTED_CHARACTERS.filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
+                    const character = this.pickRandom((this.getSave().betaMode ? BETA_CHARACTERS : COMPLETE_CHARACTERS).filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
                     if (!character) {
                         console.warn('No more supported characters to load as reserve actors.');
                         break;

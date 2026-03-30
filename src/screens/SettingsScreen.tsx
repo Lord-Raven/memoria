@@ -18,6 +18,7 @@ interface SettingsData {
     playerName: string;
     playerDescription: string;
     textToSpeech: boolean;
+    betaMode: boolean;
     language: string;
 }
 
@@ -39,6 +40,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         playerName: stage().getPlayerActor()?.name || stage().primaryUser?.name || 'Player',
         playerDescription: stage().getPlayerActor()?.profile || stage().primaryUser?.chatProfile || 'An enigmatic prisoner.',
         textToSpeech: (stage().getSave()?.textToSpeech ?? true),
+        betaMode: (stage().getSave()?.betaMode ?? false),
         language: stage().getSave()?.language || 'English',
     });
 
@@ -51,6 +53,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         const saveData = stage().getSave() || {};
 
         saveData.textToSpeech = settings.textToSpeech;
+        saveData.betaMode = settings.betaMode;
         saveData.language = settings.language;
         
         if (isNewGame) {
@@ -308,6 +311,65 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             }}
                                         >
                                             Text-to-Speech
+                                        </span>
+                                    </motion.div>
+
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSettings(prev => ({ ...prev, betaMode: !prev.betaMode }))}
+                                        style={{
+                                            padding: '12px',
+                                            background: settings.betaMode
+                                                ? 'rgba(205, 169, 89, 0.18)'
+                                                : 'rgba(28, 34, 52, 0.8)',
+                                            border: settings.betaMode
+                                                ? '2px solid rgba(205, 169, 89, 0.5)'
+                                                : '2px solid rgba(138, 176, 204, 0.34)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px',
+                                                background: settings.betaMode ? '#cda959' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.betaMode ? '#cda959' : 'rgba(138, 176, 204, 0.35)'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            {settings.betaMode && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    style={{
+                                                        color: '#FFFFFF',
+                                                        fontSize: '14px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </motion.span>
+                                            )}
+                                        </div>
+                                        <span
+                                            style={{
+                                                color: settings.betaMode ? '#cda959' : 'rgba(237, 242, 242, 0.72)',
+                                                fontSize: '13px',
+                                                fontWeight: settings.betaMode ? 'bold' : 'normal',
+                                            }}
+                                        >
+                                            Beta Mode (Not Recommended)
                                         </span>
                                     </motion.div>
 
