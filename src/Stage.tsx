@@ -9,6 +9,7 @@ import { createDefaultAtlas, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
 import { fetchLorebook, Lore } from "./content/Lore";
+import { Client } from "@gradio/client";
 
 type MessageStateType = any;
 
@@ -83,7 +84,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     primaryCharacter: Character;
     betaMode: boolean;
     generationPromises: {[key: string]: Promise<any|void>} = {};
-    anticipatedLoadingPromiseCount: number = 5;
+    anticipatedLoadingPromiseCount: number = 4;
+    depthPipeline: any = null;
 
     constructor(data: InitialData<InitStateType, ChatStateType, MessageStateType, ConfigType>) {
         super(data);
@@ -108,6 +110,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     async load(): Promise<Partial<LoadResponse<InitStateType, ChatStateType, MessageStateType>>> {
+
+        this.depthPipeline = await Client.connect("ravenok/Depth-Anything-V2");
+
         return {
             success: true,
             error: null,
@@ -476,11 +481,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     async removeBackground(imageUrl: string) {
         if (!imageUrl) return imageUrl;
         try {
-            const response = await this.generator.removeBackground({image: imageUrl});
-            return response?.url ?? imageUrl;
-        } catch (error) {
-            console.error(`Error removing background`, error);
-            return imageUrl;
+            const imageResponse = await fetch(imageUrl);
+            const fileName = `backgroundless-${generateUuid()}`;
+            const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await imageResponse.blob()});
+            return await this.uploadFile(fileName, new File([await (await fetch(backgroundlessResponse.data[1].url)).blob()], fileName, {'type': 'image/png'}));
+        } catch {
+            try {
+                console.warn (`Falling back to Chub's background removal.`);
+                const response = await this.generator.removeBackground({image: imageUrl});
+                return response?.url ?? imageUrl;
+            } catch (error) {
+                console.error(`Error removing background`, error);
+                return imageUrl;
+            }
         }
     }
 

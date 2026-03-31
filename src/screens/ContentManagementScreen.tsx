@@ -25,6 +25,10 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
 
     // Get all locations from the save atlas
     const locations = Object.values(stage().getSave().atlas || {});
+    const ardeiaLocations = locations.filter(location =>
+        location.id.startsWith('ardeia-') || location.imageUrl?.toLowerCase().includes('/ardeia/')
+    );
+    const outsideLocations = locations.filter(location => !ardeiaLocations.includes(location));
 
     const handleActorClick = (actor: Actor) => {
         setSelectedActor(actor);
@@ -255,14 +259,13 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                 {/* Locations Tab */}
                                 {activeTab === 'locations' && (
                                     <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                                        gap: '15px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '25px',
                                         padding: '10px',
                                     }}>
                                         {locations.length === 0 ? (
                                             <div style={{
-                                                gridColumn: '1 / -1',
                                                 textAlign: 'center',
                                                 padding: '40px',
                                                 color: 'rgba(224, 240, 255, 0.6)',
@@ -271,70 +274,105 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                 No locations found in the current save.
                                             </div>
                                         ) : (
-                                            locations.map(location => (
-                                                <motion.div
-                                                    key={location.id}
-                                                    whileHover={{ scale: 1.05, y: -5 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={() => handleLocationClick(location)}
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                        border: `2px solid ${location.themeColor || 'rgba(0, 255, 136, 0.3)'}`,
-                                                        borderRadius: '8px',
-                                                        padding: '15px',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                        opacity: location.discovered ? 1 : 0.55,
-                                                    }}
-                                                >
-                                                    {/* Location Thumbnail */}
-                                                    <div
-                                                        style={{
-                                                            width: '120px',
-                                                            height: '80px',
-                                                            borderRadius: '6px',
-                                                            backgroundColor: 'rgba(0, 20, 40, 0.8)',
-                                                            border: `2px solid ${location.themeColor || 'rgba(0, 255, 136, 0.3)'}`,
-                                                            backgroundImage: location.imageUrl ? `url(${location.imageUrl})` : 'none',
-                                                            backgroundSize: 'cover',
-                                                            backgroundPosition: `${(location.focalPoint?.x ?? 0.5) * 100}% ${(location.focalPoint?.y ?? 0.5) * 100}%`,
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            overflow: 'hidden',
-                                                        }}
-                                                    >
-                                                        {!location.imageUrl && (
-                                                            <Place style={{ fontSize: '36px', color: 'rgba(0, 255, 136, 0.3)' }} />
+                                            <>
+                                                {[
+                                                    { title: 'Ardeia', entries: ardeiaLocations },
+                                                    { title: 'Outside', entries: outsideLocations },
+                                                ].map(section => (
+                                                    <div key={section.title}>
+                                                        <div style={{
+                                                            color: 'rgba(224, 240, 255, 0.9)',
+                                                            fontSize: '18px',
+                                                            fontWeight: 'bold',
+                                                            marginBottom: '12px',
+                                                            borderBottom: '1px solid rgba(0, 255, 136, 0.25)',
+                                                            paddingBottom: '6px',
+                                                        }}>
+                                                            {section.title}
+                                                        </div>
+                                                        {section.entries.length === 0 ? (
+                                                            <div style={{
+                                                                color: 'rgba(224, 240, 255, 0.6)',
+                                                                fontSize: '14px',
+                                                                fontStyle: 'italic',
+                                                            }}>
+                                                                No locations.
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{
+                                                                display: 'grid',
+                                                                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                                                gap: '15px',
+                                                            }}>
+                                                                {section.entries.map(location => (
+                                                                    <motion.div
+                                                                        key={location.id}
+                                                                        whileHover={{ scale: 1.05, y: -5 }}
+                                                                        whileTap={{ scale: 0.95 }}
+                                                                        onClick={() => handleLocationClick(location)}
+                                                                        style={{
+                                                                            cursor: 'pointer',
+                                                                            backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                                            border: `2px solid ${location.themeColor || 'rgba(0, 255, 136, 0.3)'}`,
+                                                                            borderRadius: '8px',
+                                                                            padding: '15px',
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            alignItems: 'center',
+                                                                            gap: '10px',
+                                                                            opacity: location.discovered ? 1 : 0.55,
+                                                                        }}
+                                                                    >
+                                                                        {/* Location Thumbnail */}
+                                                                        <div
+                                                                            style={{
+                                                                                width: '120px',
+                                                                                height: '80px',
+                                                                                borderRadius: '6px',
+                                                                                backgroundColor: 'rgba(0, 20, 40, 0.8)',
+                                                                                border: `2px solid ${location.themeColor || 'rgba(0, 255, 136, 0.3)'}`,
+                                                                                backgroundImage: location.imageUrl ? `url(${location.imageUrl})` : 'none',
+                                                                                backgroundSize: 'cover',
+                                                                                backgroundPosition: `${(location.focalPoint?.x ?? 0.5) * 100}% ${(location.focalPoint?.y ?? 0.5) * 100}%`,
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                overflow: 'hidden',
+                                                                            }}
+                                                                        >
+                                                                            {!location.imageUrl && (
+                                                                                <Place style={{ fontSize: '36px', color: 'rgba(0, 255, 136, 0.3)' }} />
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Location Name */}
+                                                                        <div
+                                                                            style={{
+                                                                                color: location.themeColor || '#00ff88',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: 'bold',
+                                                                                textAlign: 'center',
+                                                                            }}
+                                                                        >
+                                                                            {location.name}
+                                                                        </div>
+
+                                                                        {/* Undiscovered badge */}
+                                                                        {!location.discovered && (
+                                                                            <div style={{
+                                                                                fontSize: '11px',
+                                                                                color: 'rgba(224, 240, 255, 0.5)',
+                                                                            }}>
+                                                                                Undiscovered
+                                                                            </div>
+                                                                        )}
+                                                                    </motion.div>
+                                                                ))}
+                                                            </div>
                                                         )}
                                                     </div>
-
-                                                    {/* Location Name */}
-                                                    <div
-                                                        style={{
-                                                            color: location.themeColor || '#00ff88',
-                                                            fontSize: '14px',
-                                                            fontWeight: 'bold',
-                                                            textAlign: 'center',
-                                                        }}
-                                                    >
-                                                        {location.name}
-                                                    </div>
-
-                                                    {/* Undiscovered badge */}
-                                                    {!location.discovered && (
-                                                        <div style={{
-                                                            fontSize: '11px',
-                                                            color: 'rgba(224, 240, 255, 0.5)',
-                                                        }}>
-                                                            Undiscovered
-                                                        </div>
-                                                    )}
-                                                </motion.div>
-                                            ))
+                                                ))}
+                                            </>
                                         )}
                                     </div>
                                 )}
