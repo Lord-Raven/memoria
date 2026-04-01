@@ -7,16 +7,17 @@ import { Close, Person, Groups, Place } from '@mui/icons-material';
 import { Button, GlassPanel, Title } from './UiComponents';
 import { ActorDetailScreen } from './ActorDetailScreen';
 import { LocationDetailScreen } from './LocationDetailScreen';
+import { LorebookManagementPanel } from './LorebookManagementScreen';
 
 interface ContentManagementScreenProps {
     stage: () => Stage;
     onClose: () => void;
 }
 
-type TabType = 'actors' | 'locations';
+type TabType = 'lorebook' | 'actors' | 'locations';
 
 export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stage, onClose }) => {
-    const [activeTab, setActiveTab] = useState<TabType>('actors');
+    const [activeTab, setActiveTab] = useState<TabType>('lorebook');
     const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
@@ -138,6 +139,19 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                 paddingBottom: '10px',
                             }}>
                                 <Button
+                                    onClick={() => setActiveTab('lorebook')}
+                                    variant={activeTab === 'lorebook' ? 'primary' : 'secondary'}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        opacity: activeTab === 'lorebook' ? 1 : 0.6,
+                                    }}
+                                >
+                                    <Groups />
+                                    Lorebook
+                                </Button>
+                                <Button
                                     onClick={() => setActiveTab('actors')}
                                     variant={activeTab === 'actors' ? 'primary' : 'secondary'}
                                     style={{
@@ -170,7 +184,15 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                 flex: 1,
                                 overflow: 'auto',
                                 paddingRight: '10px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                minHeight: 0,
                             }}>
+                                {/* Lorebook Tab */}
+                                {activeTab === 'lorebook' && (
+                                    <LorebookManagementPanel stage={stage} />
+                                )}
+
                                 {/* Actors Tab */}
                                 {activeTab === 'actors' && (
                                     <div style={{

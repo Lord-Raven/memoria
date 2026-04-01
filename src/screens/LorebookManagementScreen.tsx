@@ -13,6 +13,10 @@ interface LorebookManagementScreenProps {
     onClose: () => void;
 }
 
+interface LorebookManagementPanelProps {
+    stage: () => Stage;
+}
+
 type LoreCategory = Lore['type'];
 
 const CORE_CATEGORY_ORDER = ['character', 'location', 'other'] as const;
@@ -89,7 +93,7 @@ const NumberStepperInput: FC<NumberStepperInputProps> = ({ value, onChange, aria
     );
 };
 
-export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ stage, onClose }) => {
+export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stage }) => {
     const shouldReduceMotion = useReducedMotion();
     const [loreEntries, setLoreEntries] = useState<Lore[]>(() => sortLoreEntries(stage().getSave().lorebook || []));
     const [selectedLoreId, setSelectedLoreId] = useState<string | null>(() => {
@@ -328,95 +332,16 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
     }, [selectedLoreId]);
 
     return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+        <>
+            <div
                 style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 10, 20, 0.85)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    padding: '10px 20px 30px',
-                }}
-                onClick={(event) => {
-                    if (event.target === event.currentTarget) {
-                        onClose();
-                    }
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(280px, 360px) 1fr',
+                    gap: '20px',
+                    flex: 1,
+                    minHeight: 0,
                 }}
             >
-                <motion.div
-                    initial={{ scale: 0.9, y: 50 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.9, y: 50 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    onClick={(event) => event.stopPropagation()}
-                    style={{
-                        width: '90vw',
-                        maxWidth: '1500px',
-                        maxHeight: '90vh',
-                    }}
-                >
-                    <GlassPanel
-                        variant="bright"
-                        style={{
-                            height: '90vh',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            padding: '30px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: '20px',
-                            }}
-                        >
-                            <Title variant="glow" style={{ fontSize: '24px', margin: 0 }}>
-                                Lorebook Management
-                            </Title>
-                            <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={onClose}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'rgba(0, 255, 136, 0.7)',
-                                    cursor: 'pointer',
-                                    fontSize: '24px',
-                                    padding: '5px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <Close />
-                            </motion.button>
-                        </div>
-
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'minmax(280px, 360px) 1fr',
-                                gap: '20px',
-                                flex: 1,
-                                minHeight: 0,
-                            }}
-                        >
                             <div
                                 style={{
                                     background: 'rgba(0, 20, 40, 0.45)',
@@ -846,20 +771,17 @@ export const LorebookManagementScreen: FC<LorebookManagementScreenProps> = ({ st
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </GlassPanel>
-                    <ConfirmDialog
-                        isOpen={isDeleteConfirmOpen && selectedLore !== null}
-                        title={selectedLore ? `Delete ${selectedLore.title || '(Untitled)'}?` : 'Delete lore entry?'}
-                        message="This will permanently remove the selected lore entry. This cannot be undone."
-                        confirmText="Delete"
-                        confirmVariant="danger"
-                        cancelText="Cancel"
-                        onConfirm={confirmDeleteSelectedLore}
-                        onCancel={() => setIsDeleteConfirmOpen(false)}
-                    />
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>
+            </div>
+            <ConfirmDialog
+                isOpen={isDeleteConfirmOpen && selectedLore !== null}
+                title={selectedLore ? `Delete ${selectedLore.title || '(Untitled)'}?` : 'Delete lore entry?'}
+                message="This will permanently remove the selected lore entry. This cannot be undone."
+                confirmText="Delete"
+                confirmVariant="danger"
+                cancelText="Cancel"
+                onConfirm={confirmDeleteSelectedLore}
+                onCancel={() => setIsDeleteConfirmOpen(false)}
+            />
+        </>
     );
 };
