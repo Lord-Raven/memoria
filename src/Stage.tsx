@@ -483,11 +483,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         try {
             const imageResponse = await fetch(imageUrl);
             console.log('Retrieved image');
-            const fileName = `backgroundless-${generateUuid()}`;
+            const fileName = `backgroundless_${Date.now()}.png`;
             const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await imageResponse.blob()});
             console.log('Background removed');
             console.log(backgroundlessResponse);
-            const file: File = new File([await (await fetch(backgroundlessResponse.data[1].url)).blob()], fileName, {type: 'image/png'});
+            const data = await fetch(backgroundlessResponse.data[1].url);
+            const blob = await data.blob();
+            const file: File = new File([blob], fileName, {type: 'image/png'});
             return await this.uploadFile(fileName, file);
         } catch {
             try {
