@@ -283,6 +283,9 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png',
         description: `A petite, female-presenting mechanoid with soft, silky skin and a smug resting expression. She has a short pink bob cut and blank, eyeless sockets, always covered by a black blindfold. Her build is slight, with average height and proportions.`,
+        voiceId: '751212e5-a871-45c7-b10b-6f42a5785954',
+        themeColor: '#C71585',
+        themeFontFamily: `'Trebuchet MS', Helvetica, sans-serif`,
         outfitId: 'default',
         outfits: [{
             id: 'default',
@@ -778,6 +781,10 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'Beastmastaa/the-living-scythe-sam-a97cfbc256a1',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/aad73514-fc09-4241-ac38-851d7033e253/b223f2ae-44e9-4802-a719-5b46099999c4.png',
         type: ActorType.ITEM,
+        description: `A sentient, ornate war scythe. The weapon is crafted from a dark, polished metal that seems to drink the light. Its crescent blade is etched with faint, intricate patterns that shimmer when moved. It has no humanoid form, but its presence is communicated through a resonant, androgynous voice that seems to emanate from the weapon itself.`,
+        themeColor: '#3dc2fa',
+        themeFontFamily: `"Garamond", "Times New Roman", serif`,
+        voiceId: 'e6b74abb-f4b2-4a84-b9ef-c390512f2f47',
         outfitId: 'default',
         outfits: [{
             id: 'default',
@@ -786,7 +793,28 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
             prompts: {},
             emotionPack: {
                 base: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png',
-                neutral: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png'
+                neutral: 'https://media.charhub.io/b203e2c2-d096-4302-95bc-a7522562e9f7/e4192cf5-bd79-4b9a-9ef6-8a6f603575a8.png',
+                approval: 'https://media.charhub.io/1ea85f7c-ba46-4f92-b84c-6d91a5a0b681/9a960bf0-780d-48ba-a9c5-6ef5cb29f9f8.png',
+                anger: 'https://media.charhub.io/44607f7a-93db-488c-830f-055eb59acb55/7e9f18f2-f31e-4f37-bd2c-e1a666b84da1.png',
+                confusion: 'https://media.charhub.io/93ee9d73-a994-4675-887b-51f4d449af9a/4b0c28bc-78b0-4549-a7ab-c5e791ded520.png',
+                desire: 'https://media.charhub.io/a5576857-7e0b-44d3-94e3-8a798bd2a2ef/30063151-db76-451f-9e88-c6f6c575fe59.png',
+                disappointment: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                disgust: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                embarrassment: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                ecstasy: 'https://media.charhub.io/a5576857-7e0b-44d3-94e3-8a798bd2a2ef/30063151-db76-451f-9e88-c6f6c575fe59.png',
+                exhaustion: 'https://media.charhub.io/75cdeb66-75f5-4e46-a928-fc7d76bf5cee/75934817-b7e4-4573-ac24-4534e92933e3.png',
+                fear: 'https://media.charhub.io/066f3f4f-cdb1-4cf6-801a-420ced6a88cc/30bed47d-634f-4ab8-9172-5028b827fce6.png',
+                grief: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                guilt: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                injury: 'https://media.charhub.io/89bee5b7-b9bc-481f-af7e-2aa108d24603/7b4e962e-7fbf-4416-ad41-3effb4e920fd.png',
+                intrigue: 'https://media.charhub.io/93ee9d73-a994-4675-887b-51f4d449af9a/4b0c28bc-78b0-4549-a7ab-c5e791ded520.png',
+                joy: 'https://media.charhub.io/1ea85f7c-ba46-4f92-b84c-6d91a5a0b681/9a960bf0-780d-48ba-a9c5-6ef5cb29f9f8.png',
+                kindness: 'https://media.charhub.io/1ea85f7c-ba46-4f92-b84c-6d91a5a0b681/9a960bf0-780d-48ba-a9c5-6ef5cb29f9f8.png',
+                love: 'https://media.charhub.io/a5576857-7e0b-44d3-94e3-8a798bd2a2ef/30063151-db76-451f-9e88-c6f6c575fe59.png',
+                nervousness: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                pride: 'https://media.charhub.io/03671ae7-1d14-426f-8679-fb8f72ca1a84/9c52ac0a-97c6-4ea1-9768-434311266726.png',
+                sadness: 'https://media.charhub.io/3d6bb06f-2d17-4524-95f3-59c8693c4d02/3d0f6548-6e29-406e-9783-0a71b45999e1.png',
+                wonder: 'https://media.charhub.io/93ee9d73-a994-4675-887b-51f4d449af9a/4b0c28bc-78b0-4549-a7ab-c5e791ded520.png'
             }
         }],
     }, {

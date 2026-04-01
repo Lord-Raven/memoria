@@ -482,9 +482,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         if (!imageUrl) return imageUrl;
         try {
             const imageResponse = await fetch(imageUrl);
+            console.log('Retrieved image');
             const fileName = `backgroundless-${generateUuid()}`;
             const backgroundlessResponse = await this.depthPipeline.predict("/remove_background", {image: await imageResponse.blob()});
-            return await this.uploadFile(fileName, new File([await (await fetch(backgroundlessResponse.data[1].url)).blob()], fileName, {'type': 'image/png'}));
+            console.log('Background removed');
+            console.log(backgroundlessResponse);
+            const file: File = new File([await (await fetch(backgroundlessResponse.data[1].url)).blob()], fileName, {type: 'image/png'});
+            return await this.uploadFile(fileName, file);
         } catch {
             try {
                 console.warn (`Falling back to Chub's background removal.`);
