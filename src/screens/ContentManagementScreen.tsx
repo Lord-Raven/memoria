@@ -149,7 +149,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                     }}
                                 >
                                     <Groups />
-                                    Lorebook
+                                    Lorebook ({stage().getSave().lorebook?.length || 0})
                                 </Button>
                                 <Button
                                     onClick={() => setActiveTab('actors')}

@@ -76,16 +76,6 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         outfitId: '',
         outfits: [],
     }, {
-        name: 'Jezreel',
-        fullPath: 'JakeH/jezreel-82c83a915232',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/47faab20-12f6-4dc3-b16e-7b6d22d4143f/4efcff58-5f3b-4b65-92b8-b8cf0bfc60e4.png',
-        description: '',
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
-    }, {
         name: 'Keri',
         fullPath: 'UsurperKing/keri-ardent-misremembering-archivist-ff1797a9a12a',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/56bb6798-c93a-4c70-955b-69661c5faf54/e44298a9-3b66-4f23-b375-73d3c746954b.png',
@@ -95,25 +85,6 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-    }, {
-        name: 'Lyra', 
-        fullPath: 'Birb_Brain/lyra-scavenger-stray-survivor-fa0621f65589', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/41adca21-24a4-477b-9ce6-c3534e8a4ddf/af134829-20b4-4b5a-9a46-1cab74497f3f.png',
-        description: '',
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: 'default',
-        outfits: [{
-            id: 'default',
-            name: 'Scavenger Wear',
-            description: 'A lithe woman with brilliant blue eyes and white hair tied up at the back. Her most striking features are a pair of expressive, orange-furred fox ears and a matching fox tail. Her clothing is lightweight, practical, and heavily modified with pockets and pouches',
-            prompts: {},
-            emotionPack: {
-                base: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png',
-                neutral: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/cf833ea3-8995-4b54-96cc-01c2efdfde41/362e2787-41f9-42d9-9a03-46031bfc9f67.png'
-            }
-        }],
     }, {
         name: 'Millia', 
         fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2', 
@@ -511,7 +482,53 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 wonder: 'https://media.charhub.io/8bf29171-3c2d-4361-aaed-1543d945bb80/10da01b1-05e0-492d-bac9-87b8b01e3196.png'
             }
         }],
-    }, { 
+    },
+    
+    
+    {
+        name: 'Jezreel',
+        fullPath: 'JakeH/jezreel-82c83a915232',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/47faab20-12f6-4dc3-b16e-7b6d22d4143f/4efcff58-5f3b-4b65-92b8-b8cf0bfc60e4.png',
+        description: 'A pink-scaled lamia (snake-woman) with an athletic-yet-voluptuous torso and serpentine lower body. She has a deep tan, golden eyes with slit pupils, and luxurious dirty-blonde hair. Her expression is typically one of poised, catty amusement.',
+        themeColor: '#fba3b6',
+        themeFontFamily: `"College","Varsity","Haettenschweiler","Arial Black",sans-serif;`,
+        voiceId: 'a2533977-83cb-4c10-9955-0277e047538f',
+        outfitId: 'Pink Collegiate Hoodie',
+        outfits: [{
+            id: 'Pink Collegiate Hoodie',
+            name: 'Pink Collegiate Hoodie',
+            description: 'She wears a cropped, pink collegiate hoodie emblazoned with "SMU" in bold white, paired with a pink leather miniskirt.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/aeef99c2-a795-40cf-81ef-0509764e4d23.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/05540cad-fb21-426c-89c4-1f159c547b82.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/e65c6092-d3f3-4694-b25f-db7429a765e8.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/15d7fd19-6106-4650-a36e-676c6574981e.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/a48fc4cd-0ffe-409a-9bc9-e8c4bfb68da1.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/276e0362-0d7d-4cde-aae5-2267e247db31.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/8ede5c90-5e8e-4390-a700-b77230d968b3.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/5ee7c1e2-6bbd-48fa-bc05-4eebfe60f41d.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/fed339bc-43a8-4414-9716-274659872bea.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/332cdbf7-38c9-48d0-a206-e0d826b5fb1c.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/b4304a55-ee6a-4e2f-be91-13ae26f1d177.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/4d74db0e-4e63-4cab-a84f-1715f291d17a.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/8197530b-c2ac-4ed1-8480-6566afbbfa25.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/9f37c9cc-e091-4cf4-8689-4f224cbe792c.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/a7797634-ebe9-4129-9d6f-5b8184653049.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/04b1f614-ab52-4de5-8358-4d7b7e210af4.png',
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/64ed26b3-6588-4684-a56a-7caaf5183527.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/98ba038b-1505-4fd0-8ce7-51f40ccc48d6.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/c8f2f0fe-536e-4d3f-af0b-594d0e8cde99.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/9e195288-5379-4fea-9811-7c23421bf30d.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/fd7612c0-4fff-43cd-ba02-44bb2ce1b27c.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/e76acaa8-c429-4470-b907-4d05fd67fef1.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/6e37e64b-c858-489b-9076-8bafa8e05719.png'
+            }
+        }],
+    },
+    
+    
+    { 
         name: 'Lumi', 
         fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png',
@@ -547,7 +564,53 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 wonder: 'https://media.charhub.io/0eabb19e-d231-4abc-bb19-d6a2266a94bc/953d0807-4c33-4325-8f16-f6466913dda6.png'
             }
         }],
-    }, { 
+    },
+    
+    
+    {
+        name: 'Lyra', 
+        fullPath: 'Birb_Brain/lyra-scavenger-stray-survivor-fa0621f65589', 
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/41adca21-24a4-477b-9ce6-c3534e8a4ddf/af134829-20b4-4b5a-9a46-1cab74497f3f.png',
+        description: 'A tall, lithe woman with white hair worn up, brilliant blue eyes, and distinct orange-furred fox ears and a matching tail that flick expressively. Her skin is fair, and she moves with exceptional agility and silence, almost never wearing shoes.',
+        themeColor: '#e9862c',
+        themeFontFamily: `'Courier New', Courier, monospace`,
+        voiceId: 'a2533977-83cb-4c10-9955-0277e047538f',
+        outfitId: 'Scavenger Wear',
+        outfits: [{
+            id: 'Scavenger Wear',
+            name: 'Scavenger Wear',
+            description: 'A lithe woman with brilliant blue eyes and white hair tied up at the back. Her most striking features are a pair of expressive, orange-furred fox ears and a matching fox tail. Her clothing is lightweight, practical, and heavily modified with pockets and pouches.',
+            prompts: {},
+            emotionPack: {
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/bfaf4163-3852-4e8d-b84e-031b3d48ae3f.png',
+                base: 'https://media.charhub.io/058a0a21-ffb2-4e61-816a-bd6f530d391c/b6df4c90-9c70-487a-8d5a-4cbfbe40a13f.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/d8ec7107-69b8-4670-b68e-2ad144419a91.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/cb7b1438-7d76-4833-9365-e686367cbf8c.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/44e40415-d311-43e8-ba70-ea0648d9b58b.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/6928a3e6-7847-405d-9b5f-509f24eb30a6.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/5a860d7b-6d4d-4fd7-a257-2ee1bf561774.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/5b26fa62-7101-4d6d-b178-ea3960ee4e8b.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/040835b0-452a-44b8-9f45-88343099962a.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/6769ee74-e0ae-40ed-b8bd-276c481eef38.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/8c79bfcf-f520-4dd1-9514-e8ffe8893576.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/cdbbe7c1-ff1f-4f7a-9d06-c4fc78a914a0.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/6606b36a-d247-49af-a98c-bf84abc97297.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/bfd715b5-fd6b-4155-adba-dbe0410d91d1.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/ec7c310f-13f4-4630-a781-fc2a74db51f0.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/2f4ab84e-176b-4bd6-8d79-0b6ca940ac6d.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/e0919808-d779-4849-8c13-8429e5983620.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/8afe9f3d-cfe9-4008-86a0-0129b206ac2c.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/1b509233-09e0-48e3-b607-6368a5b3a398.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/0f81dc88-eac2-42ba-88a7-f606b129061c.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/90c0cefc-82fe-4ac4-a964-529d25bc099e.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/88721368-c787-4549-ba0c-1598d977b842.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/bcaed21e-5cf1-44d7-bf36-4ec03be41cb2.png'
+            }
+        }],
+    },
+    
+    
+    { 
         name: 'Mallory', 
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
