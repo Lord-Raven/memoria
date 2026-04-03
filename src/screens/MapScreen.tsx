@@ -1019,20 +1019,18 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				imageUrl: string;
 				cx: number;
 				cy: number;
-				radius: number;
-				radiusX: number;
-				radiusY: number;
+				diameterPx: number;
 				stroke: string;
 				strokeWidth: number;
-				clipPathId: string;
 			}>;
 		}
 
 		const viewportScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
 		const viewportScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
-		const portraitRadiusPx = 0.02 * Math.max(mapViewportSize.width, mapViewportSize.height);
-		const portraitRadiusMapX = portraitRadiusPx / viewportScaleX;
-		const portraitRadiusMapY = portraitRadiusPx / viewportScaleY;
+		const portraitDiameterPx = clamp(0.04 * Math.max(mapViewportSize.width, mapViewportSize.height), 28, 72);
+		const portraitRadiusPx = portraitDiameterPx / 2;
+		const portraitOffsetMapX = portraitRadiusPx / viewportScaleX;
+		const portraitOffsetMapY = portraitRadiusPx / viewportScaleY;
 
 		const save = stage().getSave();
 		const choices = (save.expeditionChoices || []) as Array<{
@@ -1063,13 +1061,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 			const strokeWidth = 2.4 + emphasis * 0.6;
 			const stroke = getLocationBorderStroke(cell.point.themeColor);
-			const radius = portraitRadiusPx;
-			const radiusX = portraitRadiusMapX;
-			const radiusY = portraitRadiusMapY;
 			const portraitOnLeft = cell.point.x / MAP_WIDTH > 0.5;
 			const valueFunction = (vertex: number[]) => {
 				return portraitOnLeft ? (vertex[0] + vertex[1] * 0.0001) : -(vertex[0] - vertex[1] * 0.0001);
-			}
+			};
 
 			let extremeVertex = cell.polygon[0];
 			for (const vertex of cell.polygon) {
@@ -1079,23 +1074,20 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			}
 
 			const cx = clamp(
-				portraitOnLeft ? extremeVertex[0] + radiusX : extremeVertex[0] - radiusX,
-				radiusX + 1,
-				MAP_WIDTH - radiusX - 1,
+				portraitOnLeft ? extremeVertex[0] + portraitOffsetMapX : extremeVertex[0] - portraitOffsetMapX,
+				portraitOffsetMapX + 1,
+				MAP_WIDTH - portraitOffsetMapX - 1,
 			);
-			const cy = clamp(extremeVertex[1], radiusY + 1, MAP_HEIGHT - radiusY - 1);
+			const cy = clamp(extremeVertex[1], portraitOffsetMapY + 1, MAP_HEIGHT - portraitOffsetMapY - 1);
 
 			return [{
 				key: `${choice.locationId}-${choice.partnerActorIds.join(',')}`,
 				imageUrl,
 				cx,
 				cy,
-				radius,
-				radiusX,
-				radiusY,
+				diameterPx: portraitDiameterPx,
 				stroke,
 				strokeWidth,
-				clipPathId: `expedition-choice-portrait-${choice.locationId.replace(/[^a-zA-Z0-9_-]/g, "")}-${choice.partnerActorIds.join(',').replace(/[^a-zA-Z0-9_-]/g, "")}`,
 			}];
 		});
 	}, [expeditionChoiceSignature, mapMode, mapViewportSize.height, mapViewportSize.width, stage, targetRadiusById, voronoiCells]);
@@ -1320,11 +1312,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										<path d={cell.path} />
 									</clipPath>
 								))}
-								{expeditionPortraitMarkers.map((portrait) => (
-									<clipPath key={portrait.clipPathId} id={portrait.clipPathId} clipPathUnits="userSpaceOnUse">
-										<ellipse cx={portrait.cx} cy={portrait.cy} rx={portrait.radiusX} ry={portrait.radiusY} />
-									</clipPath>
-								))}
 						</defs>
 
 						{voronoiCells.map((cell) => {
@@ -1356,36 +1343,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							);
 						})}
 
-						{mapMode === 'management' && expeditionPortraitMarkers.map((portrait) => (
-							<g key={portrait.key} style={{ pointerEvents: 'none' }}>
-								<ellipse
-									cx={portrait.cx}
-									cy={portrait.cy}
-									rx={portrait.radiusX}
-									ry={portrait.radiusY}
-									fill="rgba(8, 12, 18, 0.95)"
-								/>
-								<image
-									href={portrait.imageUrl}
-									x={portrait.cx - portrait.radiusX}
-									y={portrait.cy - portrait.radiusY}
-									width={portrait.radiusX * 2}
-									height={portrait.radiusY * 2}
-									preserveAspectRatio="xMidYMid meet"
-									clipPath={`url(#${portrait.clipPathId})`}
-								/>
-								<ellipse
-									cx={portrait.cx}
-									cy={portrait.cy}
-									rx={portrait.radiusX}
-									ry={portrait.radiusY}
-									fill="none"
-									stroke={portrait.stroke}
-									strokeWidth={portrait.strokeWidth}
-									vectorEffect="non-scaling-stroke"
-								/>
-							</g>
-						))}
 
 						{!hasAtlasLocations && (
 							<text
@@ -1411,6 +1368,36 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							</text>
 						)}
 					</svg>
+					{mapMode === 'management' && expeditionPortraitMarkers.map((portrait) => (
+						<div
+							key={portrait.key}
+							style={{
+								position: "absolute",
+								left: `${(portrait.cx / MAP_WIDTH) * 100}%`,
+								top: `${(portrait.cy / MAP_HEIGHT) * 100}%`,
+								width: portrait.diameterPx,
+								height: portrait.diameterPx,
+								transform: "translate(-50%, -50%)",
+								borderRadius: "50%",
+								overflow: "hidden",
+								backgroundColor: "rgba(8, 12, 18, 0.95)",
+								border: `${portrait.strokeWidth}px solid ${portrait.stroke}`,
+								boxSizing: "border-box",
+								pointerEvents: "none",
+							}}
+						>
+							<img
+								src={portrait.imageUrl}
+								alt=""
+								style={{
+									width: "100%",
+									height: "100%",
+									objectFit: "cover",
+									display: "block",
+								}}
+							/>
+						</div>
+					))}
 					</motion.div>
 				<AnimatePresence>
 					{mapMode === 'skit' && skit && (
