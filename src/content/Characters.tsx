@@ -22,18 +22,7 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-    }, {
-        name: 'Astraea', 
-        fullPath: 'SteakedGamer/astraea-the-caged-wolf-a5473fd9c150', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/dd36869a-e4d8-4092-9955-69544ed77752/64ced2d8-235f-41a3-80c5-36b7f640ca7f.png',
-        description: '',
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
-
-    }, {
+    },  {
         name: 'The Bird',
         fullPath: 'Aouron/the-bird-the-97dc7461b2d8',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/10a2882c-339b-4cb8-a2cf-0584aac371ca/cc38cf5c-bd59-4f15-930b-0a7d627475db.png',
@@ -289,6 +278,50 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 injured: "https://media.charhub.io/d711ecf4-bfa8-4252-8702-43dda284755a/46079bb2-2cad-4653-82a3-7bfa33b17ba8.png"
             }
         }],
+    },
+    
+    
+    {
+        name: 'Astraea', 
+        fullPath: 'SteakedGamer/astraea-the-caged-wolf-a5473fd9c150', 
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/dd36869a-e4d8-4092-9955-69544ed77752/64ced2d8-235f-41a3-80c5-36b7f640ca7f.png',
+        description: `A 5'7" woman with a toned, athletic build, pale skin, and deep purple eyes. She has very long, pure white hair and large white wolf ears atop her head, along with a large, fluffy white wolf tail.`,
+        themeColor: '#4a235a',
+        themeFontFamily: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`,
+        voiceId: '057d53b3-bb28-47f1-9c19-a85a79851863',
+        outfitId: 'Yukata Gi',
+        outfits: [{
+            id: 'Yukata Gi',
+            name: 'Yukata Gi',
+            description: 'A sleek, dark purple and black martial arts suit resembling a yukata or hakama, designed for both mobility and a classy appearance. It is tied at the waist with a layered purple sash.',
+            prompts: {},
+            emotionPack: {
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/4b9cf4f6-ffc0-4303-89da-16349bf09728.png',
+                base: 'https://media.charhub.io/427bcdf3-172b-4d2a-8ef0-eb1d8b08d2e5/d9e4b946-2914-453f-9650-6067624488fa.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/6704a920-1f8a-46b7-b6e9-e6bdca8f5839.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/0c9d6a8b-c29a-419c-b77d-ab18f6e1f697.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/9e96a8fb-ab37-473b-8494-7d5198b5affa.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/f04d6920-e5c3-4f16-8b25-c7ab62f29846.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/c9880553-4802-4f3b-988a-89c1103d553b.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/3e09c3e8-02d4-467a-8014-b4a69c73263d.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/81937382-27b7-49a2-adb9-78a1b6dff2d2.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/3a7d1cea-a7ee-4695-af4c-9ef734069d18.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/26e6f5e0-4e75-4621-b1c7-a3c9ba14a540.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/a0b905d6-1220-40bd-a0e8-62916c8d0c52.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/eb4f0764-cb8d-4de4-8969-48473654cf39.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/76577762-5499-424f-8f44-2cb4730d2765.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/8f153fe7-2d50-4ab1-a392-111253b7a6a8.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/e8e2fde2-0aba-4bad-afc0-93a759a3dd7f.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/6555e3db-f261-41e9-8845-590315b11406.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/29232caf-2387-48cb-8d24-cbd8a7b297ba.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/a650f2a9-fb8c-4333-a3f5-4a1986b7c76d.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/3957a63f-6c4a-455a-b500-1fc875b7ec3f.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/af0d3eb0-ae59-4d25-8d8c-e8acf5394e2a.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/3a06c490-f2ea-4210-b39b-80029b1c6285.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/9a789760-59c6-447e-a446-39ebe74d0242.png'
+            }
+        }],
+
     }, {
         name: 'Axo',
         fullPath: 'LaffyGaffy/axo-traveling-merchant-40ffd341fa4d',
