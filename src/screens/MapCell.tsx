@@ -34,6 +34,7 @@ interface MapCellProps {
 	opacity?: number;
 	isInteractive?: boolean;
 	lockBackgroundToTargetRadius?: boolean;
+	isExpeditionable?: boolean;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -90,6 +91,7 @@ export const MapCell: FC<MapCellProps> = ({
 	opacity = 1,
 	isInteractive = true,
 	lockBackgroundToTargetRadius = true,
+	isExpeditionable = true,
 }) => {
 	const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
@@ -170,6 +172,15 @@ export const MapCell: FC<MapCellProps> = ({
 				clipPath={`url(#${cell.clipPathId})`}
 				style={{ pointerEvents: "none" }}
 			/>
+			{!isExpeditionable && (
+				<path
+					d={cell.path}
+					fill="url(#unavailableDiagonalStripes)"
+					clipPath={`url(#${cell.clipPathId})`}
+					style={{ pointerEvents: "none", color: borderPalette.stroke }}
+					opacity={0.5}
+				/>
+			)}
 			<path
 				d={cell.path}
 				fill="rgba(255,255,255,0)"
