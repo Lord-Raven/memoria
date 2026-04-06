@@ -12,16 +12,6 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-    }, {
-        name: 'AL1-C3',
-        fullPath: 'DongberryDinkle/al1-c3-the-broken-dc43128daf8f',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/d5d6389f-7517-4512-a548-651b304eaea3/4eb8e46e-d40d-45bf-b9d7-2e242c2ae898.png',
-        description: ``,
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
     },  {
         name: 'The Bird',
         fullPath: 'Aouron/the-bird-the-97dc7461b2d8',
@@ -33,17 +23,7 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         outfitId: '',
         outfits: [],
 
-    }, {
-        name: 'Cyanea',
-        fullPath: 'ChampionOfLight/cyanea-forgetful-jellyfish-girl-a8a1151f825b',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/2926836c-cb06-4518-a15b-15099ef47df4/188cf492-308c-4f4f-b0ca-e3143e6bf5e2.png',
-        description: ``,
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
-    }, {
+    }, /*{
         name: 'Haylon',
         fullPath: 'Inanite/haylon-da4271ca7fee',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/2b63fbce-f2b3-404c-8bcf-a6769ab41948/8b5469a1-f512-4d31-a1ad-e05b3ab7d962.png',
@@ -54,7 +34,7 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         outfitId: '',
         outfits: [],
 
-    }, {
+    },*/ {
         name: 'Keri',
         fullPath: 'UsurperKing/keri-ardent-misremembering-archivist-ff1797a9a12a',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/56bb6798-c93a-4c70-955b-69661c5faf54/e44298a9-3b66-4f23-b375-73d3c746954b.png',
@@ -139,6 +119,49 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeFontFamily: 'Georgia, serif',
         voiceId: 'calm_female_20s'
     },
+
+
+    {
+        name: 'AL1-C3',
+        fullPath: 'DongberryDinkle/al1-c3-the-broken-dc43128daf8f',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/d5d6389f-7517-4512-a548-651b304eaea3/4eb8e46e-d40d-45bf-b9d7-2e242c2ae898.png',
+        description: `A humanoid automaton with a slender, feminine build. Her "skin" is a smooth, white composite shell, now scuffed and worn. She has inverted eyes with black sclera and white pupils, giving her a vacant stare. Her blonde faux-hair is cut in a short, fluffy bob, currently dirty and unkempt.`,
+        themeColor: '#b7ccda',
+        themeFontFamily: `'Courier New', Courier, monospace`,
+        voiceId: '03a438b7-ebfa-4f72-9061-f086d8f1fca6',
+        outfitId: '',
+        outfits: [{
+            id: 'Naked Chasis',
+            name: 'Naked Chasis',
+            description: 'Alice doesn\'t wear any conventional clothes; her broken and worn pale mechanical body is plainly visible. The body\'s plating is broken and cracked in places, exposing her inner framing and mechanisms.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/2896aa1d-b471-4c76-a058-db013b4c43c7.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/fd6590d4-8c4c-4405-b022-2ec376289950.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/7a1b7b4e-80c9-4560-bf40-a210fb09449e.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/40a3a213-5b2e-4ca0-b0b3-ae9bace3b879.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/deb2572d-4eea-4f17-b718-c8ee2dc9cb84.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/77666d54-0050-4453-8f51-ef13a6ce5470.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/aa9e55cd-1e49-4d08-bf2e-a0c00665ed75.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/21ad13d9-a55f-4872-8d1d-16ca65a6c79d.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/a5a44a90-f249-491a-8197-2d0bebaa3804.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/269db8a9-0c74-429b-a543-daede762bb16.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/60ae6e5d-bf2b-4001-a7de-f45a23593dec.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/dd21b81f-e9c5-456d-b820-fec87d248b6f.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/f5582589-9d95-4631-b239-6ad719cb9380.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/298f60d2-8e4b-41a6-85f2-a970dd32d881.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/f7f7ca58-25e9-4c09-acca-840627ac5295.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/d2ad241b-ac16-4a81-860f-af2b69018d67.png',
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/8dce76f5-3a5c-424c-83a3-63cc1de6952a.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/9b649d5b-196c-4ac5-b894-f9ffae81a561.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/474ca0b1-c1a0-4d99-82f5-91fe1f1c24a4.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/151bb5d2-7dea-4093-9c90-e740c23a6aa1.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/1079cef0-3654-4562-a505-fff62a948dc8.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/392d7351-4d36-4004-803f-98de217a7ecd.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/7bb9d5e4-e999-42eb-869e-2dfb21fffda0.png'
+            }
+        }],
+    }, 
     
     
     {
@@ -396,6 +419,49 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 wonder: 'https://media.charhub.io/1d4f08ee-f33b-4a7d-9a75-78872e8bc7f0/ebfbd95a-0263-4948-a11b-6ff0a3dda620.png'
             }
         }]
+    },
+
+
+    {
+        name: 'Cyanea',
+        fullPath: 'ChampionOfLight/cyanea-forgetful-jellyfish-girl-a8a1151f825b',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/2926836c-cb06-4518-a15b-15099ef47df4/188cf492-308c-4f4f-b0ca-e3143e6bf5e2.png',
+        description: `A petite, pink-skinned jellyfish-girl with a heart-shaped face and a single, large blue eye on the left side. Her right eye is covered by a handmade flower eyepatch. Her "hair" is a large, translucent pink jellyfish bell from which hang numerous prehensile tentacles with yellow tips. Her body has a soft, gelatinous consistency and she smells faintly of strawberries and honey.`,
+        themeColor: '#fab5cd',
+        themeFontFamily: `'Comic Sans MS', 'Marker Felt', cursive, sans-serif`,
+        voiceId: 'a2533977-83cb-4c10-9955-0277e047538f',
+        outfitId: 'Librarian Casual',
+        outfits: [{
+            id: 'Librarian Casual',
+            name: 'Librarian Casual',
+            description: 'A simple white tunic worn under a slightly oversized red jacket with beige cuffs. She pairs this with comfortable brown cotton pants. A worn leather satchel is slung over her shoulder.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/eb54dc87-780b-4c35-b556-aaf30b002f12.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/14430d66-534b-4dba-bf19-7fe253be9a93.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/9e71f282-2461-4b60-a36b-e1182bd5df5e.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/b774aa94-e9c1-4ecc-ace4-2d8305a201a4.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/2860ee4f-cb9d-4701-bad5-eadbb07dddb2.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/f44cf016-5401-4f63-9f4d-31c88b418e90.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/3056149a-cd41-487e-bddf-570aa6f82347.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/bbadc809-9655-447d-9925-703c115ce5ed.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/c5032406-1cd4-4ff3-81a6-ff9a27f00d52.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/78b3e0ba-8570-4cd2-8ee2-6633119b1111.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/88313b4d-3655-48af-9d6c-b50090278a2d.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/a88fefed-f8f2-4797-b437-ccc54b02491d.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/e703572b-1dc8-4e40-b57d-f02da4abf04d.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/91cd93a7-1656-4541-977b-e859a9114fae.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/fb2027a6-b48b-4c0f-b62d-91bc2ca030df.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/c4aec082-4345-4c73-b4ae-709de3c0e8c7.png',
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/95a45abe-978a-42b9-8646-04c22697038e.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/31b84428-29de-4b8b-9a3b-f10bd06c3fb6.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/2c4fd040-e9e6-4bed-820a-445d7dcae7a8.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/4bf3e793-fbb5-4f92-9e2d-6626d42266cd.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/50884f08-13bd-4684-bc3d-e0987c69fba0.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/cb17c4fd-cf46-4aea-9266-3dc3bc1a796d.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/a1c7a094-e8a8-4d2c-adff-fc839a15d436.png'
+            }
+        }],
     },
     
     
