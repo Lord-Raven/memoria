@@ -22,8 +22,17 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-
-    }, /*{
+    }, {
+        name: 'Clementine',
+        fullPath: 'Error404unk0wn/clementine-your-ex-from-another-life-e5b330c492f1',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/73544f75-1926-4b1f-96f6-39ebfd2371e7/400c9feb-34d6-494c-b535-93f9c55818ae.png',
+        description: ``,
+        themeColor: '',
+        themeFontFamily: ``,
+        voiceId: '',
+        outfitId: '',
+        outfits: [],
+    } /*{
         name: 'Haylon',
         fullPath: 'Inanite/haylon-da4271ca7fee',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/2b63fbce-f2b3-404c-8bcf-a6769ab41948/8b5469a1-f512-4d31-a1ad-e05b3ab7d962.png',
@@ -48,17 +57,6 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         name: 'Millia', 
         fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png',
-        description: ``,
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
-
-    }, {
-        name: 'Milliette',
-        fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png',
         description: ``,
         themeColor: '',
         themeFontFamily: ``,
@@ -129,7 +127,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#b7ccda',
         themeFontFamily: `'Courier New', Courier, monospace`,
         voiceId: '03a438b7-ebfa-4f72-9061-f086d8f1fca6',
-        outfitId: '',
+        outfitId: 'Naked Chasis',
         outfits: [{
             id: 'Naked Chasis',
             name: 'Naked Chasis',
@@ -589,7 +587,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#c89b5e',
         themeFontFamily: `'Courier New', Courier, monospace`,
         voiceId: '6e6619ba-4880-4cf3-a5df-d0697ba46656',
-        outfitId: '',
+        outfitId: 'Gilded Robes',
         outfits: [{
             id: 'Gilded Robes',
             name: 'Gilded Robes',
@@ -826,6 +824,49 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 pride: 'https://media.charhub.io/14595e76-fd06-4e4e-a10b-3c2fedc57ecf/65e5fa1a-2d54-4331-94f7-0366a7a065f5.png',
                 sadness: 'https://media.charhub.io/0b26ea3b-63ad-43c0-8a91-1f8247c6895d/d96248d1-fa25-4a8f-9c50-8c1be586dfca.png',
                 wonder: 'https://media.charhub.io/a2c17466-d8ac-466e-a583-c8485eabf011/42136b48-aedc-49d9-81dc-fdc5d91855ed.png'
+            }
+        }],
+    },
+
+
+     {
+        name: 'Milliette',
+        fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png',
+        description: `A 5'7" woman with a sharp, athletic build. Her features are soft but her presence is not. She has identical crimson hair left loose past her shoulders and eyes with black irises that seem to absorb light. Her movements are restless and fluid.`,
+        themeColor: '#b12437',
+        themeFontFamily: `'Courier New', Courier, monospace`,
+        voiceId: 'professional_female_30s',
+        outfitId: 'Expedition Gear',
+        outfits: [{
+            id: 'Expedition Gear',
+            name: 'Expedition Gear',
+            description: 'A loose maroon tunic over a cloth chestwrap, paired with a practical black skirt. She wears scarred vambraces and armored thigh-boots of Old World alloy. A belt with pouches for recovered fragments hangs at her waist.',
+            prompts: {},
+            emotionPack: {
+                base: 'https://media.charhub.io/a23bee6d-c928-4873-a560-e0640a9d1152/1f26bcaf-a1cd-4a76-83c2-75a723c77f68.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/844f4be8-f4bc-428a-a2a5-ac1f09b5beaf.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/282f1607-3317-472e-b553-a9332ad53cb8.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/d12a0f88-7b71-4b50-9f09-ab69e0153f7b.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/4be13af7-f4ef-4f92-8e93-dec6383e1537.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/8850d27f-b4fb-4c92-8110-0d6b0efd56e9.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/5beb866f-3f7c-4501-b945-46626f427efd.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/9ff5ad34-7584-483a-9610-2a8f3ea21433.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/db3b47d8-a010-4628-b94a-17f7408f702e.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/ef5ec54b-cc90-4ba2-a7dd-73347bf3201f.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/013766eb-336d-4574-ac08-a054a62e4ad3.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/9ec92765-ae27-43b0-a605-fcf5c7d0a3b3.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/75152574-8ac2-4b23-b033-19fbeacefe48.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/ca7bd443-ff11-4e0c-b5f6-9d582ca36b82.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/56d07c6d-41ee-4160-8837-ff004cfaa009.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/33c5184d-ed6b-4edb-bcfd-e36d3bf1794d.png',
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/3e5f07a0-8b08-4755-b90e-efc1ad869eb5.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/666d2451-7a9f-4ece-b65a-5b511ae650c1.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/fc4206d5-8ca2-40a9-82a3-8be1d36cee1a.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/595e5908-22d1-4698-b5b5-826abe5f4edf.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/8cdc13ac-a4e2-493d-948a-5af16d80035f.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/86b2d6eb-7fad-481d-814e-3030fa83e371.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/e5d95df0-5165-4d55-ba46-468f57300646.png'
             }
         }],
     },
