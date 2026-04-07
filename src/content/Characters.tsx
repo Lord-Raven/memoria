@@ -32,7 +32,7 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-    } /*{
+    }, /*{
         name: 'Haylon',
         fullPath: 'Inanite/haylon-da4271ca7fee',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/2b63fbce-f2b3-404c-8bcf-a6769ab41948/8b5469a1-f512-4d31-a1ad-e05b3ab7d962.png',
