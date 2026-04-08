@@ -1146,41 +1146,43 @@ ${indent}}`;
                                         />
                                     </div>
 
-                                    <div>
-                                        <label
-                                            style={{
-                                                display: 'block',
-                                                color: '#00ff88',
-                                                fontSize: '14px',
-                                                fontWeight: 'bold',
-                                                marginBottom: '8px',
-                                            }}
-                                        >
-                                            Outfit Object (for testing and export)
-                                        </label>
-                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                            <Button onClick={handleGenerateOutfitsExport} variant="secondary">
-                                                Generate Object
-                                            </Button>
+                                    {stage().betaMode && (
+                                        <div>
+                                            <label
+                                                style={{
+                                                    display: 'block',
+                                                    color: '#00ff88',
+                                                    fontSize: '14px',
+                                                    fontWeight: 'bold',
+                                                    marginBottom: '8px',
+                                                }}
+                                            >
+                                                Outfit Object (for testing and export)
+                                            </label>
+                                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                                <Button onClick={handleGenerateOutfitsExport} variant="secondary">
+                                                    Generate Object
+                                                </Button>
+                                            </div>
+                                            <textarea
+                                                value={outfitsObjectExport}
+                                                readOnly
+                                                placeholder="Generate object output to export this actor's outfits"
+                                                style={{
+                                                    width: '100%',
+                                                    minHeight: '160px',
+                                                    padding: '12px',
+                                                    fontSize: '13px',
+                                                    backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                    border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                    borderRadius: '5px',
+                                                    color: '#e0f0ff',
+                                                    fontFamily: 'monospace',
+                                                    resize: 'vertical',
+                                                }}
+                                            />
                                         </div>
-                                        <textarea
-                                            value={outfitsObjectExport}
-                                            readOnly
-                                            placeholder="Generate object output to export this actor's outfits"
-                                            style={{
-                                                width: '100%',
-                                                minHeight: '160px',
-                                                padding: '12px',
-                                                fontSize: '13px',
-                                                backgroundColor: 'rgba(0, 20, 40, 0.6)',
-                                                border: '2px solid rgba(0, 255, 136, 0.3)',
-                                                borderRadius: '5px',
-                                                color: '#e0f0ff',
-                                                fontFamily: 'monospace',
-                                                resize: 'vertical',
-                                            }}
-                                        />
-                                    </div>
+                                    )}
                                 </div>
                             </section>
 

@@ -54,30 +54,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
 
     readonly SAVE_SLOT_COUNT = 10;
-    readonly FETCH_AT_TIME = 200;
-    readonly bannedTagsDefault = [
-        'FUZZ',
-        'child',
-        'teenager',
-        'narrator',
-        'underage',
-        'multi-character',
-        'multiple characters',
-        'nonenglish',
-        'non-english',
-        'famous people',
-        'celebrity',
-        'real person',
-        'feral'
-    ];
-    // At least one of these is required for a faction search; helps indicate that the card has a focus on setting or tone.
-    readonly characterSearchQuery = `https://inference.chub.ai/search?first=${this.FETCH_AT_TIME}&exclude_tags={{EXCLUSIONS}}&page={{PAGE_NUMBER}}&tags={{SEARCH_TAGS}}&sort=random&asc=false&include_forks=false&nsfw=true&nsfl=false` +
-        `&nsfw_only=false&require_images=false&require_example_dialogues=false&require_alternate_greetings=false&require_custom_prompt=false&exclude_mine=false&min_tokens=200&max_tokens=5000` +
-        `&require_expressions=true&require_lore=false&mine_first=false&require_lore_embedded=false&require_lore_linked=false&my_favorites=false&inclusive_or=true&recommended_verified=false&count=false&min_tags=3`;
     readonly characterDetailQuery = 'https://inference.chub.ai/api/characters/{fullPath}?full=true';
     
 
-    readonly INITIAL_ACTORS = 8;
+    readonly INITIAL_ACTORS = 33; // Gotta load 'em all.
 
     saveData: ChatStateType;
     primaryUser: User;
@@ -177,7 +157,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         const newSave: SaveType = this.generateFreshSave(playerData);
         Object.assign(newSave, playerData.data);
 
-        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 3 + 3;
+        this.anticipatedLoadingPromiseCount = Math.max(this.INITIAL_ACTORS - Object.keys(newSave.actors).length, 0) * 1 + 3;
 
         // Load Cassiel as the Warden and add to actors
         loadSupportedActor(COMPLETE_CHARACTERS.find(char => char.name === 'Cassiel') || {}, this).then(cassielActor => {
@@ -523,7 +503,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             try {
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 console.log(this.getSave().actors);
-                console.log(this.getSave().betaMode);
                 let actors = this.getSave().actors || {};
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
