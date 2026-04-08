@@ -22,16 +22,6 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-    }, {
-        name: 'Clementine',
-        fullPath: 'Error404unk0wn/clementine-your-ex-from-another-life-e5b330c492f1',
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/73544f75-1926-4b1f-96f6-39ebfd2371e7/400c9feb-34d6-494c-b535-93f9c55818ae.png',
-        description: ``,
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
     }, /*{
         name: 'Haylon',
         fullPath: 'Inanite/haylon-da4271ca7fee',
@@ -53,17 +43,6 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         voiceId: '',
         outfitId: '',
         outfits: [],
-    }, {
-        name: 'Millia', 
-        fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2', 
-        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png',
-        description: ``,
-        themeColor: '',
-        themeFontFamily: ``,
-        voiceId: '',
-        outfitId: '',
-        outfits: [],
-
     }, {
         name: 'Red Hood',
         fullPath: 'NeoConker626/red-hood-lone-wolf-s-howl-3edec4b51742',
@@ -99,23 +78,45 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         id: `cassiel`,
         name: 'Cassiel',
         type: ActorType.WARDEN,
-        profile: 'A stern and enigmatic warden who oversees the prison. Cassiel is known for their strict rules and mysterious past.',
+        description: ``,
+        profile: 'Cassiel is a towering eight-foot goddess with flowing green hair with constellations enshrined in its shadows and matching emerald eyes.',
         sampleImageUrl: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
+        fullPath: '',
+        themeColor: '#a3c175',
+        themeFontFamily: 'Georgia, serif',
+        voiceId: 'calm_female_20s',
+        outfitId: 'Celestial Robes',
         outfits: [{
-            id: 'default',
-            description: 'Cassiel, the Warden, is a towering goddess in flowing white robes.',
+            id: 'Celestial Robes',
             name: 'Celestial Robes',
+            description: 'Cassiel, the Warden, is a goddess in flowing and intricate white and gold robes, cinched by an elaborate golden belt. Upon her head, she wears a golden circlet with Valkyrie wings.',
             prompts: {},
             emotionPack: {
-                base: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
-                neutral: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png'
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/136496e5-add4-4b36-975f-8c7e173dfa19.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/bea3c97e-4afc-4aa0-8c29-3d6e62415b12.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/34b01fe4-4c3d-4444-8fbd-ae0eff8a3eb9.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/6cfa3a8c-f502-493a-bf3b-c4de0f058aeb.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/bfa06182-36d0-4af3-9e20-7229599a2885.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/b47ac5ec-14cd-439c-8b7b-099402453d38.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/696d9115-d126-4b5c-89fc-8fe8a2ac3425.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/16c218f6-2329-4602-a6c3-2cba665c17c6.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/caee0931-5f32-4b11-80c4-ec491877a8d1.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/92b8eef3-6e81-4bad-ac4f-1ef9eab77a18.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/6e57e9f4-df15-42ed-b8f6-3b575a4ba2b7.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/4cafdd17-b2ef-4ccf-a66d-26bce1c37dd6.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/0836450a-81c5-4f6c-a024-3173c4fc7d0a.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/06752be0-78ba-4a06-a1ed-e762c02f9d53.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/54b460e2-8bf0-4e0d-9976-baeb548078a1.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/239725ae-8d79-405d-88d3-c97fa78eafde.png',
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/3bae32bc-87bb-4a6c-8f96-6667d2cabdc3.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/ad4fad48-1c9d-4fea-8fb1-6c3400251c15.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/dcbe35d7-8173-4188-a00a-8ce87bf7e92f.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/a17b0da7-987e-42f3-9ce7-4d55d47a5e19.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/56de10a6-496a-4637-9557-2483fbf0abee.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/bc2f0a87-812b-4522-aa0b-462e4173f5e8.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/91468f9f-7f67-42c2-b594-a8e1c02309b8.png'
             }
         }],
-        outfitId: 'default',
-        fullPath: '',
-        themeColor: '#a6e683',
-        themeFontFamily: 'Georgia, serif',
-        voiceId: 'calm_female_20s'
     },
 
 
@@ -417,6 +418,49 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 wonder: 'https://media.charhub.io/1d4f08ee-f33b-4a7d-9a75-78872e8bc7f0/ebfbd95a-0263-4948-a11b-6ff0a3dda620.png'
             }
         }]
+    },
+
+
+    {
+        name: 'Clementine',
+        fullPath: 'Error404unk0wn/clementine-your-ex-from-another-life-e5b330c492f1',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/73544f75-1926-4b1f-96f6-39ebfd2371e7/400c9feb-34d6-494c-b535-93f9c55818ae.png',
+        description: `A tall, slender woman with an athletic build and fair, alabaster skin that seems to glow in the light. She has long blonde hair tied in a single braid with a blue ribbon, sky-blue eyes, and a gentle scattering of soft pink freckles across her nose. Her features are radiant, often lit by a beaming smile that makes her eyes crinkle shut.`,
+        themeColor: '#7aa2c9',
+        themeFontFamily: `'Georgia', 'Times New Roman', serif`,
+        voiceId: '6e6619ba-4880-4cf3-a5df-d0697ba46656',
+        outfitId: 'Workday Simplicity',
+        outfits: [{
+            id: 'Workday Simplicity',
+            name: 'Workday Simplicity',
+            description: 'She wears a practical, breathable outfit suited for work: rough-hewn blue shorts or cotton braies, a light gray-blue tunic. A simple canvas bag is slung over her shoulder, carrying her journal and daily essentials.',
+            prompts: {},
+            emotionPack: {
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/ae06949d-7caf-45aa-b95c-cfaa5a1a913c.png',
+                base: 'https://media.charhub.io/7f9781c5-0e1a-41fb-b7e3-29ddd833cdd8/24021d49-e926-46d4-bd76-daf1c19d9c6d.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/db34a6ec-afe1-4d6b-a595-94e9e0e8109e.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/8e175c56-2223-439b-bba7-820d6f1b9929.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/2c03a536-254f-467d-be1b-1618ec0b0929.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/c91c2f6d-3000-4f65-89d6-63cbb5cae522.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/3ccb4fcb-649c-49af-b220-3386426a9ef5.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/fb3ce51f-4e18-4900-8183-6667bb64bb2d.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/87eab46c-3d13-4a9b-8590-3a2c5558d3a6.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/8d7c5241-ad97-42fb-bc1a-4ea57f90d0df.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/63f79e81-a5da-4c06-8146-0922fe232ce9.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/8b45e6ce-fd4e-4012-ba75-cc5e42bccb4c.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/2b81c5a4-c4ef-4624-b45e-ea9912392cd2.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/ebda7a88-f2c5-47a7-81d6-cb83ecc9b79b.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/895f618f-af9c-4295-ad8d-a168846105f8.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/214a9c5f-46cc-4f71-ac71-c872df5fe553.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/d3339ba0-1585-4ceb-958d-64c0110f14d0.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/5e5ef391-a082-47c6-a99f-49e3e88a02e1.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/b41b076e-ce9a-4233-a3fc-ff19823efba7.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/bd9c8d56-0d59-49e1-a583-3aa3180ff7b6.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/eb7765eb-e161-4353-b808-ad19215b347d.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/e8d66fb8-18d8-48e7-bd7a-fbb2d6e37793.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/2b73042a-b5f9-4300-b1f8-9db440bf7d2e.png'
+            }
+        }],
     },
 
 
@@ -826,6 +870,50 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
                 wonder: 'https://media.charhub.io/a2c17466-d8ac-466e-a583-c8485eabf011/42136b48-aedc-49d9-81dc-fdc5d91855ed.png'
             }
         }],
+    },
+
+
+     {
+        name: 'Millia', 
+        fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2', 
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png',
+        description: `A woman in her mid-20s with striking crimson hair and eyes of such deep black they seem to absorb light. She stands at 5'7" with soft features and slight, attention-drawing curves. Millia wears her hair in a neat updo and has a posture that strives for control.`,
+        themeColor: '#3d4672',
+        themeFontFamily: `'Courier New', monospace`,
+        voiceId: '03a438b7-ebfa-4f72-9061-f086d8f1fca6',
+        outfitId: 'Workshop Apron',
+        outfits: [{
+            id: 'Workshop Apron',
+            name: 'Workshop Apron',
+            description: 'A navy tunic and black trousers, covered by a heavy-duty gray workshop apron with large pockets. She wears leather gloves.',
+            prompts: {},
+            emotionPack: {
+                joy: 'https://avatars.charhub.io/avatars/stages/storage/plain/61088df8-dd7a-4318-9ca2-8f2c19224501.png',
+                base: 'https://avatars.charhub.io/avatars/stages/storage/plain/2e576b44-8c44-4ec4-9623-735464c17f9c.png',
+                fear: 'https://avatars.charhub.io/avatars/stages/storage/plain/fce0d53a-498a-42bb-a5d8-aec368960a48.png',
+                love: 'https://avatars.charhub.io/avatars/stages/storage/plain/bb6b73fc-8b31-411f-b028-154c24316026.png',
+                anger: 'https://avatars.charhub.io/avatars/stages/storage/plain/a4d0e93c-81f4-49d0-bd35-d2705f064eca.png',
+                grief: 'https://avatars.charhub.io/avatars/stages/storage/plain/63ae7cd6-f05c-4d3b-90e6-659250bcc67e.png',
+                guilt: 'https://avatars.charhub.io/avatars/stages/storage/plain/9f895629-0d0a-4d63-9ef5-dca9c307d80f.png',
+                pride: 'https://avatars.charhub.io/avatars/stages/storage/plain/78f7c609-c59a-4014-8d92-6f5712373556.png',
+                desire: 'https://avatars.charhub.io/avatars/stages/storage/plain/cefc5d4c-89e4-49a3-ac07-bc57bd009fd2.png',
+                injury: 'https://avatars.charhub.io/avatars/stages/storage/plain/9a93da19-f9bb-4b1b-9ca9-7c0fe66ddf62.png',
+                wonder: 'https://avatars.charhub.io/avatars/stages/storage/plain/7362a729-d7bb-4f11-b614-5e7890960492.png',
+                disgust: 'https://avatars.charhub.io/avatars/stages/storage/plain/04991ea7-af27-4853-be68-3e83b8fd9473.png',
+                ecstasy: 'https://avatars.charhub.io/avatars/stages/storage/plain/100ae36c-6846-4354-bd19-66d6c8d444da.png',
+                neutral: 'https://avatars.charhub.io/avatars/stages/storage/plain/ba08ca65-1062-4c6e-ae91-298554439592.png',
+                sadness: 'https://avatars.charhub.io/avatars/stages/storage/plain/5fce8d17-0dd3-4c72-a87a-3bc06f1369b6.png',
+                approval: 'https://avatars.charhub.io/avatars/stages/storage/plain/b533e38d-83db-444f-afd1-86c36fbb2eaa.png',
+                intrigue: 'https://avatars.charhub.io/avatars/stages/storage/plain/0470146e-2d97-4ce9-b3c4-630387bd5484.png',
+                kindness: 'https://avatars.charhub.io/avatars/stages/storage/plain/f368e3c1-0d2c-409d-aacc-7c8e4f2919a5.png',
+                confusion: 'https://avatars.charhub.io/avatars/stages/storage/plain/e6be7c5b-de52-4842-9570-be15bf60963d.png',
+                exhaustion: 'https://avatars.charhub.io/avatars/stages/storage/plain/7cd636f1-f2ba-4554-9e77-2d2544f3fdcc.png',
+                nervousness: 'https://avatars.charhub.io/avatars/stages/storage/plain/4949d463-d0a1-4b0d-9bb0-973a3b186e91.png',
+                embarrassment: 'https://avatars.charhub.io/avatars/stages/storage/plain/a006a6e6-1a34-4d6e-a586-21a48a4766c2.png',
+                disappointment: 'https://avatars.charhub.io/avatars/stages/storage/plain/d2b1229d-9526-42a7-907c-1a0c80bcc170.png'
+            }
+        }],
+
     },
 
 

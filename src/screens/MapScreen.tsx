@@ -1307,9 +1307,21 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							</g>
 
 						<defs>
-								<pattern id="unavailableDiagonalStripes" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(-45)">
-									<line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" strokeWidth="4" />
-								</pattern>
+								{voronoiCells.map((cell) => {
+									const borderPaletteColor = cell.point.themeColor;
+									return (
+										<pattern
+											key={`pattern-${cell.point.id}`}
+											id={`unavailableDiagonalStripes-${cell.point.id}`}
+											patternUnits="userSpaceOnUse"
+											width="8"
+											height="8"
+											patternTransform="rotate(-45)"
+										>
+											<line x1="0" y1="0" x2="0" y2="8" stroke={borderPaletteColor} strokeWidth="4" />
+										</pattern>
+									);
+								})}
 								{voronoiCells.map((cell) => (
 									<clipPath key={cell.clipPathId} id={cell.clipPathId} clipPathUnits="userSpaceOnUse">
 										<path d={cell.path} />
@@ -1385,6 +1397,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								borderRadius: "50%",
 								overflow: "hidden",
 								backgroundColor: "rgba(8, 12, 18, 0.95)",
+								backgroundPosition: "top center",
 								border: `${portrait.strokeWidth}px solid ${portrait.stroke}`,
 								boxSizing: "border-box",
 								pointerEvents: "none",
