@@ -1027,7 +1027,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		const viewportScaleX = Math.max(1e-6, mapViewportSize.width / MAP_WIDTH);
 		const viewportScaleY = Math.max(1e-6, mapViewportSize.height / MAP_HEIGHT);
-		const portraitDiameterPx = clamp(0.04 * Math.max(mapViewportSize.width, mapViewportSize.height), 28, 72);
+		const portraitDiameterPx = clamp(0.06 * Math.max(mapViewportSize.width, mapViewportSize.height), 42, 108);
 		const portraitRadiusPx = portraitDiameterPx / 2;
 		const portraitOffsetMapX = portraitRadiusPx / viewportScaleX;
 		const portraitOffsetMapY = portraitRadiusPx / viewportScaleY;
@@ -1398,6 +1398,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								overflow: "hidden",
 								backgroundColor: "rgba(8, 12, 18, 0.95)",
 								backgroundPosition: "top center",
+								backgroundSize: "cover",
 								border: `${portrait.strokeWidth}px solid ${portrait.stroke}`,
 								boxSizing: "border-box",
 								pointerEvents: "none",
