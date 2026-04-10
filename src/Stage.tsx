@@ -62,7 +62,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     saveData: ChatStateType;
     primaryUser: User;
     primaryCharacter: Character;
-    betaMode: boolean;
     generationPromises: {[key: string]: Promise<any|void>} = {};
     anticipatedLoadingPromiseCount: number = 4;
     depthPipeline: any = null;
@@ -84,8 +83,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // Populate default saves with SAVE_SLOT_COUNT undefines:
         this.saveData = chatState != null ? chatState : {saves: Array(this.SAVE_SLOT_COUNT).fill(undefined), lastSaveSlot: 0};
-
-        this.betaMode = config?.beta_mode === "True";
 
     }
 

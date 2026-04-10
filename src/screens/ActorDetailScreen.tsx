@@ -1146,7 +1146,7 @@ ${indent}}`;
                                         />
                                     </div>
 
-                                    {stage().betaMode && (
+                                    {stage().getSave().betaMode && (
                                         <div>
                                             <label
                                                 style={{
