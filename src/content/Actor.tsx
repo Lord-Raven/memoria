@@ -158,7 +158,7 @@ export async function loadSupportedActor(data: Partial<Actor>, stage: Stage): Pr
         }
 
         // if newActor is missing critical fields like personality or outfits, distill these details to fill the gaps
-        if (!newActor.profile || !newActor.outfits) {
+        if ((!(getLinkedActorLore(newActor.name, stage) || newActor.profile) || !newActor.outfits) && newActor.fullPath) {
             return await distillActor(newActor, definition, stage);
         }
     }

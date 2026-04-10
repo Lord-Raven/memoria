@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Stage } from '../Stage';
 import { Actor, getEmotionImage } from '../content/Actor';
 import { Location } from '../content/Location';
-import { Close, Person, Groups, Place } from '@mui/icons-material';
+import { Close, Person, Book, Place } from '@mui/icons-material';
 import { Button, GlassPanel, Title } from './UiComponents';
 import { ActorDetailScreen } from './ActorDetailScreen';
 import { LocationDetailScreen } from './LocationDetailScreen';
@@ -21,14 +21,17 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
     const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
+    const sortByName = <T extends { name?: string }>(a: T, b: T) =>
+        (a.name ?? '').trim().localeCompare((b.name ?? '').trim(), undefined, { sensitivity: 'base' });
+
     // Get all actors from the save
-    const actors = Object.values(stage().getSave().actors);
+    const actors = Object.values(stage().getSave().actors).sort(sortByName);
 
     // Get all locations from the save atlas
-    const locations = Object.values(stage().getSave().atlas || {});
+    const locations = Object.values(stage().getSave().atlas || {}).sort(sortByName);
     const ardeiaLocations = locations.filter(location =>
         location.id.startsWith('ardeia-') || location.imageUrl?.toLowerCase().includes('/ardeia/')
-    );
+    ).sort(sortByName);
     const outsideLocations = locations.filter(location => !ardeiaLocations.includes(location));
 
     const handleActorClick = (actor: Actor) => {
@@ -148,7 +151,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                         opacity: activeTab === 'lorebook' ? 1 : 0.6,
                                     }}
                                 >
-                                    <Groups />
+                                    <Book />
                                     Lorebook ({stage().getSave().lorebook?.length || 0})
                                 </Button>
                                 <Button

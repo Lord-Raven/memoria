@@ -504,7 +504,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');
-                    const character = this.pickRandom((this.getSave().betaMode ? BETA_CHARACTERS : COMPLETE_CHARACTERS).filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
+                    const character = this.pickRandom((this.getSave().betaMode ? [...COMPLETE_CHARACTERS, ...BETA_CHARACTERS] : COMPLETE_CHARACTERS).filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
                     if (!character) {
                         console.warn('No more supported characters to load as reserve actors.');
                         break;
