@@ -283,7 +283,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     
     {
-        name: ' Arca-7', 
+        name: 'Arca-7', 
         fullPath: 'NobodyNos/arca-7-tactical-support-brat-8c439a869a73', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/c755a79e-2dbe-4fcb-9aa5-5bae55f11778/f7d4658a-57c2-4390-ba8f-6c8988899667.png',
         description: `A petite, female-presenting mechanoid with soft, silky skin and a smug resting expression. She has a short pink bob cut and blank, eyeless sockets, always covered by a black blindfold. Her build is slight, with average height and proportions.`,

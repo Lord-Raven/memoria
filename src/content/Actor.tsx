@@ -567,7 +567,7 @@ export function getNameSimilarity(name: string, possibleName: string): number {
     }
 
     // Check word-based matching first (higher priority)
-    const names = name.split(' ');
+    const names = name.split(' ').filter(word => word.length > 0);
     
     // Count matching words
     let matchingWords = 0;
@@ -575,10 +575,6 @@ export function getNameSimilarity(name: string, possibleName: string): number {
         if (possibleName.includes(namePart)) {
             matchingWords++;
         }
-    }
-
-    if (name.includes("rca")) {
-        console.log(`Name similarity check for "${name}" vs "${possibleName}": ${matchingWords} matching words out of ${names.length}`);
     }
     
     // If we have good word matches, prioritize that
