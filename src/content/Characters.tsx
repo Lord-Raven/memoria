@@ -2,7 +2,7 @@ import { Actor, ActorState, ActorType } from "./Actor";
 
 
 export const BETA_CHARACTERS: Partial<Actor>[] = [
-    /*{
+    {
         name: 'Haylon',
         fullPath: 'Inanite/haylon-da4271ca7fee',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/2b63fbce-f2b3-404c-8bcf-a6769ab41948/8b5469a1-f512-4d31-a1ad-e05b3ab7d962.png',
@@ -13,7 +13,7 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         outfitId: '',
         outfits: [],
 
-    }, {
+    },/* {
         name: 'Vash',
         fullPath: 'XxSiCxX/vash-romina-ghosts-of-another-world-735a31a4e894',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/f7504502-57f0-49ef-9178-b4f053c9bb37/e09c6364-4e67-4ccb-b744-c4748316335f.png'
@@ -30,9 +30,31 @@ export const BETA_CHARACTERS: Partial<Actor>[] = [
         outfits: [],
     },
     {
+        name: 'Dorothy',
+        fullPath: '',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/17eb7a74-9fab-4f40-8eed-357a0941c1aa/97176570-ac7c-4be1-baf3-aa53f85d0b9c.png',
+        description: ``,
+        themeColor: '',
+        themeFontFamily: ``,
+        voiceId: '',
+        outfitId: '',
+        outfits: [],
+    },
+    {
         name: 'Halvola',
         fullPath: '',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37cc124d-814d-4282-a5bd-884d40fb8fd5/12b3da79-c1ca-4250-ad21-e5f799dbb60e.png',
+        description: ``,
+        themeColor: '',
+        themeFontFamily: ``,
+        voiceId: '',
+        outfitId: '',
+        outfits: [],
+    },
+    {
+        name: 'X01E',
+        fullPath: '',
+        sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/e7e1e219-e3dd-4c08-96c2-c5471dc675cc/b10be82f-0232-46e6-b4f6-dc5a63419e2a.png',
         description: ``,
         themeColor: '',
         themeFontFamily: ``,

@@ -258,7 +258,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
 
         if (selectedLore.type === 'character') {
             const linkedActor = Object.values(stage().getSave().actors || {}).find((actor) => {
-                const linkedLore = getLinkedActorLore(actor.name, stage());
+                const linkedLore = getLinkedActorLore(actor.lorebookName || actor.name, stage());
                 return linkedLore?.id === selectedLore.id;
             });
 

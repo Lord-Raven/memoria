@@ -33,6 +33,7 @@ export class Actor {
     type: ActorType = ActorType.PRISONER; // Default to PRISONER
     state: ActorState = ActorState.AVAILABLE; // Default to AVAILABLE
     name: string = ''; // Display name
+    lorebookName?: string; // Name to link to lorebook entries; if empty, use display name
     fullPath: string = ''; // Path to original character definition
     sampleImageUrl: string = ''; // Original reference image
     description: string = ''; // Core physical description—not outfit-oriented
@@ -158,7 +159,7 @@ export async function loadSupportedActor(data: Partial<Actor>, stage: Stage): Pr
         }
 
         // if newActor is missing critical fields like personality or outfits, distill these details to fill the gaps
-        if ((!(getLinkedActorLore(newActor.name, stage) || newActor.profile) || !newActor.outfits) && newActor.fullPath) {
+        if ((!(getLinkedActorLore(newActor.lorebookName || newActor.name, stage) || newActor.profile) || !newActor.outfits) && newActor.fullPath) {
             return await distillActor(newActor, definition, stage);
         }
     }
@@ -530,7 +531,7 @@ export function getActorProfile(actorId: string, stage: Stage) {
 		return '';
 	}
 
-	const lore = getLinkedActorLore(actor.name, stage);
+	const lore = getLinkedActorLore(actor.lorebookName || actor.name, stage);
 	return lore?.content ?? actor.profile;
 }
 
@@ -540,7 +541,7 @@ export function updateActorProfile(actorId: string, profile: string, stage: Stag
 		return;
 	}
 
-	const lore = getLinkedActorLore(actor.name, stage);
+	const lore = getLinkedActorLore(actor.lorebookName || actor.name, stage);
 	if (lore) {
 		lore.content = profile;
 		return;
@@ -575,6 +576,10 @@ export function getNameSimilarity(name: string, possibleName: string): number {
             matchingWords++;
         }
     }
+
+    if (name.includes("rca")) {
+        console.log(`Name similarity check for "${name}" vs "${possibleName}": ${matchingWords} matching words out of ${names.length}`);
+    }
     
     // If we have good word matches, prioritize that
     const wordMatchRatio = matchingWords / names.length;
@@ -604,6 +609,10 @@ export function getNameSimilarity(name: string, possibleName: string): number {
     const distance = matrix[name.length][possibleName.length];
     const maxLength = Math.max(name.length, possibleName.length);
     
+    if (name.includes("rca")) {
+        console.log(`Name similarity check for "${name}" vs "${possibleName}": Levenshtein distance = ${distance}, max length = ${maxLength}`);
+    }
+
     // Convert distance to similarity (0 to 1)
     return Math.max(0, 1 - (distance / maxLength));
 }
