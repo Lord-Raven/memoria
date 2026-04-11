@@ -789,6 +789,8 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         name: 'Lumi', 
         fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png',
+        description: ``,
+        lorebookName: `Lumen Halas`,
         outfitId: 'Healer\'s Gear',
         outfits: [{
             id: 'Healer\'s Gear',
@@ -872,6 +874,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
         description: `A tall, lean woman with a deceptively slim build. She has long, purplish hair with an orange gradient, typically styled in twin-tails, and sharp orange eyes. Her right eye is partially obscured by her bangs.`,
+        lorebookName: `Dolus Perniciosus`,
         outfitId: 'Deceptive Scholar',
         outfits: [{
             id: 'Deceptive Scholar',
@@ -954,6 +957,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/b564f9af-0ffe-49fc-aefe-c9c6563688fd/4df9d97d-165c-4c90-aa1b-aa7e8787b14d.png',
         description: `A woman in her mid-20s with striking crimson hair and eyes of such deep black they seem to absorb light. She stands at 5'7" with soft features and slight, attention-drawing curves. Millia wears her hair in a neat updo and has a posture that strives for control.`,
+        lorebookName: `Millia & Milliette`,
         themeColor: '#3d4672',
         themeFontFamily: `'Courier New', monospace`,
         voiceId: '03a438b7-ebfa-4f72-9061-f086d8f1fca6',
@@ -993,11 +997,12 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     },
 
 
-     {
+    {
         name: 'Milliette',
         fullPath: 'Not_Lex/millia-milliette-inseparable-twins-87298a2db9a2',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/adb4022f-290c-44cf-b5eb-9350bbb5d5d4/2a3399c5-77ce-4e18-8087-f8d6a25b68bf.png',
         description: `A 5'7" woman with a sharp, athletic build. Her features are soft but her presence is not. She has identical crimson hair left loose past her shoulders and eyes with black irises that seem to absorb light. Her movements are restless and fluid.`,
+        lorebookName: `Millia & Milliette`,
         themeColor: '#b12437',
         themeFontFamily: `'Courier New', Courier, monospace`,
         voiceId: 'professional_female_30s',

@@ -135,6 +135,14 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
             groups[category].push(entry);
         }
 
+        // Add additional unused categories for each Actor name not present in the groups, to allow users to assign lore entries to them
+        Object.values(stage().getSave().actors || {}).forEach((actor) => {
+            const actorCategory = actor.name.trim();
+            if (actorCategory.length > 0 && !groups[actorCategory]) {
+                groups[actorCategory] = [];
+            }
+        });
+
         for (const category of Object.keys(groups)) {
             groups[category] = sortLoreEntries(groups[category]);
         }
@@ -476,13 +484,16 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
                                                                                 type="button"
                                                                                 onClick={() => setSelectedLoreId(entry.id)}
                                                                                 style={{
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
                                                                                     textAlign: 'left',
                                                                                     background: 'transparent',
                                                                                     border: 'none',
                                                                                     cursor: 'pointer',
                                                                                     color: '#e0f0ff',
                                                                                     padding: 0,
-                                                                                    width: '100%',
+                                                                                    flex: 1,
+                                                                                    alignSelf: 'stretch',
                                                                                     fontWeight: 600,
                                                                                 }}
                                                                             >

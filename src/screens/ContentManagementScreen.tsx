@@ -25,7 +25,7 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
         (a.name ?? '').trim().localeCompare((b.name ?? '').trim(), undefined, { sensitivity: 'base' });
 
     // Get all actors from the save
-    const actors = Object.values(stage().getSave().actors).sort(sortByName);
+    const actors = Object.values(stage().getSave().actors).filter(actor => actor.type != 'PLAYER').sort(sortByName);
 
     // Get all locations from the save atlas
     const locations = Object.values(stage().getSave().atlas || {}).sort(sortByName);
