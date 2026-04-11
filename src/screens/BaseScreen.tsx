@@ -7,6 +7,7 @@ import { TooltipBar } from './TooltipBar';
 import { theme } from './Theme';
 import { MapScreen } from './MapScreen';
 import { LoadingScreen } from './LoadingScreen';
+import { usePreloadCriticalImages } from '../utils/useImagePreloading';
 
 /*
  * Base screen management; the Stage class will display this, and this will track the current screen being displayed.
@@ -27,6 +28,11 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     const [isVerticalLayout, setIsVerticalLayout] = React.useState<boolean>(stage().isVerticalLayout());
     const { message, icon, clearTooltip, setPriorityMessage } = useTooltip();
 
+    // Preload critical images (actor neutrals and location maps) on mount
+    const stageInstance = stage();
+    const actors = React.useMemo(() => Object.values(stageInstance.getSave()?.actors || {}), [stageInstance.getSave()?.actors]);
+    const locations = React.useMemo(() => Object.values(stageInstance.getSave()?.atlas || {}), [stageInstance.getSave()?.atlas]);
+    usePreloadCriticalImages(actors, locations);
 
     // Set up the priority message callback in the stage
     React.useEffect(() => {

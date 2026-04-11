@@ -13,6 +13,7 @@ import { MapCell, MapCellData } from "./MapCell";
 import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 import { determineEmotion, generateSkitScript, getCurrentLocation, Skit } from "../content/Skit";
 import { Actor, clampActorAffinity, getEmotionImage } from "../content/Actor";
+import { usePreloadLocationMap } from "../utils/useImagePreloading";
 
 export type MapScreenMode = 'management' | 'skit';
 
@@ -360,6 +361,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const fullScreenProgressRef = useRef(0);
 	const [showContentManagement, setShowContentManagement] = useState(false);
 	const [showLorebookManagement, setShowLorebookManagement] = useState(false);
+
+	// Preload location images when the map is displayed
+	const locations = useMemo(() => Object.values(stage().getSave()?.atlas || {}), [stage().getSave()?.atlas]);
+	usePreloadLocationMap(locations);
 
 	useEffect(() => {
 		const svgElement = mapSvgRef.current;

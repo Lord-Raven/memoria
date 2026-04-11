@@ -604,10 +604,6 @@ export function getNameSimilarity(name: string, possibleName: string): number {
     
     const distance = matrix[name.length][possibleName.length];
     const maxLength = Math.max(name.length, possibleName.length);
-    
-    if (name.includes("rca")) {
-        console.log(`Name similarity check for "${name}" vs "${possibleName}": Levenshtein distance = ${distance}, max length = ${maxLength}`);
-    }
 
     // Convert distance to similarity (0 to 1)
     return Math.max(0, 1 - (distance / maxLength));
