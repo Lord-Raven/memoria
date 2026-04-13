@@ -105,7 +105,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({
         character: true,
-        location: true,
+        location: false,
         other: true,
     });
 
@@ -350,6 +350,10 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
                                 {categoryOrder.map((category) => {
                                     const categoryEntries = groupedEntries[category] || [];
                                     const isCollapsed = collapsedCategories[category] ?? true;
+
+                                    if (!CORE_CATEGORY_SET.has(category) && categoryEntries.length === 0) {
+                                        return null;
+                                    }
 
                                     return (
                                         <div key={category} style={{ marginBottom: '16px' }}>
