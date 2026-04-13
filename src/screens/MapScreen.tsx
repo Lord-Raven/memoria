@@ -56,6 +56,7 @@ const MAX_CELL_RADIUS = MAX_LOCATION_RADIUS_VMIN * MAP_VMIN_IN_MAP_UNITS;
 const MIN_RENDERABLE_CELL_AREA = 1;
 const POINT_TRANSITION_MS = 700;
 const HOVER_TRANSITION_MS = 240;
+const LABEL_HOVER_RELEASE_DELAY_MS = 140;
 const PULSE_TICK_MS = 50;
 const HOVER_TARGET_RADIUS_PAD = 26;
 const HOVER_RADIUS_INFLUENCE_BOOST = 30;
@@ -334,9 +335,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const { message: activeTooltipMessage, setTooltip, clearTooltip } = useTooltip();
 	const animatedPointsRef = useRef<VoronoiPoint[]>([]);
 	const hoverIntensityRef = useRef<Record<string, number>>({});
+	const ardeiaLabelReleaseTimeoutRef = useRef<number | null>(null);
+	const outsideLabelReleaseTimeoutRef = useRef<number | null>(null);
 	const lastMapTooltipRef = useRef<string | null>(null);
 	const activeTooltipMessageRef = useRef<string | null>(activeTooltipMessage);
 	const [hoverIntensityById, setHoverIntensityById] = useState<Record<string, number>>({});
+	const [isArdeiaHovered, setIsArdeiaHovered] = useState(false);
+	const [isOutsideHovered, setIsOutsideHovered] = useState(false);
 	const [pendingLocation, setPendingLocation] = useState<{
 		name: string;
 		isArdeia: boolean;
@@ -506,6 +511,12 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		return () => {
 			if (mapClickTimeoutRef.current !== null) {
 				window.clearTimeout(mapClickTimeoutRef.current);
+			}
+			if (ardeiaLabelReleaseTimeoutRef.current !== null) {
+				window.clearTimeout(ardeiaLabelReleaseTimeoutRef.current);
+			}
+			if (outsideLabelReleaseTimeoutRef.current !== null) {
+				window.clearTimeout(outsideLabelReleaseTimeoutRef.current);
 			}
 		};
 	}, []);
@@ -736,6 +747,37 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [hoveredCellId, targetPoints]);
 
 	useEffect(() => {
+		const hoveredArdeia = !!hoveredCellId && isArdeiaLocationId(hoveredCellId);
+		const hoveredOutside = !!hoveredCellId && !isArdeiaLocationId(hoveredCellId);
+
+		if (hoveredArdeia) {
+			if (ardeiaLabelReleaseTimeoutRef.current !== null) {
+				window.clearTimeout(ardeiaLabelReleaseTimeoutRef.current);
+				ardeiaLabelReleaseTimeoutRef.current = null;
+			}
+			setIsArdeiaHovered(true);
+		} else if (ardeiaLabelReleaseTimeoutRef.current === null) {
+			ardeiaLabelReleaseTimeoutRef.current = window.setTimeout(() => {
+				ardeiaLabelReleaseTimeoutRef.current = null;
+				setIsArdeiaHovered(false);
+			}, LABEL_HOVER_RELEASE_DELAY_MS);
+		}
+
+		if (hoveredOutside) {
+			if (outsideLabelReleaseTimeoutRef.current !== null) {
+				window.clearTimeout(outsideLabelReleaseTimeoutRef.current);
+				outsideLabelReleaseTimeoutRef.current = null;
+			}
+			setIsOutsideHovered(true);
+		} else if (outsideLabelReleaseTimeoutRef.current === null) {
+			outsideLabelReleaseTimeoutRef.current = window.setTimeout(() => {
+				outsideLabelReleaseTimeoutRef.current = null;
+				setIsOutsideHovered(false);
+			}, LABEL_HOVER_RELEASE_DELAY_MS);
+		}
+	}, [hoveredCellId]);
+
+	useEffect(() => {
 		if (mapMode !== 'skit' || !skit || skit.script.length > 0) {
 			return;
 		}
@@ -949,22 +991,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		[fullScreenProgress, fullScreenTransitionCellId, targetPoints],
 	);
 
-	const ardeiaHoverIntensity = useMemo(
-		() => Object.entries(hoverIntensityById)
-			.filter(([id]) => isArdeiaLocationId(id))
-			.reduce((max, [, v]) => Math.max(max, v), 0),
-		[hoverIntensityById],
-	);
-
-	const outsideHoverIntensity = useMemo(
-		() => Object.entries(hoverIntensityById)
-			.filter(([id]) => !isArdeiaLocationId(id))
-			.reduce((max, [, v]) => Math.max(max, v), 0),
-		[hoverIntensityById],
-	);
-
-	const ardeiaLabelOpacity = (1 - fullScreenProgress) * (1 - ardeiaHoverIntensity);
-	const outsideLabelOpacity = (1 - fullScreenProgress) * (1 - outsideHoverIntensity);
+	const ardeiaLabelOpacity = (1 - fullScreenProgress) * (isArdeiaHovered ? 0 : 1);
+	const outsideLabelOpacity = (1 - fullScreenProgress) * (isOutsideHovered ? 0 : 1);
 
 	const getSelectableCellAtCoordinates = useCallback((x: number, y: number) => {
 		let hitCell: VoronoiCell | null = null;
@@ -1349,8 +1377,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										<path d={cell.path} />
 									</clipPath>
 								))}
-						<path id="ardeia-text-arc" d="M 20,295 A 470,470 0 0 0 365,20" />
-						<path id="outside-text-arc" d="M 575,20 A 760,760 0 0 1 20,625" />
+						<path id="ardeia-text-arc" d="M 20,295 A 470,470 0 0 1 365,20" />
+						<path id="outside-text-arc" d="M 20,625 A 760,760 0 0 0 575,20" />
 						</defs>
 
 						{voronoiCells.map((cell) => {

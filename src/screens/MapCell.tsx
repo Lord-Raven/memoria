@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 
 export interface MapCellPoint {
 	id: string;
@@ -39,6 +39,60 @@ interface MapCellProps {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const BACKGROUND_LOCKED_ZOOM = 1.5;
+const BACKGROUND_FILL = "rgba(14, 30, 43, 0.92)";
+
+interface ImageDimensions {
+	width: number;
+	height: number;
+}
+
+const imageDimensionsCache = new Map<string, ImageDimensions>();
+
+const useImageDimensions = (imageUrl: string) => {
+	const [dimensions, setDimensions] = useState<ImageDimensions | null>(() => imageDimensionsCache.get(imageUrl) ?? null);
+
+	useEffect(() => {
+		if (!imageUrl) {
+			setDimensions(null);
+			return;
+		}
+
+		const cachedDimensions = imageDimensionsCache.get(imageUrl) ?? null;
+		setDimensions(cachedDimensions);
+		if (cachedDimensions) {
+			return;
+		}
+
+		let isCancelled = false;
+		const image = new Image();
+
+		const handleLoad = () => {
+			if (isCancelled || !image.naturalWidth || !image.naturalHeight) {
+				return;
+			}
+
+			const nextDimensions = {
+				width: image.naturalWidth,
+				height: image.naturalHeight,
+			};
+			imageDimensionsCache.set(imageUrl, nextDimensions);
+			setDimensions(nextDimensions);
+		};
+
+		image.addEventListener("load", handleLoad);
+		image.src = imageUrl;
+		if (image.complete) {
+			handleLoad();
+		}
+
+		return () => {
+			isCancelled = true;
+			image.removeEventListener("load", handleLoad);
+		};
+	}, [imageUrl]);
+
+	return dimensions;
+};
 
 const asHexColor = (value: string) => {
 	const normalized = (value ?? "fff").trim();
@@ -93,6 +147,7 @@ export const MapCell: FC<MapCellProps> = ({
 	lockBackgroundToTargetRadius = true,
 	isExpeditionable = true,
 }) => {
+	const imageDimensions = useImageDimensions(cell.point.imageUrl);
 	const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 	const outlineStrokeWidth = 4;
@@ -114,69 +169,79 @@ export const MapCell: FC<MapCellProps> = ({
 	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
 	const backgroundRenderWidth = backgroundWidth / compensationX;
 	const backgroundRenderHeight = backgroundHeight / compensationY;
-	const backgroundTransform = `translate3d(${backgroundLeft}px, ${backgroundTop}px, 0) scale(${compensationX}, ${compensationY})`;
-	const objectPosition = `${focalX * 100}% ${focalY * 100}%`;
+	const backgroundRenderLeft = backgroundLeft / compensationX;
+	const backgroundRenderTop = backgroundTop / compensationY;
+
+	let backgroundImageX = cell.bounds.x + backgroundLeft;
+	let backgroundImageY = cell.bounds.y + backgroundTop;
+	let backgroundImageWidth = backgroundWidth;
+	let backgroundImageHeight = backgroundHeight;
+
+	if (imageDimensions && imageDimensions.width > 0 && imageDimensions.height > 0) {
+		const imageAspectRatio = imageDimensions.width / imageDimensions.height;
+		const backgroundAspectRatio = backgroundRenderWidth / backgroundRenderHeight;
+
+		if (imageAspectRatio > backgroundAspectRatio) {
+			const coverRenderHeight = backgroundRenderHeight;
+			const coverRenderWidth = coverRenderHeight * imageAspectRatio;
+			const coverRenderX = backgroundRenderLeft - (coverRenderWidth - backgroundRenderWidth) * focalX;
+
+			backgroundImageX = cell.bounds.x + coverRenderX * compensationX;
+			backgroundImageY = cell.bounds.y + backgroundTop;
+			backgroundImageWidth = coverRenderWidth * compensationX;
+			backgroundImageHeight = backgroundHeight;
+		} else {
+			const coverRenderWidth = backgroundRenderWidth;
+			const coverRenderHeight = coverRenderWidth / imageAspectRatio;
+			const coverRenderY = backgroundRenderTop - (coverRenderHeight - backgroundRenderHeight) * focalY;
+
+			backgroundImageX = cell.bounds.x + backgroundLeft;
+			backgroundImageY = cell.bounds.y + coverRenderY * compensationY;
+			backgroundImageWidth = backgroundWidth;
+			backgroundImageHeight = coverRenderHeight * compensationY;
+		}
+	}
 
 	return (
 		<g style={{ opacity, transition: "opacity 260ms ease" }}>
-			<foreignObject
+			<rect
 				x={cell.bounds.x}
 				y={cell.bounds.y}
 				width={cell.bounds.width}
 				height={cell.bounds.height}
+				fill={BACKGROUND_FILL}
 				clipPath={`url(#${cell.clipPathId})`}
 				style={{ pointerEvents: "none" }}
-			>
-				<div
+			/>
+			{imageDimensions && (
+				<image
+					href={cell.point.imageUrl}
+					x={backgroundImageX}
+					y={backgroundImageY}
+					width={backgroundImageWidth}
+					height={backgroundImageHeight}
+					preserveAspectRatio="none"
+					clipPath={`url(#${cell.clipPathId})`}
 					style={{
-						width: "100%",
-						height: "100%",
-						position: "relative",
-						overflow: "hidden",
-						backgroundColor: "rgba(14, 30, 43, 0.92)",
+						filter: `blur(${backgroundBlurPx}px)`,
+						transition: "filter 260ms ease, opacity 180ms ease",
+						pointerEvents: "none",
+						userSelect: "none",
 					}}
-					>
-						<div
-							style={{
-								position: "absolute",
-								left: 0,
-								top: 0,
-								width: backgroundRenderWidth,
-								height: backgroundRenderHeight,
-								transform: backgroundTransform,
-								transformOrigin: "0 0",
-								willChange: "transform",
-								backfaceVisibility: "hidden",
-								overflow: "hidden",
-							}}
-						>
-							<img
-								src={cell.point.imageUrl}
-								alt=""
-								draggable={false}
-								style={{
-									width: "100%",
-									height: "100%",
-									display: "block",
-									objectFit: "cover",
-									objectPosition,
-									filter: `blur(${backgroundBlurPx}px)`,
-									transition: "filter 260ms ease, opacity 180ms ease",
-									pointerEvents: "none",
-									userSelect: "none",
-								}}
-							/>
-						</div>
-					<div
-						style={{
-							position: "absolute",
-							inset: 0,
-							backgroundColor: `rgba(4, 10, 16, ${clamp(backgroundDimOpacity, 0, 0.7)})`,
-							transition: "background-color 260ms ease",
-						}}
-					/>
-				</div>
-			</foreignObject>
+				/>
+			)}
+			<rect
+				x={cell.bounds.x}
+				y={cell.bounds.y}
+				width={cell.bounds.width}
+				height={cell.bounds.height}
+				fill={`rgba(4, 10, 16, ${clamp(backgroundDimOpacity, 0, 0.7)})`}
+				clipPath={`url(#${cell.clipPathId})`}
+				style={{
+					pointerEvents: "none",
+					transition: "fill 260ms ease",
+				}}
+			/>
 			<path d={cell.path} fill={`rgba(10, 26, 39, ${shadeOpacity})`} style={{ pointerEvents: "none" }} />
 			<path
 				d={cell.path}
