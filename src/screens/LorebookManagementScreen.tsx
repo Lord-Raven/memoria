@@ -104,18 +104,14 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
     const [editingTriggerValue, setEditingTriggerValue] = useState('');
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({
-        character: false,
-        location: false,
-        other: false,
+        character: true,
+        location: true,
+        other: true,
     });
 
     const categoryOrder = useMemo(() => {
-        const extraCategories = Array.from(new Set(
-            loreEntries
-                .map((entry) => (entry.type || 'other').trim())
-                .filter((type) => type.length > 0)
-                .filter((type) => !CORE_CATEGORY_SET.has(type))
-        )).sort((a, b) => a.localeCompare(b));
+        // Add a category for each Actor name not present in the groups, to allow users to assign lore entries to them
+        const extraCategories = Object.values(stage().getSave().actors || {}).map((actor) => actor.name.trim()).sort((a, b) => a.localeCompare(b));
 
         return [...CORE_CATEGORY_ORDER, ...extraCategories];
     }, [loreEntries]);
@@ -134,14 +130,6 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
             }
             groups[category].push(entry);
         }
-
-        // Add additional unused categories for each Actor name not present in the groups, to allow users to assign lore entries to them
-        Object.values(stage().getSave().actors || {}).forEach((actor) => {
-            const actorCategory = actor.name.trim();
-            if (actorCategory.length > 0 && !groups[actorCategory]) {
-                groups[actorCategory] = [];
-            }
-        });
 
         for (const category of Object.keys(groups)) {
             groups[category] = sortLoreEntries(groups[category]);
@@ -361,7 +349,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
                             >
                                 {categoryOrder.map((category) => {
                                     const categoryEntries = groupedEntries[category] || [];
-                                    const isCollapsed = collapsedCategories[category];
+                                    const isCollapsed = collapsedCategories[category] ?? true;
 
                                     return (
                                         <div key={category} style={{ marginBottom: '16px' }}>
