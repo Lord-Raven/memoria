@@ -360,8 +360,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         let skit: Skit;
 
         if (this.isArdeiaLocationId(selectedLocation.id)) {
-            const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER');
-            // Choose one to three random actors.
+            // Choose one to three random actors (can't include player or actors currently selected for an expedition).
+            const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && !save.expeditionChoices?.some(choice => choice.partnerActorIds.includes(actor.id)));
             skit = new Skit({
                 skitType: SkitType.SOCIAL,
                 initialLocationId: selectedLocation.id,

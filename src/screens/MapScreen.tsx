@@ -949,6 +949,23 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		[fullScreenProgress, fullScreenTransitionCellId, targetPoints],
 	);
 
+	const ardeiaHoverIntensity = useMemo(
+		() => Object.entries(hoverIntensityById)
+			.filter(([id]) => isArdeiaLocationId(id))
+			.reduce((max, [, v]) => Math.max(max, v), 0),
+		[hoverIntensityById],
+	);
+
+	const outsideHoverIntensity = useMemo(
+		() => Object.entries(hoverIntensityById)
+			.filter(([id]) => !isArdeiaLocationId(id))
+			.reduce((max, [, v]) => Math.max(max, v), 0),
+		[hoverIntensityById],
+	);
+
+	const ardeiaLabelOpacity = (1 - fullScreenProgress) * (1 - ardeiaHoverIntensity);
+	const outsideLabelOpacity = (1 - fullScreenProgress) * (1 - outsideHoverIntensity);
+
 	const getSelectableCellAtCoordinates = useCallback((x: number, y: number) => {
 		let hitCell: VoronoiCell | null = null;
 
@@ -1332,6 +1349,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 										<path d={cell.path} />
 									</clipPath>
 								))}
+						<path id="ardeia-text-arc" d="M 20,295 A 470,470 0 0 0 365,20" />
+						<path id="outside-text-arc" d="M 575,20 A 760,760 0 0 1 20,625" />
 						</defs>
 
 						{voronoiCells.map((cell) => {
@@ -1364,6 +1383,40 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							);
 						})}
 
+						{hasAtlasLocations && (
+							<>
+								<text
+									fontFamily='"Lora", Georgia, serif'
+									fontSize="65"
+									fill="rgba(210, 232, 255, 0.48)"
+									stroke="rgba(3, 10, 22, 0.52)"
+									strokeWidth={5}
+									paintOrder="stroke"
+									letterSpacing="12"
+									opacity={ardeiaLabelOpacity}
+									style={{ pointerEvents: "none" }}
+								>
+									<textPath href="#ardeia-text-arc" startOffset="50%" textAnchor="middle">
+										Ardeia
+									</textPath>
+								</text>
+								<text
+									fontFamily='"Lora", Georgia, serif'
+									fontSize="78"
+									fill="rgba(210, 232, 255, 0.48)"
+									stroke="rgba(3, 10, 22, 0.52)"
+									strokeWidth={5}
+									paintOrder="stroke"
+									letterSpacing="12"
+									opacity={outsideLabelOpacity}
+									style={{ pointerEvents: "none" }}
+								>
+									<textPath href="#outside-text-arc" startOffset="50%" textAnchor="middle">
+										Outside
+									</textPath>
+								</text>
+							</>
+						)}
 
 						{!hasAtlasLocations && (
 							<text

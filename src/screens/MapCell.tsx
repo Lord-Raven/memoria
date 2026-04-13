@@ -101,7 +101,6 @@ export const MapCell: FC<MapCellProps> = ({
 	const focalY = clamp(cell.point.focalPoint.y, 0, 1);
 	const compensationX = clamp(backgroundAspectCompensationX, 1e-3, 1000);
 	const compensationY = clamp(backgroundAspectCompensationY, 1e-3, 1000);
-	const backgroundPosition = `${focalX * 100}% ${focalY * 100}%`;
 	const referenceDiameter = Math.max(1, targetRadius * 2);
 	const lockedBackgroundWidth = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
 	const lockedBackgroundHeight = referenceDiameter * BACKGROUND_LOCKED_ZOOM;
@@ -115,6 +114,8 @@ export const MapCell: FC<MapCellProps> = ({
 	const backgroundTop = (cell.bounds.height - backgroundHeight) * focalY;
 	const backgroundRenderWidth = backgroundWidth / compensationX;
 	const backgroundRenderHeight = backgroundHeight / compensationY;
+	const backgroundTransform = `translate3d(${backgroundLeft}px, ${backgroundTop}px, 0) scale(${compensationX}, ${compensationY})`;
+	const objectPosition = `${focalX * 100}% ${focalY * 100}%`;
 
 	return (
 		<g style={{ opacity, transition: "opacity 260ms ease" }}>
@@ -134,24 +135,38 @@ export const MapCell: FC<MapCellProps> = ({
 						overflow: "hidden",
 						backgroundColor: "rgba(14, 30, 43, 0.92)",
 					}}
-				>
-					<div
-						style={{
-							position: "absolute",
-							left: backgroundLeft,
-							top: backgroundTop,
-							width: backgroundRenderWidth,
-							height: backgroundRenderHeight,
-							backgroundImage: `url(${cell.point.imageUrl})`,
-							backgroundPosition,
-							backgroundRepeat: "no-repeat",
-							backgroundSize: "cover",
-							transform: `scale(${compensationX}, ${compensationY})`,
-							transformOrigin: "0 0",
-							filter: `blur(${backgroundBlurPx}px)`,
-							transition: "filter 260ms ease, opacity 180ms ease",
-						}}
-					/>
+					>
+						<div
+							style={{
+								position: "absolute",
+								left: 0,
+								top: 0,
+								width: backgroundRenderWidth,
+								height: backgroundRenderHeight,
+								transform: backgroundTransform,
+								transformOrigin: "0 0",
+								willChange: "transform",
+								backfaceVisibility: "hidden",
+								overflow: "hidden",
+							}}
+						>
+							<img
+								src={cell.point.imageUrl}
+								alt=""
+								draggable={false}
+								style={{
+									width: "100%",
+									height: "100%",
+									display: "block",
+									objectFit: "cover",
+									objectPosition,
+									filter: `blur(${backgroundBlurPx}px)`,
+									transition: "filter 260ms ease, opacity 180ms ease",
+									pointerEvents: "none",
+									userSelect: "none",
+								}}
+							/>
+						</div>
 					<div
 						style={{
 							position: "absolute",
