@@ -2,7 +2,7 @@ import { Emotion, EMOTION_MAPPING } from "./Emotion";
 import { v4 as generateUuid } from 'uuid';
 import { Outcome } from "./Outcome";
 import { Stage } from "../Stage";
-import { Actor, findBestNameMatch, getActorProfile } from "./Actor";
+import { Actor, findBestNameMatch, getActorLore } from "./Actor";
 import { getLocationDescription } from "./Location";
 import { MAX_ENTRIES } from "./Lore";
 
@@ -210,13 +210,14 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
         (location ? (`\n\nCurrent Location:\n  The following scene is set in ` +
             `${location.name || 'Unknown Location'}. ${getLocationDescription(location.id, stage) || 'No description available.'}\n`) : '') +
 
-        `\n\nPlayer Profile for ${playerName}:\n  ${getActorProfile(stage.getPlayerActor()?.id || '', stage) || 'No profile available.'}\n` +
+        `\n\nPlayer Profile for ${playerName}:\n  ${stage.getPlayerActor().profile}\n` +
         (skit && currentActors.length > 0 ? `\n\nCharacters in this Scene:\n${currentActors.map(actor => {
             const currentOutfit = actor.outfits.find(a => a.id === determineOutfit(actor.id, skit, skit.script.length - 1)) ?? actor.outfits[0];
             const otherOutfits = actor.outfits.filter(o => o.id !== currentOutfit?.id && o.emotionPack['neutral']);
             return `  ${actor.name}\n    Current Outfit (${currentOutfit.name}): ${currentOutfit.description}\n` +
                 (otherOutfits.length > 0 ? `    Other Outfits: ${otherOutfits.map(o => o.name).join(', ')}\n` : '') +
-                `    Profile: ${getActorProfile(actor.id, stage) || 'No profile available.'}`}).join('\n')}` : '');
+                `    Profile: ${actor.profile}\n` +
+                `    Lore: ${getActorLore(actor.id, stage)}`}).join('\n')}` : '');
 
 
 

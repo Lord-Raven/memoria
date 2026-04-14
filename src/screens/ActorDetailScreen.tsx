@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stage } from '../Stage';
 import { v4 as generateUuid } from 'uuid';
-import { Actor, ActorState, clampActorAffinity, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getActorProfile, updateActorProfile } from '../content/Actor';
+import { Actor, ActorState, clampActorAffinity, generateBaseActorImage, generateEmotionImage, generateOutfitEmotionPrompt, VOICE_MAP, Outfit, getLinkedActorLore, updateActorLore } from '../content/Actor';
 import { Emotion } from '../content/Emotion';
 import { Close, Save, Image as ImageIcon, ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import { Button, Chip, GlassPanel, TextInput, Title } from './UiComponents';
@@ -21,6 +21,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     type ImageTarget = 'base' | Emotion;
     type BaseRegenSource = 'description' | 'original sample' | `outfit:${string}`;
     const initialOutfitIdRef = useRef(actor.outfitId);
+    const linkedLoreEntry = getLinkedActorLore(actor.lorebookName || actor.name, stage());
 
     const getClonedOutfits = (): Outfit[] => {
         const sourceOutfits: Outfit[] = Array.isArray(actor.outfits) && actor.outfits.length > 0
@@ -45,6 +46,7 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         name: string;
         description: string;
         profile: string;
+        lore: string;
         affinity: number;
         state: ActorState;
         voiceId: string;
@@ -53,7 +55,8 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
     }>({
         name: actor.name,
         description: actor.description || '',
-        profile: getActorProfile(actor.id, stage()),
+        profile: actor.profile || '',
+        lore: linkedLoreEntry?.content || '',
         affinity: clampActorAffinity(actor.affinity),
         state: actor.state || ActorState.AVAILABLE,
         voiceId: actor.voiceId,
@@ -164,7 +167,10 @@ export const ActorDetailScreen: FC<ActorDetailScreenProps> = ({ actor, stage, on
         // Update the actor in the save
         actor.name = editedActor.name;
         actor.description = editedActor.description;
-        updateActorProfile(actor.id, editedActor.profile, stage());
+        actor.profile = editedActor.profile;
+        if (linkedLoreEntry) {
+            updateActorLore(actor.id, editedActor.lore, stage());
+        }
         actor.affinity = clampActorAffinity(editedActor.affinity);
         actor.state = editedActor.state;
         actor.voiceId = editedActor.voiceId;
@@ -927,6 +933,39 @@ ${indent}}`;
                                             }}
                                         />
                                     </div>
+
+                                    {linkedLoreEntry && (
+                                        <div>
+                                            <label
+                                                style={{
+                                                    display: 'block',
+                                                    color: '#00ff88',
+                                                    fontSize: '14px',
+                                                    fontWeight: 'bold',
+                                                    marginBottom: '8px',
+                                                }}
+                                            >
+                                                Linked Lore Entry
+                                            </label>
+                                            <textarea
+                                                value={editedActor.lore}
+                                                onChange={(e) => handleInputChange('lore', e.target.value)}
+                                                placeholder="Lorebook content linked to this actor"
+                                                style={{
+                                                    width: '100%',
+                                                    minHeight: '120px',
+                                                    padding: '12px',
+                                                    fontSize: '14px',
+                                                    backgroundColor: 'rgba(0, 20, 40, 0.6)',
+                                                    border: '2px solid rgba(0, 255, 136, 0.3)',
+                                                    borderRadius: '5px',
+                                                    color: '#e0f0ff',
+                                                    fontFamily: 'inherit',
+                                                    resize: 'vertical',
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </section>
 

@@ -159,7 +159,7 @@ export async function loadSupportedActor(data: Partial<Actor>, stage: Stage): Pr
         }
 
         // if newActor is missing critical fields like personality or outfits, distill these details to fill the gaps
-        if ((!(getLinkedActorLore(newActor.lorebookName || newActor.name, stage) || newActor.profile) || !newActor.outfits) && newActor.fullPath) {
+        if ((!newActor.profile || !newActor.outfits) && newActor.fullPath) {
             return await distillActor(newActor, definition, stage);
         }
     }
@@ -217,7 +217,7 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
             `DESCRIPTION: A vivid description of the character's core physical appearance: elements like gender, build, skin tone, eye color, hair color, ears, tails, or other distinguishing features.\n` +
             `OUTFIT DESCRIPTION: A detailed description of the character's current outfit, including style, colors, and any notable accessories or features.\n` +
             `OUTFIT NAME: A one- to two-word name for the character's current outfit that matches the description.\n` +
-            `PROFILE: A brief summary of the character's personality traits, mannerisms, history, and motives.\n` +
+            `PROFILE: A summary of the character's personality traits, mannerisms, history, and motives.\n` +
             `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
             `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
             `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
@@ -525,29 +525,36 @@ export function getLinkedActorLore(actorName: string, stage: Stage) {
 	return findBestNameMatch(actorName, stage.getSave().lorebook?.filter(lore => lore.type === 'character') ?? [], 'title');
 }
 
-export function getActorProfile(actorId: string, stage: Stage) {
+export function getActorLore(actorId: string, stage: Stage) {
 	const actor = stage.getSave().actors[actorId];
 	if (!actor) {
 		return '';
 	}
 
 	const lore = getLinkedActorLore(actor.lorebookName || actor.name, stage);
-	return lore?.content ?? actor.profile;
+	return lore?.content ?? '';
 }
 
 export function updateActorProfile(actorId: string, profile: string, stage: Stage) {
+    const actor = stage.getSave().actors[actorId];
+    if (!actor) {
+        return;
+    }
+
+    actor.profile = profile;
+}
+
+export function updateActorLore(actorId: string, lore: string, stage: Stage) {
 	const actor = stage.getSave().actors[actorId];
 	if (!actor) {
 		return;
 	}
 
-	const lore = getLinkedActorLore(actor.lorebookName || actor.name, stage);
-	if (lore) {
-		lore.content = profile;
+	const linkedLore = getLinkedActorLore(actor.lorebookName || actor.name, stage);
+	if (linkedLore) {
+		linkedLore.content = lore;
 		return;
 	}
-
-	actor.profile = profile;
 }
 
 /**

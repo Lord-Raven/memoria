@@ -5,7 +5,7 @@ import { Chip } from '@mui/material';
 import { Stage } from '../Stage';
 import { createLoreEntry, Lore } from '../content/Lore';
 import { Button, ConfirmDialog, GlassPanel, TextInput, Title } from './UiComponents';
-import { findBestNameMatch, getLinkedActorLore, updateActorProfile } from '../content/Actor';
+import { findBestNameMatch, getLinkedActorLore, updateActorLore } from '../content/Actor';
 import { getLinkedLocationLore, updateLocationDescription } from '../content/Location';
 
 interface LorebookManagementScreenProps {
@@ -259,7 +259,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
             });
 
             if (linkedActor) {
-                updateActorProfile(linkedActor.id, content, stage());
+                updateActorLore(linkedActor.id, content, stage());
                 setLoreEntries(sortLoreEntries([...(stage().getSave().lorebook || [])]));
                 return;
             }
