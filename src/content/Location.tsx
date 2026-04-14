@@ -9,7 +9,7 @@ const getLocationImage = createImageAssetUrlResolver('locations');
 // Default list are locations in the city of Ardeia, which is the central location of the game. Other areas will be more dynamic.
 // Ardeia is a fantasy sci-fi city with a mixture of heavy gothic architecture mixed with overgrown greenery and archaically high-tech machinery that feels ancient and alien at once.
 export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
-	{
+	/*{
 		id: "ardeia-streets",
 		name: "The Streets of Ardeia",
 		description: "",
@@ -20,7 +20,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		lightColor: "#d8d1ba",
 		themeColor: "#5aa3d8",
 		discovered: true,
-	},
+	},*/
 	{
 		id: "ardeia-library",
 		name: "The Library",
@@ -38,9 +38,10 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		id: "ardeia-temple",
 		name: "The Temple",
 		description: "",
-		weight: 15,
+		weight: 20,
 		imageUrl: getLocationImage('ardeia/temple.png'),
-		center: { x: 0.15, y: 0.27 },
+		center: { x: 0.2, y: 0.1 },
+		// center: { x: 0.15, y: 0.27 },
 		focalPoint: { x: 0.4, y: 0.5 },
 		lightColor: "#f4cc73",
 		themeColor: "#d86f5a",
@@ -52,7 +53,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		description: "",
 		weight: 15,
 		imageUrl: getLocationImage('ardeia/gardens.png'),
-		center: { x: 0.27, y: 0.25 },
+		center: { x: 0.25, y: 0.13 },
 		focalPoint: { x: 0.6, y: 0.4 },
 		lightColor: "#b8e6cf",
 		themeColor: '#39d78e',
@@ -64,12 +65,25 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		description: "",
 		weight: 15,
 		imageUrl: getLocationImage('ardeia/plaza.png'),
-		center: { x: 0.25, y: 0.13 },
+		center: { x: 0.27, y: 0.25 },
 		focalPoint: { x: 0.2, y: 0.4 },
 		lightColor: "#eeeeee",
 		themeColor: '#d8c659',
 		discovered: true,
 	},
+	{
+		id: "ardeia-nandemonankai",
+		name: "Nandemonankai",
+		description: "",
+		weight: 10,
+		imageUrl: `https://avatars.charhub.io/avatars/uploads/images/gallery/file/b24d5a9c-9bb3-4896-8e3e-d1101f2fd4f0/5cb180c3-dcb8-4fc8-99ac-409380661b4d.png`,
+		center: { x: 0.25, y: 0.3 },
+		focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#eecccc",
+		themeColor: '#ee9999',
+		discovered: true,
+	},
+
 	// Near locations:
     {
         id: "slumbering-orchard",
@@ -168,6 +182,18 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#eeffcc",
 		themeColor: '#ccffaa',
+		discovered: true,
+	},
+	{
+		id: "the-shells",
+		name: "The Shells",
+		description: "",
+		weight: 25,
+		imageUrl: `https://avatars.charhub.io/avatars/uploads/images/gallery/file/e5e6a460-2555-4c69-804e-d9e776eeacf6/cb993e51-dd1a-42d0-b831-21d85f25ce29.png`,
+		center: { x: 0.6, y: 0.9 }, // far south
+		focalPoint: { x: 0.5, y: 0.5 },
+		lightColor: "#ddccff",
+		themeColor: '#bb99ff',
 		discovered: true,
 	}
 ];
