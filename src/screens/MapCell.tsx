@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from "react";
+import { imagePreloader } from "../utils/imagePreloader";
 
 export interface MapCellPoint {
 	id: string;
@@ -47,27 +48,29 @@ interface ImageDimensions {
 }
 
 const imageDimensionsCache = new Map<string, ImageDimensions>();
+const imageDimensionsPromiseCache = new Map<string, Promise<ImageDimensions | null>>();
 
-const useImageDimensions = (imageUrl: string) => {
-	const [dimensions, setDimensions] = useState<ImageDimensions | null>(() => imageDimensionsCache.get(imageUrl) ?? null);
+const loadImageDimensions = (imageUrl: string): Promise<ImageDimensions | null> => {
+	if (!imageUrl) {
+		return Promise.resolve(null);
+	}
 
-	useEffect(() => {
-		if (!imageUrl) {
-			setDimensions(null);
-			return;
-		}
+	const cachedDimensions = imageDimensionsCache.get(imageUrl);
+	if (cachedDimensions) {
+		return Promise.resolve(cachedDimensions);
+	}
 
-		const cachedDimensions = imageDimensionsCache.get(imageUrl) ?? null;
-		setDimensions(cachedDimensions);
-		if (cachedDimensions) {
-			return;
-		}
+	const inflightDimensions = imageDimensionsPromiseCache.get(imageUrl);
+	if (inflightDimensions) {
+		return inflightDimensions;
+	}
 
-		let isCancelled = false;
+	const dimensionsPromise = new Promise<ImageDimensions | null>((resolve) => {
 		const image = new Image();
 
 		const handleLoad = () => {
-			if (isCancelled || !image.naturalWidth || !image.naturalHeight) {
+			if (!image.naturalWidth || !image.naturalHeight) {
+				resolve(null);
 				return;
 			}
 
@@ -76,22 +79,64 @@ const useImageDimensions = (imageUrl: string) => {
 				height: image.naturalHeight,
 			};
 			imageDimensionsCache.set(imageUrl, nextDimensions);
-			setDimensions(nextDimensions);
+			resolve(nextDimensions);
 		};
 
-		image.addEventListener("load", handleLoad);
+		const handleError = () => resolve(null);
+
+		image.addEventListener("load", handleLoad, { once: true });
+		image.addEventListener("error", handleError, { once: true });
 		image.src = imageUrl;
 		if (image.complete) {
 			handleLoad();
 		}
+	});
+
+	imageDimensionsPromiseCache.set(imageUrl, dimensionsPromise);
+	void dimensionsPromise.finally(() => {
+		imageDimensionsPromiseCache.delete(imageUrl);
+	});
+
+	return dimensionsPromise;
+};
+
+
+const useMapCellImageData = (imageUrl: string) => {
+	const [resolvedImageUrl, setResolvedImageUrl] = useState<string>(() => imagePreloader.getImageUrl(imageUrl));
+	const [dimensions, setDimensions] = useState<ImageDimensions | null>(() => imageDimensionsCache.get(imageUrl) ?? null);
+
+	useEffect(() => {
+		if (!imageUrl) {
+			setResolvedImageUrl("");
+			setDimensions(null);
+			return;
+		}
+
+		let isCancelled = false;
+		setResolvedImageUrl(imagePreloader.getImageUrl(imageUrl));
+		setDimensions(imageDimensionsCache.get(imageUrl) ?? null);
+
+		void imagePreloader.preloadImage(imageUrl).finally(() => {
+			if (!isCancelled) {
+				setResolvedImageUrl(imagePreloader.getImageUrl(imageUrl));
+			}
+		});
+
+		void loadImageDimensions(imageUrl).then((nextDimensions) => {
+			if (!isCancelled) {
+				setDimensions(nextDimensions);
+			}
+		});
 
 		return () => {
 			isCancelled = true;
-			image.removeEventListener("load", handleLoad);
 		};
 	}, [imageUrl]);
 
-	return dimensions;
+	return {
+		resolvedImageUrl,
+		dimensions,
+	};
 };
 
 const asHexColor = (value: string) => {
@@ -147,7 +192,7 @@ export const MapCell: FC<MapCellProps> = ({
 	lockBackgroundToTargetRadius = true,
 	isExpeditionable = true,
 }) => {
-	const imageDimensions = useImageDimensions(cell.point.imageUrl);
+	const { resolvedImageUrl, dimensions: imageDimensions } = useMapCellImageData(cell.point.imageUrl);
 	const borderPalette = getLocationBorderPalette(cell.point.themeColor);
 	const emphasis = clamp((cell.point.radius - targetRadius) / 30, 0, 1);
 	const outlineStrokeWidth = 4;
@@ -215,7 +260,7 @@ export const MapCell: FC<MapCellProps> = ({
 			/>
 			{imageDimensions && (
 				<image
-					href={cell.point.imageUrl}
+					href={resolvedImageUrl || cell.point.imageUrl}
 					x={backgroundImageX}
 					y={backgroundImageY}
 					width={backgroundImageWidth}

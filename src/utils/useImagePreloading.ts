@@ -2,7 +2,7 @@
  * React hooks for image preloading
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { imagePreloader } from './imagePreloader';
 import { Actor, getEmotionImage } from '../content/Actor';
 import { Stage } from '../Stage';
@@ -57,20 +57,33 @@ export function usePreloadLocationImage(location: Location | null): void {
  * Preload location map images
  */
 export function usePreloadLocationMap(locations: Location[]): void {
-	useEffect(() => {
-		if (!locations || locations.length === 0) return;
+	const preloadSignature = useMemo(() => {
+		if (!locations || locations.length === 0) return '';
 
-		const imageUrls = locations
-			.filter((loc) => loc.imageUrl)
-			.map((loc) => loc.imageUrl);
+		const uniqueUrls = [...new Set(
+			locations
+				.filter((loc) => loc.imageUrl)
+				.map((loc) => loc.imageUrl)
+		)];
 
-		if (imageUrls.length > 0) {
-			// Stagger the preloading to avoid network congestion
-			setTimeout(() => {
-				imagePreloader.scheduleIdlePreload(imageUrls);
-			}, 1000);
-		}
+		return uniqueUrls.sort().join('|');
 	}, [locations]);
+
+	useEffect(() => {
+		if (!preloadSignature) return;
+
+		const imageUrls = preloadSignature.split('|').filter(Boolean);
+		if (imageUrls.length === 0) return;
+
+		// Stagger the preloading to avoid network congestion.
+		const timeoutId = window.setTimeout(() => {
+			imagePreloader.scheduleIdlePreload(imageUrls);
+		}, 1000);
+
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [preloadSignature]);
 }
 
 /**

@@ -7,6 +7,7 @@ interface PreloadedImage {
 	url: string;
 	timestamp: number;
 	data?: Blob;
+	objectUrl?: string;
 }
 
 const CACHE_KEY = 'memoria_image_cache';
@@ -18,6 +19,7 @@ export { default as React } from 'react';
 
 class ImagePreloaderService {
 	private preloadedImages: Map<string, PreloadedImage> = new Map();
+	private inflightPreloads: Map<string, Promise<void>> = new Map();
 	private isPreloading = false;
 	private requestIdleCallbackId: number | null = null;
 
@@ -29,25 +31,47 @@ class ImagePreloaderService {
 	 * Preload a single image URL
 	 */
 	async preloadImage(url: string): Promise<void> {
-		if (!url || this.preloadedImages.has(url)) {
+		if (!url) {
 			return;
 		}
 
+		const existing = this.preloadedImages.get(url);
+		if (existing?.data || existing?.objectUrl) {
+			return;
+		}
+
+		const inflight = this.inflightPreloads.get(url);
+		if (inflight) {
+			await inflight;
+			return;
+		}
+
+		const preloadPromise = (async () => {
+			try {
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+				const data = await response.blob();
+				const objectUrl = URL.createObjectURL(data);
+				this.preloadedImages.set(url, {
+					url,
+					timestamp: Date.now(),
+					data,
+					objectUrl,
+				});
+
+				// Optionally save to cache storage
+				this.saveCacheToStorage();
+			} catch (error) {
+				console.warn(`Failed to preload image: ${url}`, error);
+			}
+		})();
+
+		this.inflightPreloads.set(url, preloadPromise);
 		try {
-			const response = await fetch(url);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-			const data = await response.blob();
-			this.preloadedImages.set(url, {
-				url,
-				timestamp: Date.now(),
-				data,
-			});
-
-			// Optionally save to cache storage
-			this.saveCacheToStorage();
-		} catch (error) {
-			console.warn(`Failed to preload image: ${url}`, error);
+			await preloadPromise;
+		} finally {
+			this.inflightPreloads.delete(url);
 		}
 	}
 
@@ -97,8 +121,13 @@ class ImagePreloaderService {
 		if (!url) return '';
 
 		const cached = this.preloadedImages.get(url);
+		if (cached?.objectUrl) {
+			return cached.objectUrl;
+		}
+
 		if (cached?.data) {
-			return URL.createObjectURL(cached.data);
+			cached.objectUrl = URL.createObjectURL(cached.data);
+			return cached.objectUrl;
 		}
 
 		return url;
@@ -170,7 +199,13 @@ class ImagePreloaderService {
 			}
 		});
 
-		entriesToDelete.forEach((url) => this.preloadedImages.delete(url));
+		entriesToDelete.forEach((url) => {
+			const cached = this.preloadedImages.get(url);
+			if (cached?.objectUrl) {
+				URL.revokeObjectURL(cached.objectUrl);
+			}
+			this.preloadedImages.delete(url);
+		});
 		this.saveCacheToStorage();
 	}
 
@@ -178,6 +213,11 @@ class ImagePreloaderService {
 	 * Clear all cached images
 	 */
 	clearCache(): void {
+		this.preloadedImages.forEach((cached) => {
+			if (cached.objectUrl) {
+				URL.revokeObjectURL(cached.objectUrl);
+			}
+		});
 		this.preloadedImages.clear();
 		try {
 			sessionStorage.removeItem(CACHE_KEY);
