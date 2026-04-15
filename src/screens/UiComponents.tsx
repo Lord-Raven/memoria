@@ -208,7 +208,7 @@ export const NamePlate: FC<NamePlateProps> = ({
 	const { setTooltip, clearTooltip } = useTooltip();
 
 	const hoverText = actor.fullPath ? `Visit ${actor.name} by ${actor.fullPath.split('/')[0]}` : '';
-	const link = actor.fullPath ? `https://chub.ai/characters/${actor.fullPath}` : null;
+	const link = actor.fullPath && actor.fullPath.includes('/') ? `https://chub.ai/characters/${actor.fullPath}` : (actor.fullPath ? `https://chub.ai/users/${actor.fullPath}` : null);
 
 	return (
 		<Box

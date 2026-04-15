@@ -124,7 +124,8 @@ export async function loadSupportedActor(data: Partial<Actor>, stage: Stage): Pr
     // Retrieve data from Chub to fill in possible gaps:
     let definition: any = null;
     try {
-        if (newActor.fullPath) {
+        // If fullPath is present and contains a "/", load the character details from Chub.
+        if (newActor.fullPath && newActor.fullPath.includes('/')) {
             const response = await fetch(stage.characterDetailQuery.replace('{fullPath}', newActor.fullPath));
             definition = (await response.json()).node.definition;
         }

@@ -501,17 +501,24 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 console.log(this.getSave().actors);
                 let actors = this.getSave().actors || {};
+                const minLoopDurationMs = 1000;
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');
-                    const character = this.pickRandom((this.getSave().betaMode ? [...COMPLETE_CHARACTERS, ...BETA_CHARACTERS] : COMPLETE_CHARACTERS).filter(charDef => !Object.values(actors).some(actor => actor.fullPath === charDef.fullPath)));
+                    const character = this.pickRandom((this.getSave().betaMode ? [...COMPLETE_CHARACTERS, ...BETA_CHARACTERS] : COMPLETE_CHARACTERS).filter(charDef => !Object.values(actors).some(actor => actor.name === charDef.name)));
                     if (!character) {
                         console.warn('No more supported characters to load as reserve actors.');
                         break;
                     } else if (!character.name || !character.fullPath) {
                         continue;
                     }
+                    // Enforce a minimum loop duration; loadSupportedActor time counts toward this.
+                    const loopStartTime = Date.now();
                     const newActor = await loadSupportedActor(character, this);
+                    const loopElapsedMs = Date.now() - loopStartTime;
+                    if (loopElapsedMs < minLoopDurationMs) {
+                        await new Promise(resolve => setTimeout(resolve, minLoopDurationMs - loopElapsedMs));
+                    }
                     if (newActor) {
                         console.log(`Loaded reserve actor ${newActor.name} from fullPath ${newActor.fullPath}`);
                         this.getSave().actors = {...actors, [newActor.id]: newActor};

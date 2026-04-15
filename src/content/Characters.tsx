@@ -73,7 +73,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         description: `Cassiel is a towering eight-foot goddess with flowing green hair with constellations enshrined in its shadows and matching emerald eyes.`,
         profile: '',
         sampleImageUrl: 'https://media.charhub.io/3bb73e95-be2a-4f2c-bda7-1314e821eb3b/1641bc16-ede8-492c-b135-e82f019b3bed.png',
-        fullPath: '',
+        fullPath: 'miyo_rin',
         themeColor: '#a3c175',
         themeFontFamily: 'Georgia, serif',
         voiceId: 'calm_female_20s',
@@ -803,7 +803,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     { 
         name: 'Lumi', 
-        fullPath: 'DarkSkies/lumen-healer-writing-faster-than-she-s-forgetting-9f715a662e32', 
+        fullPath: 'DarkSkies', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png',
         description: ``,
         profile: ``,
