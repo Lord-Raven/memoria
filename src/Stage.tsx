@@ -285,6 +285,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
     }
 
     private async rebuildExpeditionChoices(save: SaveType = this.getSave()): Promise<ExpeditionChoice[]> {
+        save.expeditionChoices = [];
+        this.saveGame();
         
         const discoveredOutsideLocations = this.getDiscoveredOutsideLocations(save);
         const eligibleActors = this.getEligibleExpeditionActorsFromSave(save);
@@ -330,7 +332,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 prompt: generateContext(undefined, this, 5) +
                     `\n\nEligible Partners:\n${eligibleActors.map(actor => `  ${actor.name}\n    Profile: ${actor.profile}\n    Lore: ${getActorLore(actor.id, this)}`).join('\n')}` +
                     `\n\nPossible Destinations:\n${discoveredOutsideLocations.map(location => `  ${location.name}\n    ${getLinkedLocationLore(location.name, this)}`).join('\n')}` +
-                    `\n\nThis is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output four potential expeditions, ` +
+                    `\n\nThis is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output three potential expeditions, ` +
                     `each with a destination, partner, short summary/goal, and abbreviated name. ` +
                     `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
                     `\n\nExample Response:\n` +
@@ -346,10 +348,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     `PARTNER: Milliette\n` +
                     `SUMMARY: Everyone's looking for Reitia. Milliette believes she's the only one who can do it. She doesn't realize that success might cost her.\n` +
                     `NAME: Join Milliette at the Core\n\n` +
-                    `DESTINATION: Bleached Earth\n` +
-                    `PARTNER: Cyanea\n` +
-                    `SUMMARY: Cyanea's uncertain why she's been chosen for this expedition. The Bleached Earth is a far cry from her colorful nature. Maybe this is an opportunity for growth?\n` +
-                    `NAME: Travel to the Bleached Earth with Cyanea\n` +
                     `#END#`,
                 min_tokens: 100,
                 max_tokens: 500,
@@ -405,6 +403,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             skit = new Skit({
                 skitType: SkitType.EXPEDITION,
                 initialLocationId: selectedLocation.id,
+                guidance: expedition?.description || '',
                 script: [],
                 initialActors: initialActors,
                 summary: '',

@@ -347,7 +347,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		isArdeia: boolean;
 		locationId: string;
 		expeditionPartnerName?: string;
-		expeditionDescription?: string;
+		expeditionName?: string;
 	} | null>(null);
 	const [mapMode, setMapMode] = useState<MapScreenMode>(stage().getCurrentSkit() ? 'skit' : 'management');
 	const [skitLocationId, setSkitLocationId] = useState<string | null>(null);
@@ -536,11 +536,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		.sort()
 		.join('|');
 	const expeditionChoiceSignature = (stage().getSave().expeditionChoices || [])
-		.map((choice: { id: string; locationId: string; partnerActorIds: string[]; description: string }) => [
+		.map((choice: { id: string; locationId: string; partnerActorIds: string[]; name: string }) => [
 			choice.id,
 			choice.locationId,
 			choice.partnerActorIds.join(','),
-			choice.description ?? '',
+			choice.name ?? '',
 		].join(':'))
 		.sort()
 		.join('|');
@@ -549,7 +549,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		const choices = (stage().getSave().expeditionChoices || []) as Array<{
 			id: string;
 			locationId: string;
-			description: string;
+			name: string;
 			partnerActorIds: string[];
 		}>;
 		return new Map(choices.map((choice) => [choice.locationId, choice]));
@@ -1149,13 +1149,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 			const locationName = targetPoints.find((p) => p.id === clickedCell!.point.id)?.name ?? clickedCell.point.id;
 			const expeditionChoice = expeditionChoiceByLocationId.get(clickedCell.point.id);
 			const expeditionPartnerName = !isArdeia ? getExpeditionPartnerName(expeditionChoice) : undefined;
-			const expeditionDescription = !isArdeia ? expeditionChoice?.description?.trim() : undefined;
+			const expeditionName = !isArdeia ? expeditionChoice?.name?.trim() : undefined;
 			setPendingLocation({
 				name: locationName,
 				isArdeia,
 				locationId: clickedCell.point.id,
 				expeditionPartnerName,
-				expeditionDescription,
+				expeditionName,
 			});
 		}
 	}, [expeditionChoiceByLocationId, getExpeditionPartnerName, getSelectableCellAtCoordinates, targetPoints]);
@@ -1662,7 +1662,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 						pendingLocation
 							? pendingLocation.isArdeia
 								? `Visit ${pendingLocation.name}?`
-								: pendingLocation.expeditionDescription ||
+								: pendingLocation.expeditionName ||
 									`Expedition to ${pendingLocation.name} with ${pendingLocation.expeditionPartnerName || "Unknown partner"}?`
 							: ""
 					}

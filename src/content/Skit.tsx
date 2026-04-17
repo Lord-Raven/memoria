@@ -16,6 +16,7 @@ export enum SkitType {
 export class Skit {
     id: string = '';
     skitType: SkitType = SkitType.SOCIAL;
+    guidance: string = ''; // Optional guidance for the goal of this skit.
     script: ScriptEntry[] = [];
     initialActors: string[] = []; // List of Actor IDs present in this skit
     initialLocationId: string = ''; // Initial location for the skit, can be used to set background or context
@@ -238,6 +239,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             `  ${stage.getPlayerActor().name.toUpperCase()}: "Hey, Character Name," I greet them warmly. I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n` +
             `\n\n` +
             (skit.script.length > 0 ? `\n\nCurrent Scene Script to Continue:\n${buildScriptLog(skit, [], stage)}` : '') +
+            `\n\nScene Prompt:\n  ${(skit.guidance ? skit.guidance : buildSkitTypePrompt(skit, stage))}` +
             `\n\nPrimary Instruction:\n` +
                 `  ${skit.script.length == 0 ? 'Produce the initial moments of a scene (perhaps joined in medias res)' : 'Extend or conclude the current scene script'} with three to five entries, ` +
                 `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags, if warranted. ` +
