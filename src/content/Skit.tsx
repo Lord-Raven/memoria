@@ -220,9 +220,6 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
                 `    Lore: ${getActorLore(actor.id, stage)}`}).join('\n')}` : '');
 
 
-
-
-
     return coreContext;
 }
 

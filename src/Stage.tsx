@@ -1,11 +1,11 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, findBestNameMatch, loadSupportedActor, ActorState } from "./content/Actor";
+import { Actor, ActorType, findBestNameMatch, loadSupportedActor, ActorState, getActorLore } from "./content/Actor";
 import { BETA_CHARACTERS, COMPLETE_CHARACTERS } from "./content/Characters";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
-import { createDefaultAtlas, Location } from "./content/Location";
+import { createDefaultAtlas, getLinkedLocationLore, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { v4 as generateUuid } from 'uuid';
 import { fetchLorebook, Lore } from "./content/Lore";
@@ -41,6 +41,7 @@ type ExpeditionChoice = {
     id: string;
     locationId: string;
     description: string;
+    name: string;
     partnerActorIds: string[];
 }
 
@@ -179,7 +180,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Generate a few initial characters.
         this.loadActors().finally(() => {
             console.log('Finished loading initial actors for new game');
-            this.rebuildExpeditionChoices(newSave);
+            this.rebuildExpeditionChoices(newSave).then(() => {
+                this.showPriorityMessage('Expeditions are now available.');
+            });
             delete this.generationPromises['newGame']; // Clear the dummy promise to allow the loading screen to finish.
             this.saveGame();
         });
@@ -281,65 +284,93 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         );
     }
 
-    private rebuildExpeditionChoices(save: SaveType = this.getSave()): ExpeditionChoice[] {
+    private async rebuildExpeditionChoices(save: SaveType = this.getSave()): Promise<ExpeditionChoice[]> {
         
         const discoveredOutsideLocations = this.getDiscoveredOutsideLocations(save);
         const eligibleActors = this.getEligibleExpeditionActorsFromSave(save);
 
-        if (discoveredOutsideLocations.length === 0 || eligibleActors.length === 0) {
-            save.expeditionChoices = [];
-            return save.expeditionChoices;
-        }
+        const parseChoices = (text: string): ExpeditionChoice[] => {
+            const parsed: ExpeditionChoice[] = [];
+            // Split on blank lines or on a new DESTINATION: block
+            const blocks = text.split(/(?=DESTINATION:)/i).map(b => b.trim()).filter(Boolean);
+            for (const block of blocks) {
+                const destMatch = block.match(/^DESTINATION:\s*(.+)/im);
+                const partnerMatch = block.match(/^PARTNER:\s*(.+)/im);
+                const summaryMatch = block.match(/^SUMMARY:\s*(.+)/im);
+                const nameMatch = block.match(/^NAME:\s*(.+)/im);
 
-        const selectedLocations = this.takeRandomDistinct(
-            discoveredOutsideLocations,
-            Math.min(3, discoveredOutsideLocations.length),
-        );
+                if (!destMatch || !partnerMatch || !summaryMatch || !nameMatch) continue;
 
-        const requiredPartnerCount = selectedLocations.length;
-        const partnerActors: Actor[] = [];
-        let actorPool = this.takeRandomDistinct(eligibleActors, eligibleActors.length);
+                const destName = destMatch[1].trim();
+                const partnerName = partnerMatch[1].trim();
+                const summary = summaryMatch[1].trim();
+                const name = nameMatch[1].trim();
 
-        while (partnerActors.length < requiredPartnerCount && actorPool.length > 0) {
-            partnerActors.push(actorPool.shift() as Actor);
-            if (actorPool.length === 0 && partnerActors.length < requiredPartnerCount) {
-                actorPool = this.takeRandomDistinct(eligibleActors, eligibleActors.length);
+                const location = discoveredOutsideLocations.find(
+                    l => l.name.toLowerCase() === destName.toLowerCase()
+                );
+                const actor = eligibleActors.find(
+                    a => a.name.toLowerCase() === partnerName.toLowerCase()
+                );
+
+                if (!location || !actor) continue;
+
+                parsed.push({
+                    id: `expedition-${location.id}-${actor.id}`,
+                    locationId: location.id,
+                    description: summary,
+                    name,
+                    partnerActorIds: [actor.id],
+                });
             }
-        }
+            return parsed;
+        };
 
-        save.expeditionChoices = selectedLocations.map((location, index) => ({
-            id: generateUuid(),
-            locationId: location.id,
-            description: `Expedition to ${location.name}`,
-            partnerActorIds: [partnerActors[index]?.id || ''].filter(id => id !== ''),
-        }));
-
-        this.saveGame(); // Save the rough expedition options.
-
-        // Generate distinctive descriptions for each expedition, using context and the LLM:
-        this.generator.textGen({
-            prompt: generateContext(undefined, this, 5) +
-                `\n\nRepeat each of the following three expedition descriptions, but with revised, vivid and compelling one-line descriptions that briefly relate to ongoing plotlines or hint at an intriguing new angle:\n\n` +
-                save.expeditionChoices.map(choice => `${choice.id} - ${save.atlas[choice.locationId]?.name || 'unknown location'} with ${choice.partnerActorIds.map(id => save.actors[id]?.name || 'unknown actor').join(', ')}: ${choice.description}`).join('\n'),
-            min_tokens: 10,
-            max_tokens: 500,
-            include_history: true
-        }).then(response => {
+        let choices: ExpeditionChoice[] = [];
+        let attempts = 0;
+        while (choices.length === 0 && attempts < 3) {
+            attempts++;
+            const response = await this.generator.textGen({
+                prompt: generateContext(undefined, this, 5) +
+                    `\n\nEligible Partners:\n${eligibleActors.map(actor => `  ${actor.name}\n    Profile: ${actor.profile}\n    Lore: ${getActorLore(actor.id, this)}`).join('\n')}` +
+                    `\n\nPossible Destinations:\n${discoveredOutsideLocations.map(location => `  ${location.name}\n    ${getLinkedLocationLore(location.name, this)}`).join('\n')}` +
+                    `\n\nThis is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output four potential expeditions, ` +
+                    `each with a destination, partner, short summary/goal, and abbreviated name. ` +
+                    `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
+                    `\n\nExample Response:\n` +
+                    `DESTINATION: The Cradle\n` +
+                    `PARTNER: Mel\n` +
+                    `SUMMARY: The last expedition the Cradle found something strange. A key, perhaps. Cassiel is sending the Prisoners back with it; whether to use it or destroy it remains unclear.\n` +
+                    `NAME: Return the Key with Mel\n\n` +
+                    `DESTINATION: Pilgrimage\n` +
+                    `PARTNER: Lyra\n` +
+                    `SUMMARY: Lyra has been quiet lately. Maybe a change of scenery will help her open up? Maybe it will drive her further into herself?\n` +
+                    `NAME: Take Lyra on a Pilgrimage\n\n` +
+                    `DESTINATION: The Core\n` +
+                    `PARTNER: Milliette\n` +
+                    `SUMMARY: Everyone's looking for Raeitia. Milliette believes she's the only one who can do it. She doesn't realize that success might cost her.\n` +
+                    `NAME: Join Milliette at the Core\n\n` +
+                    `DESTINATION: Bleached Earth\n` +
+                    `PARTNER: Cyanea\n` +
+                    `SUMMARY: Cyanea's uncertain why she's been chosen for this expedition. The Bleached Earth is a far cry from her colorful nature. Maybe this is an opportunity for growth?\n` +
+                    `NAME: Travel to the Bleached Earth with Cyanea\n` +
+                    `#END#`,
+                min_tokens: 100,
+                max_tokens: 500,
+                include_history: true,
+                stop: ['#END']
+            });
             if (response?.result) {
-                const descriptions = response.result.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-                const currentSave = this.getSave(); // Get the most recent save to ensure we're updating the current one
-                for (const choice of currentSave.expeditionChoices || []) {
-                    const matchingDescription = descriptions.find(desc => desc.toLowerCase().startsWith(choice.id.toLowerCase()));
-                    if (matchingDescription) {
-                        choice.description = matchingDescription.substring(choice.id.length).trim();
-                    }
-                }
+                choices = parseChoices(response.result);
             }
-        }).catch(err => {
-            console.warn('Error generating expedition descriptions', err);
-        });
+        }
 
-        return save.expeditionChoices;
+        if (choices.length > 0) {
+            save.expeditionChoices = choices;
+            this.saveGame();
+        }
+
+        return save.expeditionChoices ?? [];
     }
 
     private buildTravelTimelineDescription(location: Location): string {
@@ -407,7 +438,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // This is where various outcomes of the skit would be processed and applied to the save state
 
-        this.rebuildExpeditionChoices(save);
+        this.rebuildExpeditionChoices(save).then(() => {
+            this.showPriorityMessage('Expeditions are now available.');
+        });
 
         this.saveGame();
     }
@@ -514,7 +547,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                     // Enforce a minimum loop duration; loadSupportedActor time counts toward this.
                     const loopStartTime = Date.now();
-                    const newActor = await loadSupportedActor(character, this);
+
+                    const loadPromise = loadSupportedActor(character, this);
+                    this.generationPromises[`loading ${character.name}`] = loadPromise;
+                    loadPromise.then(() => delete this.generationPromises[`loading ${character.name}`]);
+
+                    const newActor = await loadPromise;
                     const loopElapsedMs = Date.now() - loopStartTime;
                     if (loopElapsedMs < minLoopDurationMs) {
                         await new Promise(resolve => setTimeout(resolve, minLoopDurationMs - loopElapsedMs));
