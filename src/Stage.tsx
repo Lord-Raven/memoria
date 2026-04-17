@@ -306,12 +306,8 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const summary = summaryMatch[1].trim();
                 const name = nameMatch[1].trim();
 
-                const location = discoveredOutsideLocations.find(
-                    l => l.name.toLowerCase() === destName.toLowerCase()
-                );
-                const actor = eligibleActors.find(
-                    a => a.name.toLowerCase() === partnerName.toLowerCase()
-                );
+                const location = findBestNameMatch(destName, discoveredOutsideLocations);
+                const actor = findBestNameMatch(partnerName, eligibleActors);
 
                 if (!location || !actor) continue;
 
@@ -348,7 +344,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     `NAME: Take Lyra on a Pilgrimage\n\n` +
                     `DESTINATION: The Core\n` +
                     `PARTNER: Milliette\n` +
-                    `SUMMARY: Everyone's looking for Raeitia. Milliette believes she's the only one who can do it. She doesn't realize that success might cost her.\n` +
+                    `SUMMARY: Everyone's looking for Reitia. Milliette believes she's the only one who can do it. She doesn't realize that success might cost her.\n` +
                     `NAME: Join Milliette at the Core\n\n` +
                     `DESTINATION: Bleached Earth\n` +
                     `PARTNER: Cyanea\n` +
