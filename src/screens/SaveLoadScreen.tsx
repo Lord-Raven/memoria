@@ -30,7 +30,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
             stage().loadSave(slotIndex);
             setTooltip('Game loaded!', FolderOpen, 2000);
             onClose();
-            // Navigate to station screen
+            // Navigate to main game screen
             if (setScreenType) {
                 setScreenType(ScreenType.MAP);
             }

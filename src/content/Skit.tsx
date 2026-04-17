@@ -124,19 +124,6 @@ function buildScriptLog(skit: Skit, additionalEntries: ScriptEntry[] = [], stage
         : '(None so far)';
 }
 
-export function buildSkitTypePrompt(skit: Skit, stage: Stage): string {
-    switch (skit.skitType) {
-        case SkitType.INTRO:
-            return `This scene introduces the beginning of the story, as the player awakens in Ardeia.`;
-        case SkitType.SOCIAL:
-            return `This scene primarily focuses on interpersonal dynamics, character development, and social interaction with Prisoners or other characters in Ardeia.`;
-        case SkitType.EXPEDITION:
-            return `This scene primarily focuses on exploration, discovery, and trials as the player ventures into new locations or delves into the mysteries of Ardeia.`;
-        default:
-            return '';
-    }
-}
-
 export function buildPremise(playerName: string): string {
     return `This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
             `Ever since the end of the world—two centuries ago—the lone, overgrown city of Ardeia has stood as the final bastion of humanity. ` +
@@ -228,6 +215,42 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
     const playerName = stage.getPlayerActor()?.name || 'The Prisoner';
     const save = stage.getSave();
 
+    if (!skit.guidance) {
+        // Generate guidance for this skit based on its type and the current context, to help direct the script generation.
+        console.log('Generating skit guidance...');
+        let attempts = 3;
+        while (attempts > 0) {
+            const response = await stage.generator.textGen({
+                prompt: generateContext(undefined, stage, 5) +
+                    // List actors in the skit
+                    `\n\nLocation:\n  ${skit.initialLocationId ? (save.atlas?.[skit.initialLocationId]?.name || 'Unknown Location') : 'Unknown Location'}\n` +
+                    `\n\nCurrent Characters in the Scene:\n${skit.initialActors.map(actorId => {
+                        const actor = stage.getSave().actors?.[actorId];
+                        return actor ? `  ${actor.name}\n    ${actor.profile}` : '';
+                    }).join('\n')}\n` +
+                    `\n\nThis is a request for structured content for a game. Given the context, location, and current characters for a new upcoming scene, ` +
+                    `output a short summary/goal for the scene, bearing in mind whether any other characters might make sense to add to the mix; ` +
+                    `for instance, if the scene is set in a location they are known to frequent, or if a preceding scene set them up to be at this location. ` +
+                    `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
+                    `\n\nExample Response:\n` +
+                    `${playerName} is relaxing at the Amber Drop when Cyanea walks in. Persephone hovers nearby, pretending not to listen to their exchange, but inevitably cutting in.\n` +
+                    `#END#`,
+                min_tokens: 10,
+                max_tokens: 150,
+                include_history: true,
+                stop: ['#END']
+            }).catch(err => {
+                console.error('Error generating skit guidance: ', err);
+            });
+            attempts--;
+            if (response && response.result && response.result.trim().length > 0) {
+                console.log('Generated skit guidance: ', response.result.trim());
+                skit.guidance = response.result.trim();
+                break;
+            }
+        }
+    }
+
     const mainPrompt = 
             `Example Script Format:\n` +
             `  CHARACTER NAME: Character Name does some actions in prose; for example, they may be waving to you, the player. They say, "My dialogue is in quotation marks."\n` +
@@ -239,11 +262,11 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             `  ${stage.getPlayerActor().name.toUpperCase()}: "Hey, Character Name," I greet them warmly. I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n` +
             `\n\n` +
             (skit.script.length > 0 ? `\n\nCurrent Scene Script to Continue:\n${buildScriptLog(skit, [], stage)}` : '') +
-            `\n\nScene Prompt:\n  ${(skit.guidance ? skit.guidance : buildSkitTypePrompt(skit, stage))}` +
+            (skit.guidance ? `\n\nScene Prompt:\n  ${skit.guidance}` : '') +
             `\n\nPrimary Instruction:\n` +
                 `  ${skit.script.length == 0 ? 'Produce the initial moments of a scene (perhaps joined in medias res)' : 'Extend or conclude the current scene script'} with three to five entries, ` +
                 `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags, if warranted. ` +
-                `The script should tacitly consider characters' stats, relationships, past events, and the station's stats—among other factors—to craft a compelling scene. ` +
+                `The script should tacitly consider characters motives, relationships, and past events. ` +
                 `\n\n  Follow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Characters present their own actions and dialogue, while other events within the scene are attributed to NARRATOR. ` +
                 `Although a loose script format is employed, the actual content should be professionally edited narrative prose. ` +
