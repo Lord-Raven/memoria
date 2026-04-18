@@ -2,7 +2,7 @@ import { Emotion, EMOTION_MAPPING } from "./Emotion";
 import { v4 as generateUuid } from 'uuid';
 import { Outcome, OutcomeType } from "./Outcome";
 import { Stage } from "../Stage";
-import { Actor, findBestNameMatch, getActorLore } from "./Actor";
+import { Actor, ActorType, findBestNameMatch, getActorLore } from "./Actor";
 import { getLocationDescription } from "./Location";
 import { MAX_ENTRIES } from "./Lore";
 
@@ -551,8 +551,8 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             const ttsPromises = scriptEntries.map(async (entry) => {
                 const actor = entry.speakerId ? save.actors[entry.speakerId] : null;
                 // Only TTS if entry.speaker matches an actor from stage().getSave().actors and entry.message includes dialogue in quotes.
-                if (!actor || !entry.message.includes('"') || !save.textToSpeech) {
-                    console.log(`Skipping TTS: ${!actor ? "No matching actor" : (!entry.message.includes('"') ? "No dialogue in quotes" : "Text-to-speech disabled")}.`);
+                if (!actor || actor.type === ActorType.PLAYER || !entry.message.includes('"') || !save.textToSpeech) {
+                    console.log(`Skipping TTS: ${(!actor || actor.type === ActorType.PLAYER) ? "No matching non-player actor" : (!entry.message.includes('"') ? "No dialogue in quotes" : "Text-to-speech disabled")}.`);
                     entry.speechUrl = '';
                     return;
                 }
