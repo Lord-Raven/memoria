@@ -1,13 +1,14 @@
 import {ReactElement} from "react";
 import {StageBase, StageResponse, InitialData, Message, User, Character} from "@chub-ai/stages-ts";
 import {LoadResponse} from "@chub-ai/stages-ts/dist/types/load";
-import { Actor, ActorType, findBestNameMatch, loadSupportedActor, ActorState, getActorLore } from "./content/Actor";
+import { Actor, ActorType, findBestNameMatch, loadSupportedActor, ActorState, getActorLore, getEmotionImage } from "./content/Actor";
+import { Emotion } from "./content/Emotion";
+import { AffinityChangeInfo } from "./screens/AffinityPopIn";
 import { BETA_CHARACTERS, COMPLETE_CHARACTERS } from "./content/Characters";
 import { Item } from "./content/Item";
 import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, getLinkedLocationLore, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
-import { v4 as generateUuid } from 'uuid';
 import { fetchLorebook, Lore } from "./content/Lore";
 import { Client } from "@gradio/client";
 
@@ -431,7 +432,64 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             save.turn += 1;
         }
 
-        // This is where various outcomes of the skit would be processed and applied to the save state
+        // This is where various outcomes of the skit are processed and applied to the save state
+        // Get the final entry of the skit and process outcomes:
+        const outcomes = currentSkit?.script[currentSkit.script.length - 1]?.outcomes || [];
+        for (const outcome of outcomes) {
+            switch (outcome.type) {
+                case 'LORE_UPDATE':
+                    // For lore updates, we expect details to include a loreEntry with id, title, and content.
+                    const loreEntry = save.lorebook?.find(entry => entry.id === outcome.details?.loreEntry?.id);
+                    if (loreEntry) {
+                        // Make a textGen call with context and the current lore entry, asking for revisions based on context.
+                        this.generator.textGen({
+                            prompt: generateContext(undefined, this, 3) + 
+                                `\n\nTarget Lore Title:\n${loreEntry.title}\nContent for Revision:\n${loreEntry.content}` +
+                                `\n\nBased on the current context and recent events, output an updated or revised version of the content above. ` +
+                                `If there are no changes, simply return the original content, followed by #END#.`,
+                            min_tokens: 10,
+                            max_tokens: 1000,
+                            include_history: true,
+                        }).then(response => {
+                            if (response?.result) {
+                                // If "Content:" occurs in the response, eliminate everything before it; use split.
+                                loreEntry.content = response.result.split('Content:').pop()?.trim() || loreEntry.content;
+                            }
+                        });
+                    }
+                    break;
+                case 'RELATIONSHIP_CHANGE': {
+                    // For relationship changes, we expect details to include actorId and change (e.g. +10 or -5).
+                    const actor = save.actors[outcome.details?.actorId];
+                    if (actor) {
+                        const previousAffinity = actor.affinity;
+                        actor.affinity = Math.min(10, Math.max(0, actor.affinity + (outcome.details?.change || 0)));
+                        const effectiveChange = actor.affinity - previousAffinity;
+                        // If affinity effectively changed, show a heart portrait pop-in at the top of the screen.
+                        if (effectiveChange !== 0) {
+                            const isPositive = effectiveChange > 0;
+                            const emotionKey = isPositive
+                                ? (getEmotionImage(actor, Emotion.joy) ? Emotion.joy :
+                                   getEmotionImage(actor, Emotion.love) ? Emotion.love :
+                                   getEmotionImage(actor, Emotion.kindness) ? Emotion.kindness : Emotion.neutral)
+                                : (getEmotionImage(actor, Emotion.sadness) ? Emotion.sadness :
+                                   getEmotionImage(actor, Emotion.disappointment) ? Emotion.disappointment : Emotion.neutral);
+                            const portraitUrl = getEmotionImage(actor, emotionKey);
+                            this.showAffinityChange({
+                                id: `${actor.id}-${Date.now()}`,
+                                actorName: actor.name,
+                                portraitUrl,
+                                change: effectiveChange,
+                                themeColor: actor.themeColor || '#ffffff',
+                            });
+                        }
+                    }
+                    break;
+                }
+                    break;
+            }
+        }
+                    
 
         this.rebuildExpeditionChoices(save).then(() => {
             this.showPriorityMessage('Expeditions are now available.');
@@ -442,6 +500,25 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     // Callback to show priority messages in the tooltip bar
     private priorityMessageCallback?: (message: string, icon?: any, durationMs?: number) => void;
+
+    // Callback to show affinity change pop-ins
+    private affinityChangeCallback?: (info: AffinityChangeInfo) => void;
+
+    /**
+     * Register a callback to display affinity change pop-ins.
+     */
+    setAffinityChangeCallback(callback: (info: AffinityChangeInfo) => void) {
+        this.affinityChangeCallback = callback;
+    }
+
+    /**
+     * Trigger an affinity change pop-in.
+     */
+    showAffinityChange(info: AffinityChangeInfo) {
+        if (this.affinityChangeCallback) {
+            this.affinityChangeCallback(info);
+        }
+    }
 
     /**
      * Register a callback to show priority messages in the tooltip bar.

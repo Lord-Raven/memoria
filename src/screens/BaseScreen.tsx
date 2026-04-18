@@ -8,6 +8,7 @@ import { theme } from './Theme';
 import { MapScreen } from './MapScreen';
 import { LoadingScreen } from './LoadingScreen';
 import { usePreloadCriticalImages } from '../utils/useImagePreloading';
+import { AffinityPopIn, AffinityChangeInfo } from './AffinityPopIn';
 
 /*
  * Base screen management; the Stage class will display this, and this will track the current screen being displayed.
@@ -28,6 +29,26 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     const [isVerticalLayout, setIsVerticalLayout] = React.useState<boolean>(stage().isVerticalLayout());
     const { message, icon, clearTooltip, setPriorityMessage } = useTooltip();
 
+    // Affinity pop-in queue
+    const [affinityQueue, setAffinityQueue] = React.useState<AffinityChangeInfo[]>([]);
+    const [currentAffinityPopIn, setCurrentAffinityPopIn] = React.useState<AffinityChangeInfo | null>(null);
+
+    // Advance through queue when current pop-in completes
+    const handleAffinityComplete = React.useCallback(() => {
+        setCurrentAffinityPopIn(null);
+        setAffinityQueue(prev => {
+            const [, ...rest] = prev;
+            return rest;
+        });
+    }, []);
+
+    // Show next in queue when current finishes
+    React.useEffect(() => {
+        if (!currentAffinityPopIn && affinityQueue.length > 0) {
+            setCurrentAffinityPopIn(affinityQueue[0]);
+        }
+    }, [currentAffinityPopIn, affinityQueue]);
+
     // Preload critical images (actor neutrals and location maps) on mount
     const stageInstance = stage();
     const actors = React.useMemo(() => Object.values(stageInstance.getSave()?.actors || {}), [stageInstance.getSave()?.actors]);
@@ -38,6 +59,13 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
     React.useEffect(() => {
         stage().setPriorityMessageCallback(setPriorityMessage);
     }, [setPriorityMessage]);
+
+    // Set up affinity change callback in the stage
+    React.useEffect(() => {
+        stage().setAffinityChangeCallback((info: AffinityChangeInfo) => {
+            setAffinityQueue(prev => [...prev, info]);
+        });
+    }, []);
 
     // Update layout orientation on resize
     React.useEffect(() => {
@@ -74,6 +102,11 @@ const BaseScreenContent: FC<{ stage: () => Stage }> = ({ stage }) => {
                 Icon={icon}
                 onDismiss={clearTooltip}
                 isVerticalLayout={isVerticalLayout}
+            />
+            {/* Affinity change pop-in — overlays all screens, non-interactive */}
+            <AffinityPopIn
+                info={currentAffinityPopIn}
+                onComplete={handleAffinityComplete}
             />
         </div>
     );

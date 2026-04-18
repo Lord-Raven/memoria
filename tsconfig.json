@@ -6,8 +6,10 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
+    "ignoreDeprecations": "6.0",
+
     /* Bundler mode */
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

@@ -125,7 +125,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		description: "",
 		weight: 10,
 		imageUrl: `https://avatars.charhub.io/avatars/uploads/images/gallery/file/88b0eab5-4128-4dc7-8795-b45e198c349c/e0f3469c-d499-4f48-be67-4b84c7564f4a.png`,
-		center: { x: 0.25, y: 0.3 },
+		center: { x: 0.3, y: 0.03 },
 		focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#eecccc",
 		themeColor: '#ee9999',
