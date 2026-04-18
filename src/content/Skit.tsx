@@ -105,8 +105,6 @@ export function getCurrentLocation(skit: Skit, upToEntryIndex: number): string {
 }
 
 function buildScriptLog(skit: Skit, additionalEntries: ScriptEntry[] = [], stage?: Stage): string {
-    console.log('Outputting skit:');
-    console.log(skit);
     return ((skit.script && skit.script.length > 0) || additionalEntries.length > 0) ?
         [...skit.script, ...additionalEntries].map(e => {
             // Find the best matching emotion key for this speaker

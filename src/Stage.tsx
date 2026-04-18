@@ -483,8 +483,9 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 case 'LORE_UPDATE':
                     console.log(`Processing lore update outcome:`, outcome);
                     // For lore updates, we expect details to include a loreEntry with id, title, and content.
-                    const loreEntry = save.lorebook?.find(entry => entry.id === outcome.details?.loreId);
+                    const loreEntry = findBestNameMatch(outcome.details?.loreTitle, save.lorebook || [], 'title');
                     if (loreEntry) {
+                        console.log(`Found an entry to update:`, loreEntry);
                         // Make a textGen call with context and the current lore entry, asking for revisions based on context.
                         this.generator.textGen({
                             prompt: generateContext(undefined, this, 3) + 
@@ -498,6 +499,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             if (response?.result) {
                                 // If "Content:" occurs in the response, eliminate everything before it; use split.
                                 loreEntry.content = response.result.split('Content:').pop()?.trim() || loreEntry.content;
+                                this.saveGame();
                             }
                         });
                     }
@@ -505,12 +507,14 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 case 'RELATIONSHIP_CHANGE': {
                     // For relationship changes, we expect details to include actorId and change (e.g. +10 or -5).
                     console.log(`Processing relationship change outcome:`, outcome);
-                    const actor = save.actors[outcome.details?.actorId];
+                    const actor = findBestNameMatch(outcome.details?.actorName, Object.values(save.actors));
                     if (actor) {
+                        console.log(`Found an actor to update affinity for:`, actor);
                         const previousAffinity = actor.affinity;
                         actor.affinity = Math.min(10, Math.max(0, actor.affinity + (outcome.details?.changeValue || 0)));
                         const effectiveChange = actor.affinity - previousAffinity;
                         // If affinity effectively changed, show a heart portrait pop-in at the top of the screen.
+                        console.log(`Actor ${actor.name} affinity changed from ${previousAffinity} to ${actor.affinity} (effective change: ${effectiveChange})`);
                         if (effectiveChange !== 0) {
                             const isPositive = effectiveChange > 0;
                             const emotionKey = isPositive
