@@ -377,6 +377,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     `\n\nPossible Destinations:\n${discoveredOutsideLocations.map(location => `  ${location.name}\n    ${getLinkedLocationLore(location.name, this)}`).join('\n')}` +
                     `\n\nThis is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output three potential expeditions, ` +
                     `each with a destination, partner, short summary/goal, and abbreviated name. ` +
+                    `Ensure that at least one option is a natural continuation of ongoing events and at least one is a new and unexpected development with an underutilized character. ` +
                     `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
                     `\n\nExample Response:\n` +
                     `DESTINATION: The Cradle\n` +
@@ -476,17 +477,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // This is where various outcomes of the skit are processed and applied to the save state
         // Get the final entry of the skit and process outcomes:
-        console.log(`Processing outcomes for skit ending...`);
+        console.log(`Processing outcomes for skit:`);
         const outcomes = currentSkit?.script[currentSkit.script.length - 1]?.outcomes || [];
         console.log(outcomes);
         for (const outcome of outcomes) {
             switch (outcome.type) {
                 case 'LORE_UPDATE':
-                    console.log(`Processing lore update outcome:`, outcome);
                     // For lore updates, we expect details to include a loreEntry with id, title, and content.
                     const loreEntry = findBestNameMatch(outcome.details?.loreTitle, save.lorebook || [], 'title');
                     if (loreEntry) {
-                        console.log(`Found an entry to update:`, loreEntry);
                         // Make a textGen call with context and the current lore entry, asking for revisions based on context.
                         this.generator.textGen({
                             prompt: generateContext(undefined, this, 3) + 
@@ -501,6 +500,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                             min_tokens: 10,
                             max_tokens: 1000,
                             include_history: true,
+                            stop: ['#END']
                         }).then(response => {
                             if (response?.result) {
                                 // If "CONTENT:" occurs in the response, eliminate everything before it; use split.
@@ -512,15 +512,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     break;
                 case 'RELATIONSHIP_CHANGE': {
                     // For relationship changes, we expect details to include actorId and change (e.g. +10 or -5).
-                    console.log(`Processing relationship change outcome:`, outcome);
                     const actor = findBestNameMatch(outcome.details?.actorName, Object.values(save.actors));
                     if (actor) {
-                        console.log(`Found an actor to update affinity for:`, actor);
                         const previousAffinity = actor.affinity;
                         actor.affinity = Math.min(10, Math.max(0, actor.affinity + (outcome.details?.changeValue || 0)));
                         const effectiveChange = actor.affinity - previousAffinity;
                         // If affinity effectively changed, show a heart portrait pop-in at the top of the screen.
-                        console.log(`Actor ${actor.name} affinity changed from ${previousAffinity} to ${actor.affinity} (effective change: ${effectiveChange})`);
                         if (effectiveChange !== 0) {
                             const isPositive = effectiveChange > 0;
                             const emotionKey = isPositive
