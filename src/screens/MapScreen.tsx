@@ -1588,7 +1588,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 												icon: inputText.trim().length > 0 ? <Send /> : (endScene ? <LastPage /> : <PlayArrow />),
 											};
 										}}
-										enableAudio={!stage().getSave().textToSpeech}
+										enableAudio={stage().getSave().textToSpeech}
 										enableGhostSpeakers={true}
 										enableTalkingAnimation={true}
 										renderActorHoverInfo={(actor) => {

@@ -248,7 +248,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
                                     fontWeight: 'bold',
                                     color: 'rgba(0, 255, 136, 1)'
                                 }}>
-                                    {save.actors[save.playerId].name} - Day {save.turn}
+                                    {save.actors[save.playerId].name} - Turn {save.turn}
                                 </div>
                             </div>
                         </>
