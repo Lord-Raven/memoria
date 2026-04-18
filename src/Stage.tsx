@@ -490,15 +490,20 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         this.generator.textGen({
                             prompt: generateContext(undefined, this, 3) + 
                                 `\n\nTarget Lore Title:\n${loreEntry.title}\nContent for Revision:\n${loreEntry.content}` +
-                                `\n\nBased on the current context and recent events, output an updated or revised version of the content above. ` +
-                                `If there are no changes, simply return the original content, followed by #END#.`,
+                                `\n\nBased on the current context and recent events, output an updated or revised version of the content above using the below format, ` +
+                                `taking care to maintain all information from the original that remains true. ` +
+                                `\n\nExample Response:` +
+                                `\nPLANNING: <explanation of changes to made and existing content to retain.>` +
+                                `\nCONTENT: <revised content, including relevant updates and persisting other accurate details from the original.>` +
+                                `\n#END#` +
+                                `\n\nIf there are no significant changes, simply return the original content verbatim, followed by #END#.`,
                             min_tokens: 10,
                             max_tokens: 1000,
                             include_history: true,
                         }).then(response => {
                             if (response?.result) {
-                                // If "Content:" occurs in the response, eliminate everything before it; use split.
-                                loreEntry.content = response.result.split('Content:').pop()?.trim() || loreEntry.content;
+                                // If "CONTENT:" occurs in the response, eliminate everything before it; use split.
+                                loreEntry.content = response.result.split('CONTENT:').pop()?.trim() || loreEntry.content;
                                 this.saveGame();
                             }
                         });
