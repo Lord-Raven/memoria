@@ -63,7 +63,7 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         const isCurrentSlot = stage().saveData.lastSaveSlot === slotIndex;
 
         // Get non-warden, non-player actors:
-        const actors = !isEmpty ? Object.values(save.actors).filter(actor => actor.type !== ActorType.WARDEN && actor.type !== ActorType.PLAYER) : [];
+        let actors = !isEmpty ? Object.values(save.actors).filter(actor => actor.type !== ActorType.WARDEN && actor.type !== ActorType.PLAYER) : [];
         // Sort actors by most recent appearance in a skit (initial only).
         actors.map(actor => {
             const lastAppearance = save?.timeline.map(entry => entry.skit).filter(skit => skit).reduce((last, skit, index) => {
@@ -72,6 +72,9 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
             }, 0) || 0;
             return {...actor, lastAppearance: lastAppearance};
         }).sort((a, b) => b.lastAppearance - a.lastAppearance);
+
+        // Trim actors to max of 5 for display:
+        actors = actors.slice(0, 5);
 
         return (
             <motion.div
