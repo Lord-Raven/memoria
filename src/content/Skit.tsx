@@ -626,7 +626,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                             const characterName = match[1].trim();
                             const changeValue = parseInt(match[2]);
                             const matchedActor = findBestNameMatch(characterName, Object.values(save.actors));
-                            if (matchedActor && !isNaN(changeValue)) {
+                            if (matchedActor && !isNaN(changeValue) && changeValue !== 0) {
                                 console.log(`Affection change flagged for ${matchedActor.name}: ${changeValue > 0 ? '+' : ''}${changeValue}`);
                                 outcomes.push(new Outcome({
                                     type: OutcomeType.RELATIONSHIP_CHANGE,
