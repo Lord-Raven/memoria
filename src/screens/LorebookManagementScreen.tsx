@@ -541,7 +541,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
                                                     lineHeight: 1.4,
                                                 }}
                                             >
-                                                This lore entry is providing the profile for a matching character.
+                                                This entry is providing the lore for a matching character.
                                             </div>
                                         )}
 
@@ -557,7 +557,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
                                                     lineHeight: 1.4,
                                                 }}
                                             >
-                                                This lore entry is providing the description for a matching location.
+                                                This entry is providing the description for a matching location.
                                             </div>
                                         )}
 

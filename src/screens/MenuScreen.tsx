@@ -432,7 +432,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 boxSizing: 'border-box',
                                             }}
                                         >
-                                            {'v2026.03.19 - Alpha junk; lots going on.'}
+                                            {'v2026.04.18 - Beta build.'}
                                         </div>
                                     </motion.div>
                                 )}

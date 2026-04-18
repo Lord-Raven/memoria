@@ -27,7 +27,7 @@ export type Lore = {
     triggers: string[];
     enabled: boolean;
     constant: boolean;
-    scanDepth: number; // default to 15
+    scanDepth: number; // default to 10
     insertionOrder: number;
     priority: number;
     probability: number; // 1 to 100
@@ -41,7 +41,7 @@ export function createLoreEntry(params: Partial<Omit<Lore, 'id'>>): Lore {
         triggers: [],
         enabled: true,
         constant: false,
-        scanDepth: 15,
+        scanDepth: 10,
         insertionOrder: 0,
         priority: 0,
         probability: 100,

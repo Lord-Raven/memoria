@@ -64,13 +64,14 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
 
         // Get non-warden, non-player actors:
         const actors = !isEmpty ? Object.values(save.actors).filter(actor => actor.type !== ActorType.WARDEN && actor.type !== ActorType.PLAYER) : [];
-        // Insert warden to the beginning, even if no one is in the list:
-        if (!isEmpty) {
-            const warden = Object.values(save.actors).find(actor => actor.type === ActorType.WARDEN);
-            if (warden) {
-                actors.unshift(warden);
-            }
-        }
+        // Sort actors by most recent appearance in a skit (initial only).
+        actors.map(actor => {
+            const lastAppearance = save?.timeline.map(entry => entry.skit).filter(skit => skit).reduce((last, skit, index) => {
+                const found = skit?.initialActors.includes(actor.id);
+                return found ? Math.max(last, index) : last;
+            }, 0) || 0;
+            return {...actor, lastAppearance: lastAppearance};
+        }).sort((a, b) => b.lastAppearance - a.lastAppearance);
 
         return (
             <motion.div

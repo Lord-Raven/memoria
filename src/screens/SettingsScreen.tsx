@@ -200,7 +200,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Wanderer Name
+                                    Prisoner Name
                                 </label>
                                 <TextInput
                                     id="player-name"
@@ -224,7 +224,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         marginBottom: '8px',
                                     }}
                                 >
-                                    Field Notes
+                                    Prisoner Details
                                 </label>
                                 <textarea
                                     id="player-description"

@@ -1638,9 +1638,6 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 																? <Favorite key={`heart-filled-${index}`} sx={{ fontSize: 16 }} />
 																: <FavoriteBorder key={`heart-empty-${index}`} sx={{ fontSize: 16, opacity: 0.65 }} />
 														))}
-														<Typography variant="caption" sx={{ color: 'rgba(242, 173, 184, 0.9)', marginLeft: 0.5 }}>
-															{affinity}/{HEART_COUNT}
-														</Typography>
 													</Box>
 													<Box sx={{ color: '#edf2f2', fontSize: '0.9rem', lineHeight: 1.4 }}>
 														{typedActor.profile}

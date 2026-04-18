@@ -168,6 +168,47 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         this.generationPromises['lorebook'] = fetchLorebook().then(loreEntries => {
             newSave.lorebook = loreEntries;
+
+            // Insert missing, unofficial entries needed for the game: Jezreel, Clementine, and Nandemonankai
+            if (!newSave.lorebook?.find(entry => entry.id === 'jezreel')) {
+                newSave.lorebook?.push({
+                    id: 'jezreel',
+                    title: 'Jezreel',
+                    type: 'character',
+                    triggers: ['jezreel', 'lamia', 'college', 'collegiate', 'snob', 'sorority', 'valley-girl', 'luxe'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `## Jezreel\n` +
+                        `A lamia with sorority-girl vibes, still struggling with the luxe-less life of Ardeia. She doesn't remember much from the Past, but she knows it was nicer than this.\n\n` +
+                        `After ten years in Ardeia, she often still plays the snobby blonde valley-girl, even though she begrudgingly appreciates her found family and secretly enjoys doing her part to help.\n\n` +
+                        `She loves sunning her scales, tanning her torso, and finding exotic new fashions for her serpentine physique, constantly on the lookout for minor ways to bring luxury or beauty into her life. She has little in the way of practical skills, ` +
+                        `but has grown quite good with her bonewood spear, which she has named "Vanity."\n\n` +
+                        `She speaks with a valley-girl affectation and slang, and genuinely believes this is the tongue of her people; she will get defensive about it.`
+                });
+            }
+            if (!newSave.lorebook?.find(entry => entry.id === 'clementine')) {
+                newSave.lorebook?.push({
+                    id: 'clementine',
+                    title: 'Clementine',
+                    type: 'character',
+                    triggers: ['clementine', 'naenia'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `## Clementine Naenia\n` +
+                        `Clementine is a misguidedly trusting and optimistic young woman with a nasty habit of befriending even the shadiest of characters.\n\n` +
+                        `Despite her naivety, Clementine has a good heart and is more than capable of helping others around Ardeia.`
+                });            
+            }
+            if (!newSave.lorebook?.find(entry => entry.id === 'nandemonankai')) {
+                newSave.lorebook?.push({
+                    id: 'nandemonankai',
+                    title: 'Nandemonankai',
+                    type: 'location',
+                    triggers: ['nandemonankai', 'shop', 'plaza'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `## Nandemonankai\n` +
+                        `A quiet, cluttered shop in the backstreets of Ardeia, where Tawamure Rei sells or exchanges an eclectic assortment of odds-and-ends.`
+                });
+            }
+
             delete this.generationPromises['lorebook'];
         }).catch(err => {
             console.error('Error fetching lorebook', err);
@@ -442,7 +483,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 case 'LORE_UPDATE':
                     console.log(`Processing lore update outcome:`, outcome);
                     // For lore updates, we expect details to include a loreEntry with id, title, and content.
-                    const loreEntry = save.lorebook?.find(entry => entry.id === outcome.details?.loreEntry?.id);
+                    const loreEntry = save.lorebook?.find(entry => entry.id === outcome.details?.loreId);
                     if (loreEntry) {
                         // Make a textGen call with context and the current lore entry, asking for revisions based on context.
                         this.generator.textGen({
@@ -467,7 +508,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const actor = save.actors[outcome.details?.actorId];
                     if (actor) {
                         const previousAffinity = actor.affinity;
-                        actor.affinity = Math.min(10, Math.max(0, actor.affinity + (outcome.details?.change || 0)));
+                        actor.affinity = Math.min(10, Math.max(0, actor.affinity + (outcome.details?.changeValue || 0)));
                         const effectiveChange = actor.affinity - previousAffinity;
                         // If affinity effectively changed, show a heart portrait pop-in at the top of the screen.
                         if (effectiveChange !== 0) {
@@ -490,7 +531,6 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     }
                     break;
                 }
-                    break;
             }
         }
                     
