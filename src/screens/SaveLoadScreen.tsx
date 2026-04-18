@@ -66,12 +66,12 @@ export const SaveLoadScreen: FC<SaveLoadScreenProps> = ({ stage, mode, onClose, 
         let actors = !isEmpty ? Object.values(save.actors).filter(actor => actor.type !== ActorType.WARDEN && actor.type !== ActorType.PLAYER) : [];
         // Sort actors by most recent appearance in a skit (initial only).
         actors.map(actor => {
-            const lastAppearance = save?.timeline.map(entry => entry.skit).filter(skit => skit).reduce((last, skit, index) => {
-                const found = skit?.initialActors.includes(actor.id);
+            const lastAppearance = save?.timeline.filter(entry => entry.skit).sort((a, b) => b.turn - a.turn).reduce((last, entry, index) => {
+                const found = entry?.skit?.initialActors.includes(actor.id);
                 return found ? Math.max(last, index) : last;
             }, 0) || 0;
             return {...actor, lastAppearance: lastAppearance};
-        }).sort((a, b) => b.lastAppearance - a.lastAppearance);
+        }).filter(a => a.lastAppearance > 0).sort((a, b) => b.lastAppearance - a.lastAppearance);
 
         // Trim actors to max of 5 for display:
         actors = actors.slice(0, 5);

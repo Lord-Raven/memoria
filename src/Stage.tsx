@@ -11,6 +11,7 @@ import { createDefaultAtlas, getLinkedLocationLore, Location } from "./content/L
 import { BaseScreen } from "./screens/BaseScreen";
 import { fetchLorebook, Lore } from "./content/Lore";
 import { Client } from "@gradio/client";
+import { DEFAULT_PLAYER_THEME_COLOR } from "./screens/SettingsScreen";
 
 type MessageStateType = any;
 
@@ -116,7 +117,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         //}
     }
 
-    generateFreshSave(playerData: {name: string, personality: string}): SaveType {
+    generateFreshSave(playerData: {name: string, personality: string, themeColor?: string}): SaveType {
         return {playerId: this.primaryUser.anonymizedId,
             actors: {
                 [this.primaryUser.anonymizedId]: {
@@ -131,7 +132,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     outfitId: '', // Ditto.
                     fullPath: '',
                     affinity: 0,
-                    themeColor: '',
+                    themeColor: playerData.themeColor || DEFAULT_PLAYER_THEME_COLOR,
                     themeFontFamily: '',
                     voiceId: ''
                 },
@@ -144,7 +145,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         };
     }
 
-    startNewGame(playerData: {name: string, data: Partial<SaveType>, personality: string}) {
+    startNewGame(playerData: {name: string, data: Partial<SaveType>, personality: string, themeColor?: string}) {
         // Insert a dummy promise into generationPromises to ensure the loading screen shows until we manually clear it after the initial actors are loaded.
         this.generationPromises['newGame'] = new Promise(() => {});
 

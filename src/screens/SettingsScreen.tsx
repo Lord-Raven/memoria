@@ -6,6 +6,14 @@ import { Close, VoiceChat } from '@mui/icons-material';
 import { useTooltip } from './TooltipContext';
 import { ScreenType } from './BaseScreen';
 
+export const DEFAULT_PLAYER_THEME_COLOR = '#66bbee';
+
+const isValidHexColor = (value: string): boolean => /^#[0-9a-f]{6}$/i.test(value.trim());
+
+const resolvePlayerThemeColor = (value: string): string => (
+    isValidHexColor(value) ? value : DEFAULT_PLAYER_THEME_COLOR
+);
+
 interface SettingsScreenProps {
     stage: () => Stage;
     onCancel: () => void;
@@ -17,6 +25,7 @@ interface SettingsScreenProps {
 interface SettingsData {
     playerName: string;
     playerDescription: string;
+    playerColor: string;
     textToSpeech: boolean;
     betaMode: boolean;
     language: string;
@@ -39,6 +48,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
     const [settings, setSettings] = useState<SettingsData>({
         playerName: stage().getPlayerActor()?.name || stage().primaryUser?.name || 'Player',
         playerDescription: stage().getPlayerActor()?.profile || stage().primaryUser?.chatProfile || 'An enigmatic prisoner.',
+        playerColor: resolvePlayerThemeColor(stage().getPlayerActor()?.themeColor || ''),
         textToSpeech: (stage().getSave()?.textToSpeech ?? true),
         betaMode: (stage().getSave()?.betaMode ?? false),
         language: stage().getSave()?.language || 'English',
@@ -46,14 +56,17 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
 
     const [languageSuggestions, setLanguageSuggestions] = useState<string[]>([]);
     const [showLanguageSuggestions, setShowLanguageSuggestions] = useState(false);
+    const resolvedPlayerThemeColor = resolvePlayerThemeColor(settings.playerColor);
 
     const handleSave = () => {
         console.log('Saving settings:', settings);
+        const playerThemeColor = resolvePlayerThemeColor(settings.playerColor);
         
         if (isNewGame) {
             console.log('Starting new game with settings');
             stage().startNewGame({
                 name: settings.playerName,
+                themeColor: playerThemeColor,
                 data: {
                     textToSpeech: settings.textToSpeech,
                     betaMode: settings.betaMode,
@@ -72,6 +85,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             const player = stage().getPlayerActor();
             player.name = settings.playerName;
             player.profile = settings.playerDescription;
+            player.themeColor = playerThemeColor;
         }
 
         stage().saveGame();
@@ -82,6 +96,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         setSettings(prev => ({
             ...prev,
             [field]: value
+        }));
+    };
+
+    const handlePlayerColorChange = (value: string) => {
+        setSettings(prev => ({
+            ...prev,
+            playerColor: value,
         }));
     };
 
@@ -240,6 +261,74 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         resize: 'vertical',
                                     }}
                                 />
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="player-color"
+                                    style={{
+                                        display: 'block',
+                                        color: '#b9d2e3',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        marginBottom: '8px',
+                                    }}
+                                >
+                                    Prisoner Color
+                                </label>
+                                <div
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '88px minmax(0, 1fr)',
+                                        gap: '12px',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <input
+                                        id="player-color"
+                                        type="color"
+                                        value={resolvedPlayerThemeColor}
+                                        onChange={(e) => handlePlayerColorChange(e.target.value)}
+                                        aria-label="Pick prisoner color"
+                                        style={{
+                                            width: '88px',
+                                            height: '56px',
+                                            borderRadius: '12px',
+                                            border: '2px solid rgba(138, 176, 204, 0.35)',
+                                            background: 'rgba(20, 28, 44, 0.82)',
+                                            padding: '6px',
+                                            cursor: 'pointer',
+                                            boxShadow: `0 0 18px ${resolvedPlayerThemeColor}22`,
+                                        }}
+                                    />
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '8px',
+                                            padding: '12px 14px',
+                                            borderRadius: '12px',
+                                            background: `linear-gradient(135deg, rgba(18, 26, 41, 0.92), ${resolvedPlayerThemeColor}22)`,
+                                            border: `1px solid ${resolvedPlayerThemeColor}55`,
+                                        }}
+                                    >
+                                        <TextInput
+                                            value={settings.playerColor}
+                                            onChange={(e) => handlePlayerColorChange(e.target.value)}
+                                            placeholder={DEFAULT_PLAYER_THEME_COLOR}
+                                            style={{ fontSize: '14px' }}
+                                        />
+                                        <span
+                                            style={{
+                                                color: 'rgba(237, 242, 242, 0.72)',
+                                                fontSize: '12px',
+                                                lineHeight: 1.4,
+                                            }}
+                                        >
+                                            Stored as a hex color in your actor theme.
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Generation Settings */}
