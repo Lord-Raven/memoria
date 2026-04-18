@@ -668,9 +668,11 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
 
             // Attach endScene and endProperties to the final entry if the scene ended
             if (endScene && scriptEntries.length > 0) {
+                console.log('Updating final entry');
                 const finalEntry = scriptEntries[scriptEntries.length - 1];
                 finalEntry.endScene = true;
                 finalEntry.outcomes = outcomes;
+                console.log(finalEntry.outcomes);
             }
 
             if (endScene && !summary) {

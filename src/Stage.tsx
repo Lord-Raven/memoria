@@ -434,10 +434,13 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
         // This is where various outcomes of the skit are processed and applied to the save state
         // Get the final entry of the skit and process outcomes:
+        console.log(`Processing outcomes for skit ending...`);
         const outcomes = currentSkit?.script[currentSkit.script.length - 1]?.outcomes || [];
+        console.log(outcomes);
         for (const outcome of outcomes) {
             switch (outcome.type) {
                 case 'LORE_UPDATE':
+                    console.log(`Processing lore update outcome:`, outcome);
                     // For lore updates, we expect details to include a loreEntry with id, title, and content.
                     const loreEntry = save.lorebook?.find(entry => entry.id === outcome.details?.loreEntry?.id);
                     if (loreEntry) {
@@ -460,6 +463,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     break;
                 case 'RELATIONSHIP_CHANGE': {
                     // For relationship changes, we expect details to include actorId and change (e.g. +10 or -5).
+                    console.log(`Processing relationship change outcome:`, outcome);
                     const actor = save.actors[outcome.details?.actorId];
                     if (actor) {
                         const previousAffinity = actor.affinity;
