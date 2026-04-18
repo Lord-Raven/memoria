@@ -305,6 +305,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             // Strip all double asterisks; this is a temporary measure due to current model behavior.
             let text = response.result.replace(/\*\*/g, '').trim();
             let endScene = false;
+            const outcomes: Outcome[] = [];
             let summary = '';
             let parsedSceneLocationId = getCurrentLocation(skit, -1);
             let parsedCurrentActors = getCurrentActors(skit, -1);
@@ -584,18 +585,33 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     `\n\nInstruction:\nAnalyze the preceding scene script and determine whether the final moments make for a suitable ending to the scene. ` +
                     `If the scene feels complete or has reached a good suspended moment, output "[END SCENE]" followed by a "[SUMMARY: ...]" tag with a brief summary of the entire scene's key events or outcomes. ` +
                     `If the scene does not feel complete, output "[CONTINUE SCENE]" and "[SUMMARY: ...]" tag with a brief explanation of what is missing or what could be developed further to reach a satisfying conclusion. ` +
-                    `Example Response:\n` +
-                    `[END SCENE]\n[SUMMARY: This excursion took ${playerName} to a new location where they encountered a new threat and uncovered a mysterious new errata, the Coral Razor.]` +
-                    `Example Response:\n` +
-                    `[CONTINUE SCENE]\n[SUMMARY: The scene is developing well, but it would be more satisfying with a clearer moment of resolution or suspense at the end. Consider whether ${playerName} could discover a new clue or have a significant interaction with another character to create a more compelling ending.]`;
+                    `\n\nIf the scene is complete, utilize additional tags to highlight any significant developments, such as character relationship changes or lore entries above that require updates as a result of this scene. ` +
+                    `\n\n#Relationship Changes:#\n` +
+                    `Indicate affection changes between the player and any characters involved in the scene; affection is represented as a number between 1 and 10, so increments should be small.\n` +
+                    `[AFFECTION CHANGE: Character Name +/-x]` +
+                    `\nExamples:\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Lyra -1]` +
+                    `\n\n#Lore Updates:#\n` +
+                    `Indicate the names of lore entries that may need to be updated as a result of the skit. Actual updates will be made in separate requests; this tag merely flags an entry for update.\n` +
+                    `[LORE UPDATE: Lore Entry Name]` +
+                    `\nExample:\n[LORE UPDATE: Cassiel]\n[LORE UPDATE: The Gardens]` +
+                    `\n\nThe primary goal is to determine the completion of the scene and provide a summary, but include additional tags when appropriate.` +
+                    `\nExample Response:\n` +
+                    `[END SCENE]\n[SUMMARY: This expedition took ${playerName} and Cyanea to the Shells, where they encountered Red Hood and uncovered a new threat: the Coral Razor.]` +
+                    `\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Red Hood -1]\n[LORE UPDATE: The Shells]\n[LORE UPDATE: Cyanea]\n[LORE UPDATE: Red Hood]\n` +
+                    `#END#` +
+                    `\nExample Response:\n` +
+                    `[CONTINUE SCENE]\n[SUMMARY: The scene is developing well, but it would be more satisfying with a clearer moment of resolution at the end. Consider whether ${playerName} could discover a new clue or have a significant interaction with another character to create a more compelling ending.]\n` +
+                    `#END#` +
+                    ``;
                 
                 const endResponse = await stage.generator.textGen({
                     prompt: endPrompt,
                     min_tokens: 1,
-                    max_tokens: 150,
+                    max_tokens: 500,
                     include_history: true,
                     stop: ['#END']
                 });
+
                 if (endResponse && endResponse.result) {
                     // Strip double-asterisks. TODO: Remove this once other model issue is resolved.
                     text = text.replace(/\*\*/g, '');
@@ -605,6 +621,44 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(endResponse.result);
                         summary = summaryMatch ? summaryMatch[1].trim() : '';
                         console.log('Model determined scene should end. Summary:', summary);
+
+                        const affectionChangeRegex = /\[AFFECTION CHANGE:\s*([^\]]+?)\s*([+-]\d+)\]/gi;
+                        let match;
+                        while ((match = affectionChangeRegex.exec(endResponse.result)) !== null) {
+                            const characterName = match[1].trim();
+                            const changeValue = parseInt(match[2]);
+                            const matchedActor = findBestNameMatch(characterName, Object.values(save.actors));
+                            if (matchedActor && !isNaN(changeValue)) {
+                                console.log(`Affection change flagged for ${matchedActor.name}: ${changeValue > 0 ? '+' : ''}${changeValue}`);
+                                outcomes.push(new Outcome({
+                                    type: OutcomeType.RELATIONSHIP_CHANGE,
+                                    description: `Affection with ${matchedActor.name} changes by ${changeValue > 0 ? '+' : ''}${changeValue}.`,
+                                    details: {
+                                        actorId: matchedActor.id,
+                                        actorName: matchedActor.name,
+                                        changeValue,
+                                    },
+                                }));
+                            }
+                        }
+
+                        const loreUpdateRegex = /\[LORE UPDATE:\s*([^\]]+)\]/gi;
+                        while ((match = loreUpdateRegex.exec(endResponse.result)) !== null) {
+                            const loreName = match[1].trim();
+                            const matchedLore = findBestNameMatch(loreName, save.lorebook || [], 'title');
+                            if (matchedLore) {
+                                console.log(`Lore update flagged for "${matchedLore.title}".`);
+                                outcomes.push(new Outcome({
+                                    type: OutcomeType.LORE_UPDATE,
+                                    description: `Lore entry \"${matchedLore.title}\" should be reviewed for updates.`,
+                                    details: {
+                                        loreId: matchedLore.id,
+                                        loreTitle: matchedLore.title,
+                                    },
+                                }));
+                            }
+                        }
+
                     }
                 }
             })());
@@ -614,75 +668,6 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
 
             // Attach endScene and endProperties to the final entry if the scene ended
             if (endScene && scriptEntries.length > 0) {
-                const outcomes: Outcome[] = [];
-                // Do some analysis of the script to assess some things: affection gain/loss with characters and which lore entries may need to be updated.
-                const analysisPrompt = generateContext(skit, stage, 0) +
-                    `\n\nScene Script for Analysis:\n${buildScriptLog(skit, scriptEntries, stage)}` +
-                    `\n\nInstruction:\nAnalyze the preceding scene script and identify significant developments or changes that occurred during or as a result of the scene's events; ` +
-                    `output specially-formatted tags for the game to process:` +
-                    `\n\n#Relationship Changes:#\n` +
-                    `Indicate affection changes between the player and any characters involved in the scene; affection is represented as a number between 1 and 10, so increments should be small.\n` +
-                    `[AFFECTION CHANGE: Character Name +/-x]` +
-                    `\nExamples:\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Lyra -1]` +
-                    `\n\n#Lore Updates:#\n` +
-                    `Indicate the names of lore entries that may need to be updated as a result of the skit. Actual updates will be made in separate requests; this tag merely flags an entry for update.\n` +
-                    `[LORE UPDATE: Lore Entry Name]` +
-                    `\nExample:\n[LORE UPDATE: Cassiel]\n[LORE UPDATE: The Gardens]` +
-                    (!summary ? `\n\n#Scene Summary:#\nIf the scene ended, provide a brief summary of the key events or outcomes of the scene.\n[SUMMARY: ...]` : '');
-
-                const analysisResponse = await stage.generator.textGen({
-                    prompt: analysisPrompt,
-                    min_tokens: 1,
-                    max_tokens: 200,
-                    include_history: true,
-                    stop: ['#END']
-                });
-                if (analysisResponse && analysisResponse.result) {
-                    const affectionChangeRegex = /\[AFFECTION CHANGE:\s*([^\]]+?)\s*([+-]\d+)\]/gi;
-                    let match;
-                    while ((match = affectionChangeRegex.exec(analysisResponse.result)) !== null) {
-                        const characterName = match[1].trim();
-                        const changeValue = parseInt(match[2]);
-                        const matchedActor = findBestNameMatch(characterName, Object.values(save.actors));
-                        if (matchedActor && !isNaN(changeValue)) {
-                            outcomes.push(new Outcome({
-                                type: OutcomeType.RELATIONSHIP_CHANGE,
-                                description: `Affection with ${matchedActor.name} changes by ${changeValue > 0 ? '+' : ''}${changeValue}.`,
-                                details: {
-                                    actorId: matchedActor.id,
-                                    actorName: matchedActor.name,
-                                    changeValue,
-                                },
-                            }));
-                        }
-                    }
-
-                    const loreUpdateRegex = /\[LORE UPDATE:\s*([^\]]+)\]/gi;
-                    while ((match = loreUpdateRegex.exec(analysisResponse.result)) !== null) {
-                        const loreName = match[1].trim();
-                        const matchedLore = findBestNameMatch(loreName, save.lorebook || [], 'title');
-                        if (matchedLore) {
-                            outcomes.push(new Outcome({
-                                type: OutcomeType.LORE_UPDATE,
-                                description: `Lore entry \"${matchedLore.title}\" should be reviewed for updates.`,
-                                details: {
-                                    loreId: matchedLore.id,
-                                    loreTitle: matchedLore.title,
-                                },
-                            }));
-                        }
-                    }
-
-                    if (!summary) {
-                        const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(analysisResponse.result);
-                        summary = summaryMatch ? summaryMatch[1].trim() : '';
-                        if (summary) {
-                            console.log('Scene summary from analysis:', summary);
-                        }
-                    }
-                }
-
-
                 const finalEntry = scriptEntries[scriptEntries.length - 1];
                 finalEntry.endScene = true;
                 finalEntry.outcomes = outcomes;
