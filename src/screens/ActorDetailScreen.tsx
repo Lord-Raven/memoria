@@ -836,7 +836,7 @@ ${indent}}`;
                                         />
                                     </div>
 
-                                    <div>
+                                    { /*<div>
                                         <label
                                             style={{
                                                 display: 'block',
@@ -869,7 +869,8 @@ ${indent}}`;
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>
+                                    </div> 
+                                    */}
 
                                     <div>
                                         <label 

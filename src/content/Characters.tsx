@@ -1295,7 +1295,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         name: 'Reitia',
         fullPath: '7leaf/reitia-overwritten-rabbit-30a97d6be1ef',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/37db624a-cf8c-4010-b483-8598b2f9771e/2008acca-2532-4cf0-aca8-8b95e090dcc4.png',
-        state: ActorState.FORMA,
+        //state: ActorState.FORMA,
         description: `A young adult female rabbit kemonomimi with an athletic build, pale skin, and deep red eyes that hold an unnervingly direct gaze. She has long blonde hair typically worn in a high ponytail, topped with a pair of expressive rabbit ears.`,
         profile: `Reitia is a prisoner of Ardeia, overwritten by ancient machine logic after a traumatic expedition. Her former cheerful, teasing, and impulsive personality is buried, replaced by a cold, stoic, and emotionally detached demeanor. She speaks in brief, monotone sentences and moves with unnerving efficiency. She follows routines without question and shows no interest in social bonds, though a deep, subconscious yearning to rediscover her lost self persists. She serves as a mid-range combat specialist on expeditions, utilizing her magitech revolver and limited elemental magic.`,
         themeColor: '#dddddd',

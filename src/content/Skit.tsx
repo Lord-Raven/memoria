@@ -580,12 +580,12 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             ttsPromises.push((async () => {
                 const endPrompt = generateContext(skit, stage, 0) +
                     `\n\nScene Script for Analysis:\n${buildScriptLog(skit, scriptEntries, stage)}` +
-                    `\n\nInstruction:\nAnalyze the preceding scene script and determine whether the final moments make for a suitable ending to the scene. ` +
-                    `If the scene feels complete or has reached a good suspended moment, output "[END SCENE]" followed by a "[SUMMARY: ...]" tag with a brief summary of the entire scene's key events or outcomes. ` +
+                    `\n\nInstruction:\nAnalyze the preceding script and determine whether the scene has run its course. ` +
+                    `If the scene feels complete or has reached a suitable moment to end on, output "[END SCENE]" followed by a "[SUMMARY: ...]" tag with a brief summary of the entire scene's key events and outcomes. ` +
                     `If the scene does not feel complete, output "[CONTINUE SCENE]" and "[SUMMARY: ...]" tag with a brief explanation of what is missing or what could be developed further to reach a satisfying conclusion. ` +
                     `\n\nIf the scene is complete, utilize additional tags to highlight any significant developments, such as character relationship changes or lore entries above that require updates as a result of this scene. ` +
                     `\n\n#Relationship Changes:#\n` +
-                    `Indicate affection changes between the player and any characters involved in the scene; affection is represented as a number between 1 and 10, so increments should be small.\n` +
+                    `Indicate affection changes between the player and any characters involved in the scene; affection is represented as a number between 1 and 10, so adjustments should be generally incremental.\n` +
                     `[AFFECTION CHANGE: Character Name +/-x]` +
                     `\nExamples:\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Lyra -1]` +
                     `\n\n#Lore Updates:#\n` +
@@ -594,11 +594,11 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     `\nExample:\n[LORE UPDATE: Cassiel]\n[LORE UPDATE: The Gardens]` +
                     `\n\nThe primary goal is to determine the completion of the scene and provide a summary, but include additional tags when appropriate.` +
                     `\nExample Response:\n` +
-                    `[END SCENE]\n[SUMMARY: This expedition took ${playerName} and Cyanea to the Shells, where they encountered Red Hood and uncovered a new threat: the Coral Razor.]` +
-                    `\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Red Hood -1]\n[LORE UPDATE: The Shells]\n[LORE UPDATE: Cyanea]\n[LORE UPDATE: Red Hood]\n` +
+                    `[END SCENE]\n[SUMMARY: This expedition took ${playerName} and Cyanea to the Shells, where they encountered Red Hood and uncovered a new forma: the Coral Razor. Red Hood vehemently disagreed with ${playerName} and Cyanea on how to handle this new threat.]` +
+                    `\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Red Hood -2]\n[LORE UPDATE: The Shells]\n[LORE UPDATE: Cyanea]\n[LORE UPDATE: Red Hood]\n` +
                     `#END#` +
                     `\nExample Response:\n` +
-                    `[CONTINUE SCENE]\n[SUMMARY: The scene is developing well, but it would be more satisfying with a clearer moment of resolution at the end. Consider whether ${playerName} could discover a new clue or have a significant interaction with another character to create a more compelling ending.]\n` +
+                    `[CONTINUE SCENE]\n[SUMMARY: The scene is developing well, but it would be more satisfying with a clearer moment of resolution at the end. Consider whether ${playerName} could discover a clue or have a significant interaction with another character to create a more compelling ending.]\n` +
                     `#END#` +
                     ``;
                 

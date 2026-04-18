@@ -301,33 +301,6 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                             boxShadow: `0 0 18px ${resolvedPlayerThemeColor}22`,
                                         }}
                                     />
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '8px',
-                                            padding: '12px 14px',
-                                            borderRadius: '12px',
-                                            background: `linear-gradient(135deg, rgba(18, 26, 41, 0.92), ${resolvedPlayerThemeColor}22)`,
-                                            border: `1px solid ${resolvedPlayerThemeColor}55`,
-                                        }}
-                                    >
-                                        <TextInput
-                                            value={settings.playerColor}
-                                            onChange={(e) => handlePlayerColorChange(e.target.value)}
-                                            placeholder={DEFAULT_PLAYER_THEME_COLOR}
-                                            style={{ fontSize: '14px' }}
-                                        />
-                                        <span
-                                            style={{
-                                                color: 'rgba(237, 242, 242, 0.72)',
-                                                fontSize: '12px',
-                                                lineHeight: 1.4,
-                                            }}
-                                        >
-                                            Stored as a hex color in your actor theme.
-                                        </span>
-                                    </div>
                                 </div>
                             </div>
 
