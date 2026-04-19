@@ -82,6 +82,7 @@ export const LoadingScreen: FC<LoadingScreenProps> = ({ stage, setScreenType }) 
             if (currentPromiseKeys.length === 0 && hasObservedPromiseActivityRef.current) {
                 console.log('Done loading');
                 currentStage.saveGame();
+                currentStage.loadMapScreen();
                 setScreenType(ScreenType.MAP);
             }
         }, 100);

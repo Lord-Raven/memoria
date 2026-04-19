@@ -270,12 +270,20 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         // Generate a few initial characters.
         this.loadActors().finally(() => {
             console.log('Finished loading initial actors for new game');
-            this.rebuildExpeditionChoices(newSave).then(() => {
-                this.showPriorityMessage('Expeditions are now available.');
-            });
             delete this.generationPromises['newGame']; // Clear the dummy promise to allow the loading screen to finish.
             this.saveGame();
         });
+    }
+
+    // Called when map screen displays.
+    loadMapScreen() {
+        if (!this.generationPromises['expeditionChoices'] && (!this.getSave().expeditionChoices || this.getSave().expeditionChoices?.length === 0)) {
+            this.generationPromises['expeditionChoices'] = this.rebuildExpeditionChoices(this.getSave()).then(() => {
+                this.showPriorityMessage('Expeditions are now available.');
+            }).finally(() => {
+                delete this.generationPromises['expeditionChoices'];
+            });
+        }
     }
     
     loadSave(slotIndex: number) {
@@ -292,6 +300,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
 
     saveGame() {
         this.messenger.updateChatState(this.saveData);
+    }
+
+    isMapScreenLoading(): boolean {
+        return Object.keys(this.generationPromises).length > 0;
     }
 
     deleteSave(slotIndex: number) {
@@ -534,7 +546,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     const loreEntry = findBestNameMatch(outcome.details?.loreTitle, save.lorebook || [], ['title']);
                     if (loreEntry) {
                         // Make a textGen call with context and the current lore entry, asking for revisions based on context.
-                        this.generator.textGen({
+                        const loreUpdatePromise = this.generator.textGen({
                             prompt: generateContext(undefined, this, 3) + 
                                 `\n\nTarget Lore Title:\n${loreEntry.title}\nContent for Revision:\n${loreEntry.content}` +
                                 `\n\nBased on the current context and recent events, output an updated or revised version of the content above using the below format, ` +
@@ -554,7 +566,10 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                                 loreEntry.content = response.result.split('CONTENT:').pop()?.trim() || loreEntry.content;
                                 this.saveGame();
                             }
-                        });
+                        }).catch(error => {
+                            console.error(`Error updating lore entry ${loreEntry.title}`, error);
+                        }).finally(() => delete this.generationPromises[`loreUpdate-${loreEntry.id}`]);
+                        this.generationPromises[`loreUpdate-${loreEntry.id}`] = loreUpdatePromise;
                     }
                     break;
                 case 'RELATIONSHIP_CHANGE': {
@@ -587,11 +602,15 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 }
             }
         }
-                    
 
-        this.rebuildExpeditionChoices(save).then(() => {
-            this.showPriorityMessage('Expeditions are now available.');
-        });
+        if (!this.generationPromises['rebuildExpeditions']) {
+            const rebuildExpeditionsPromise = this.rebuildExpeditionChoices(save).then(() => {
+                this.showPriorityMessage('Expeditions are now available.');
+            }).catch(error => {
+                console.error('Error rebuilding expedition choices after skit', error);
+            }).finally(() => {delete  this.generationPromises['rebuildExpeditions']});
+            this.generationPromises['rebuildExpeditions'] = rebuildExpeditionsPromise;
+        }
 
         this.saveGame();
     }

@@ -14,6 +14,7 @@ import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 import { determineEmotion, generateSkitScript, getCurrentLocation, Skit } from "../content/Skit";
 import { Actor, clampActorAffinity, getEmotionImage } from "../content/Actor";
 import { usePreloadLocationMap } from "../utils/useImagePreloading";
+import gearSvg from "../assets/gear.svg";
 
 export type MapScreenMode = 'management' | 'skit';
 
@@ -329,6 +330,7 @@ const createCirclePolygon = (cx: number, cy: number, radius: number, segments = 
 };
 
 export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVerticalLayout }) => {
+	const stageInstance = stage();
 	const mapSvgRef = useRef<SVGSVGElement | null>(null);
 	const [pulseClock, setPulseClock] = useState(() => performance.now());
 	const [hoveredCellId, setHoveredCellId] = useState<string | null>(null);
@@ -366,9 +368,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	const fullScreenProgressRef = useRef(0);
 	const [showContentManagement, setShowContentManagement] = useState(false);
 	const [showLorebookManagement, setShowLorebookManagement] = useState(false);
+	const isMapScreenLoading = stageInstance.isMapScreenLoading();
+	const isMapInteractionLocked = isMapScreenLoading;
 
 	// Preload location images when the map is displayed
-	const locations = useMemo(() => Object.values(stage().getSave()?.atlas || {}), [stage().getSave()?.atlas]);
+	const locations = useMemo(() => Object.values(stageInstance.getSave()?.atlas || {}), [stageInstance.getSave()?.atlas]);
 	usePreloadLocationMap(locations);
 
 	useEffect(() => {
@@ -565,6 +569,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [stage]);
 
 	const isSelectableLocationId = useCallback((locationId: string) => {
+		if (isMapInteractionLocked) {
+			return false;
+		}
+
 		if (mapMode !== 'management') {
 			return true;
 		}
@@ -574,7 +582,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 		}
 
 		return expeditionChoiceByLocationId.has(locationId);
-	}, [expeditionChoiceByLocationId, mapMode]);
+	}, [expeditionChoiceByLocationId, isMapInteractionLocked, mapMode]);
 
 	const targetPoints = useMemo(() => {
 		const save = stage().getSave();
@@ -1142,6 +1150,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [expeditionChoiceSignature, mapMode, mapViewportSize.height, mapViewportSize.width, stage, targetRadiusById, voronoiCells]);
 
 	const selectMapLocation = useCallback((x: number, y: number) => {
+		if (isMapInteractionLocked) {
+			return;
+		}
+
 		const clickedCell = getSelectableCellAtCoordinates(x, y);
 
 		if (clickedCell) {
@@ -1158,9 +1170,13 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				expeditionName,
 			});
 		}
-	}, [expeditionChoiceByLocationId, getExpeditionPartnerName, getSelectableCellAtCoordinates, targetPoints]);
+	}, [expeditionChoiceByLocationId, getExpeditionPartnerName, getSelectableCellAtCoordinates, isMapInteractionLocked, targetPoints]);
 
 	const handleMapClick = (event: MouseEvent<SVGSVGElement>) => {
+		if (isMapInteractionLocked) {
+			return;
+		}
+
 		if (hasFullScreenCell) {
 			setFullScreenCellId(null);
 			return;
@@ -1196,6 +1212,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
+		if (isMapInteractionLocked) {
+			setHoveredCellId((current) => (current ? null : current));
+			return;
+		}
+
 		if (hasFullScreenCell && fullScreenTransitionCellId) {
 			setHoveredCellId((current) => (current === fullScreenTransitionCellId ? current : fullScreenTransitionCellId));
 			return;
@@ -1227,6 +1248,11 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	const handleMapPointerLeave = () => {
+		if (isMapInteractionLocked) {
+			setHoveredCellId((current) => (current ? null : current));
+			return;
+		}
+
 		if (hasFullScreenCell && fullScreenTransitionCellId) {
 			setHoveredCellId((current) => (current === fullScreenTransitionCellId ? current : fullScreenTransitionCellId));
 			return;
@@ -1236,6 +1262,10 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	const handleCellPointerEnter = (cellId: string) => {
+		if (isMapInteractionLocked) {
+			return;
+		}
+
 		if (hasFullScreenCell && fullScreenTransitionCellId && fullScreenTransitionCellId !== cellId) {
 			return;
 		}
@@ -1246,6 +1276,15 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 
 		setHoveredCellId((current) => (current === cellId ? current : cellId));
 	};
+
+	useEffect(() => {
+		if (!isMapInteractionLocked) {
+			return;
+		}
+
+		setHoveredCellId(null);
+		setPendingLocation(null);
+	}, [isMapInteractionLocked]);
 
 	return (
 		<>
@@ -1264,6 +1303,64 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 					position: "relative",
 				}}
 			>
+
+								<AnimatePresence>
+					{isMapScreenLoading && (
+						<motion.div
+							key="map-loading-indicator"
+							initial={{ opacity: 0, y: -10, scale: 0.92 }}
+							animate={{ opacity: 1, y: 0, scale: 1 }}
+							exit={{ opacity: 0, y: -8, scale: 0.96 }}
+							transition={{ duration: 0.18, ease: "easeOut" }}
+							style={{
+								position: "absolute",
+								top: 16,
+								right: 144,
+								zIndex: 12,
+								pointerEvents: "none",
+							}}
+						>
+							<Box
+								role="status"
+								aria-label="Updating map"
+								sx={{
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									width: 44,
+									height: 44,
+									borderRadius: "50%",
+									background: "radial-gradient(circle at 30% 30%, rgba(214, 234, 248, 0.22), rgba(17, 26, 42, 0.84))",
+									border: "1px solid rgba(157, 201, 226, 0.55)",
+									boxShadow: "0 6px 20px rgba(5, 11, 20, 0.42), 0 0 18px rgba(138, 176, 204, 0.18)",
+									backdropFilter: "blur(8px)",
+								}}
+							>
+								<motion.div
+									animate={{ rotate: 360 }}
+									transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+									style={{ width: 22, height: 22 }}
+								>
+									<Box
+										sx={{
+											width: "100%",
+											height: "100%",
+											backgroundColor: "#d6eaf8",
+											maskImage: `url(${gearSvg})`,
+											maskRepeat: "no-repeat",
+											maskPosition: "center",
+											maskSize: "contain",
+											WebkitMaskImage: `url(${gearSvg})`,
+											WebkitMaskRepeat: "no-repeat",
+											WebkitMaskPosition: "center",
+											WebkitMaskSize: "contain",
+										}}
+									/>
+								</motion.div>
+							</Box>
+						</motion.div>
+					)}
+				</AnimatePresence>
 
 				<IconButton
 					onClick={() => setShowContentManagement(true)}
@@ -1385,7 +1482,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 							const isOutsideArdeia = !cell.point.id.startsWith("ardeia-");
 							const isExpeditionOption = expeditionChoiceByLocationId.has(cell.point.id);
 							const isSelectable = isSelectableLocationId(cell.point.id);
-							const backgroundDimOpacity = mapMode === 'management' && isOutsideArdeia && !isExpeditionOption
+							const isMarkedUnavailable = (mapMode === 'management' && (isMapInteractionLocked || (isOutsideArdeia && !isExpeditionOption)));
+							const backgroundDimOpacity = isMarkedUnavailable
 								? UNAVAILABLE_EXPEDITION_DIM_OPACITY
 								: 0;
 							const cellOpacity = hasFullScreenCell
@@ -1403,9 +1501,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									onPointerEnter={handleCellPointerEnter}
 									onPointerLeave={handleMapPointerLeave}
 									opacity={cellOpacity}
-									isInteractive={isSelectable && (!hasFullScreenCell || isFullScreenPoint)}
+									isInteractive={!isMapInteractionLocked && isSelectable && (!hasFullScreenCell || isFullScreenPoint)}
 									lockBackgroundToTargetRadius={!isFullScreenPoint}
-									isExpeditionable={mapMode === 'management' ? !isOutsideArdeia || isExpeditionOption : true}
+									isExpeditionable={!isMarkedUnavailable}
 								/>
 							);
 						})}

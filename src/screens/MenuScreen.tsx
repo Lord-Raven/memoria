@@ -54,6 +54,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
     }, [showSettings]);
 
     const handleContinue = () => {
+        stage().loadMapScreen();
         setScreenType(ScreenType.MAP);
     };
 
@@ -432,7 +433,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 boxSizing: 'border-box',
                                             }}
                                         >
-                                            {'v2026.04.18 - Beta build.'}
+                                            {'v2026.04.19 - Beta build. Loading changes ongoing.'}
                                         </div>
                                     </motion.div>
                                 )}
