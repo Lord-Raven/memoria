@@ -174,7 +174,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             // Some lore entries contain headers with ##; remove these lines.
             newSave.lorebook.forEach(entry => {
                 // Use regex to remove all lines that start with ##.
-                entry.content = entry.content.replace(/^##.*$/gm, '');
+                entry.content = entry.content.replace(/^##.*$/gm, '').trim();
             });
 
             // Insert missing, unofficial entries needed for the game: Jezreel, Clementine, and Nandemonankai

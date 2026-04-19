@@ -648,7 +648,7 @@ export function findBestNameMatch<T extends Record<K, string | string[]>, K exte
                     }
                 }
             } else if (typeof candidate[property] === 'string') {
-                score = Math.max(score, getNameSimilarity(candidate[property], searchName as string));
+                score = Math.max(score, getNameSimilarity(candidate[property] as string, searchName));
             }
         }
         // Only consider matches above threshold
