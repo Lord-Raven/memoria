@@ -45,6 +45,7 @@ export class Actor {
     themeFontFamily: string = ''; // Font family stack for CSS styling
     voiceId: string = ''; // Voice ID for TTS
     affinity: number = 0; // Trust/reputation with the player, clamped between 0 and 10.
+    heightMultiplier?: number;
 
     static clampAffinity(value: number | undefined | null): number {
         if (!Number.isFinite(value)) {

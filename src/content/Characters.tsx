@@ -77,6 +77,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#a3c175',
         themeFontFamily: 'Georgia, serif',
         voiceId: 'calm_female_20s',
+        heightMultiplier: 1.3,
         outfitId: 'Celestial Robes',
         outfits: [{
             id: 'Celestial Robes',
@@ -121,6 +122,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeFontFamily: `'Papyrus', 'Comic Sans MS', cursive`,
         voiceId: '057d53b3-bb28-47f1-9c19-a85a79851863',
         outfitId: 'Mystic Kimono',
+        heightMultiplier: 1.1,
         outfits: [{
             id: 'Mystic Kimono',
             name: 'Mystic Kimono',
@@ -341,6 +343,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#4a235a',
         themeFontFamily: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`,
         voiceId: '057d53b3-bb28-47f1-9c19-a85a79851863',
+        heightMultiplier: 1.1,
         outfitId: 'Yukata Gi',
         outfits: [{
             id: 'Yukata Gi',
@@ -430,6 +433,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#2F4F4F',
         themeFontFamily: `'Georgia', 'Times New Roman', serif`,
         voiceId: `resonant_male_40s`,
+        heightMultiplier: 1.1,
         outfitId: 'Forge Apron',
         outfits: [{
             id: 'Forge Apron',
@@ -681,6 +685,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeFontFamily: `'Courier New', Courier, monospace`,
         voiceId: '6e6619ba-4880-4cf3-a5df-d0697ba46656',
         outfitId: 'Gilded Robes',
+        heightMultiplier: 1.1,
         outfits: [{
             id: 'Gilded Robes',
             name: 'Gilded Robes',
@@ -858,6 +863,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#e9862c',
         themeFontFamily: `'Courier New', Courier, monospace`,
         voiceId: 'a2533977-83cb-4c10-9955-0277e047538f',
+        heightMultiplier: 1.1,
         outfitId: 'Scavenger Wear',
         outfits: [{
             id: 'Scavenger Wear',
@@ -1307,6 +1313,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
         themeColor: '#dddddd',
         themeFontFamily: `Arial, sans-serif`,
         voiceId: 'professional_female_30s',
+        heightMultiplier: 1.2,
         outfitId: 'Utilitarian Jumpsuit',
         outfits: [{
             id: 'Utilitarian Jumpsuit',
