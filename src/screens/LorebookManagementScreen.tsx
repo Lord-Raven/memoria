@@ -150,7 +150,7 @@ export const LorebookManagementPanel: FC<LorebookManagementPanelProps> = ({ stag
             return false;
         }
 
-        return !!findBestNameMatch(normalizedTitle, Object.values(stage().getSave().actors) || []);
+        return !!findBestNameMatch(normalizedTitle, Object.values(stage().getSave().actors) || [], ['name', 'nicknames']);
     }, [selectedLore]);
 
     const selectedLoreMatchesExistingLocation = useMemo(() => {

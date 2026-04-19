@@ -268,7 +268,7 @@ export const createDefaultAtlas = () => {
 };
 
 export function getLinkedLocationLore(locationName: string, stage: Stage) {
-	return findBestNameMatch(locationName, stage.getSave().lorebook?.filter(lore => lore.type === 'location') ?? [], 'title');
+	return findBestNameMatch(locationName, stage.getSave().lorebook?.filter(lore => lore.type === 'location') ?? [], ['title']);
 }
 
 export function getLocationDescription(locationId: string, stage: Stage) {

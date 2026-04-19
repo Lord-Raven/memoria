@@ -33,6 +33,7 @@ export class Actor {
     type: ActorType = ActorType.PRISONER; // Default to PRISONER
     state: ActorState = ActorState.AVAILABLE; // Default to AVAILABLE
     name: string = ''; // Display name
+    nicknames: string[] = []; // List of nicknames
     lorebookName?: string; // Name to link to lorebook entries; if empty, use display name
     fullPath: string = ''; // Path to original character definition
     sampleImageUrl: string = ''; // Original reference image
@@ -523,7 +524,7 @@ export async function generateEmotionImage(actor: Actor, emotion: Emotion, stage
 }
 
 export function getLinkedActorLore(actorName: string, stage: Stage) {
-	return findBestNameMatch(actorName, stage.getSave().lorebook?.filter(lore => lore.type === 'character') ?? [], 'title');
+	return findBestNameMatch(actorName, stage.getSave().lorebook?.filter(lore => lore.type === 'character') ?? [], ['title']);
 }
 
 export function getActorLore(actorId: string, stage: Stage) {
@@ -621,12 +622,13 @@ export function getNameSimilarity(name: string, possibleName: string): number {
  * Find the best matching name from a list of candidates.
  * @param searchName The name to search for
  * @param candidates An array of objects with name properties
+ * @param nameProperties The properties to use for comparison—default is ['name'] but could be ['name', 'nicknames'] (where nicknames is an array of strings)
  * @returns The best matching candidate, or null if no good match is found
  */
-export function findBestNameMatch<T extends Record<K, string>, K extends string = 'name'>(
+export function findBestNameMatch<T extends Record<K, string | string[]>, K extends string = 'name'>(
     searchName: string,
     candidates: T[],
-    nameProperty: K = 'name' as K
+    nameProperties: K[] = ['name' as K]
 ): T | null {
     if (!searchName || candidates.length === 0) {
         return null;
@@ -637,7 +639,18 @@ export function findBestNameMatch<T extends Record<K, string>, K extends string 
     const threshold = 0.7; // Minimum similarity threshold
 
     for (const candidate of candidates) {
-        const score = getNameSimilarity(candidate[nameProperty], searchName);
+        let score = 0;
+        for (const property of nameProperties) {
+            if (Array.isArray(candidate[property])) {
+                for (const item of candidate[property]) {
+                    if (typeof item === 'string') {
+                        score = Math.max(score, getNameSimilarity(item, searchName));
+                    }
+                }
+            } else if (typeof candidate[property] === 'string') {
+                score = Math.max(score, getNameSimilarity(candidate[property], searchName));
+            }
+        }
         // Only consider matches above threshold
         if (score > threshold && score > bestScore) {
             bestScore = score;

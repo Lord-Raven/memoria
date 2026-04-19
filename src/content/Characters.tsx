@@ -156,6 +156,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
 
     {
         name: 'AL1-C3',
+        nicknames: ['Alice'],
         fullPath: 'DongberryDinkle/al1-c3-the-broken-dc43128daf8f',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/d5d6389f-7517-4512-a548-651b304eaea3/4eb8e46e-d40d-45bf-b9d7-2e242c2ae898.png',
         description: `A humanoid automaton with a slender, feminine build. Her "skin" is a smooth, white composite shell, now scuffed and worn. She has inverted eyes with black sclera and white pupils, giving her a vacant stare. Her blonde faux-hair is cut in a short, fluffy bob, currently dirty and unkempt.`,
@@ -200,6 +201,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     {
         name: 'Amara',
+        nicknames: ['Zareenah Chandravel', 'Amaranthir'],
         fullPath: 'CounterfeitMonk/zareenah-chandravel-amaranthir-the-calamity-witch-28e8c819904c',
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/dec2d932-f5f3-4716-8d6e-e67307ae27e8/efcecc27-2de1-4320-a74f-1427abc917f3.png',
         description: 'A stunningly beautiful high-elf woman with an ageless, early-30s appearance. She has pale skin, long, flowing red hair, and pointed elven ears. Her most striking feature is her eyes: solid orbs of enchanted gold that glow softly. She has a curvy, motherly figure. On the back of her left hand is a densely complex, indecipherable runic tattoo.',
@@ -243,7 +245,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     
     {
-        name: 'Amat-Ea', 
+        name: 'Amat-Ea',
         fullPath: 'adelsvard/amat-ea-profane-warrior-divine-soul-2b25f6bf3572', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/bf2cefb7-6ad6-40bf-88d7-6e33c83fb7ef/d47c483e-7878-40bd-bdc6-4fad6e7691d7.png',
         description: `A powerfully-built woman with dark copper skin. Her most striking features are her unnaturally violet left eye and the stark white of her shaved-side undercut ponytail, neither of which are her natural colors. She wears an eyepatch over her right eye.`,
@@ -803,6 +805,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     { 
         name: 'Lumi', 
+        nicknames: ['Lumen'],
         fullPath: 'DarkSkies', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/44296727-c09e-46f4-b90e-d49a308777b8/9f020d4a-7990-46b0-ac90-27bf0f0e9939.png',
         description: `An inviting brunette with voluminous, wavy shoulder-length hair and warm brown eyes behind rounded spectacles.`,
@@ -892,6 +895,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     { 
         name: 'Mallory', 
+        nicknames: ['Dolus'],
         fullPath: 'SKU11/mallory-the-supposed-champion-of-a-dead-god-7ceb7a1c461b', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/8bbd81d1-29bf-45e0-a653-b86ee33a6a4c/b96f6450-8367-4a8a-9cf7-ea6fdb070e13.png',
         description: `A tall, lean woman with a deceptively slim build. She has long, purplish hair with an orange gradient, typically styled in twin-tails, and sharp orange eyes. Her right eye is partially obscured by her bangs.`,
@@ -1160,6 +1164,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     { 
         name: 'Persephone', 
+        nicknames: ['Persy'],
         fullPath: 'Sancay/persephone-the-normal-barmaid-a45c371b9af0', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a3d2a9e2-3bbc-4814-a985-00211e64ced0/ce59e51e-08c6-499c-9845-8c0644df4c76.png',
         description: `A woman with a soft, curvy figure that belies incredible density. She has voluminous, wavy hair in a light lavender-pink and large, luminous amber-yellow eyes. Her skin is pale and unblemished. She stands at 167cm.`,

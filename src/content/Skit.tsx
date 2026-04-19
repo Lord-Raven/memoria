@@ -160,12 +160,12 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
 
     // Remove (if present) lore entry for the current location (which is referenced in detail below):
     if (location) {
-        const locationLoreId = findBestNameMatch(location.name, triggeredLore, 'title')?.id || '';
+        const locationLoreId = findBestNameMatch(location.name, triggeredLore, ['title'])?.id || '';
         triggeredLore = triggeredLore.filter(lore => lore.id !== locationLoreId);
     }
     // Remove (if present) lore entries for current actors (which are referenced in detail below):
     if (currentActors.length > 0) {
-        const currentActorLoreIds = currentActors.map(actor => findBestNameMatch(actor.name, triggeredLore.filter(lore => lore.type === 'character'), 'title')?.id || '');
+        const currentActorLoreIds = currentActors.map(actor => findBestNameMatch(actor.name, triggeredLore.filter(lore => lore.type === 'character'), ['title'])?.id || '');
         triggeredLore = triggeredLore.filter(lore => !currentActorLoreIds.includes(lore.id));
     }
 
@@ -268,7 +268,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 const participantsMatch = /PARTICIPANTS:\s*(.+)/i.exec(response.result);
                 if (guidanceMatch && participantsMatch) {
                     skit.guidance = guidanceMatch[1].trim();
-                    skit.initialActors = participantsMatch[1].split(',').map(name => findBestNameMatch(name.trim(), availableActors)?.id).filter(id => id !== undefined) as string[];
+                    skit.initialActors = participantsMatch[1].split(',').map(name => findBestNameMatch(name.trim(), availableActors, ['name', 'nicknames'])?.id).filter(id => id !== undefined) as string[];
                     break;
                 }
             }
@@ -408,7 +408,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                             continue;
                         }
 
-                        const matchedActor = findBestNameMatch(moverName, allActors);
+                        const matchedActor = findBestNameMatch(moverName, allActors, ['name', 'nicknames']);
                         if (!matchedActor) continue;
 
                         const isMoveToCurrentScene = destinationUpper === 'HERE' ||
@@ -434,7 +434,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         const characterName = outfitMatch[1].trim();
                         const outfitName = outfitMatch[2].trim();
                         // Find matching actor using findBestNameMatch
-                        const matched = findBestNameMatch(characterName, allActors);
+                        const matched = findBestNameMatch(characterName, allActors, ['name', 'nicknames']);
                         if (!matched) continue;
 
                         // Find matching outfit for this actor
@@ -455,7 +455,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         const characterName = emotionMatch[1].trim();
                         const emotionName = emotionMatch[2].trim().toLowerCase();
                         // Find matching actor using findBestNameMatch
-                        const matched = findBestNameMatch(characterName, allActors);
+                        const matched = findBestNameMatch(characterName, allActors, ['name', 'nicknames']);
                         if (!matched) continue;
 
                         // Try to map emotion using EMOTION_SYNONYMS if not a standard emotion
@@ -525,7 +525,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 if (idx !== -1) {
                     const speakerName = l.slice(0, idx).trim();
                     // Find matching actor using findBestNameMatch
-                    const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : []);
+                    const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : [], ['name', 'nicknames']);
                     console.log(`Processing speaker: "${speakerName}" - Matched Actor: ${matched ? matched.name : 'None'}`);
                     speakerId = matched ? matched.id : ''; // Use actor ID if found, otherwise empty for narrator.
                     message = l.slice(idx + 1).trim();
@@ -651,7 +651,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         while ((match = affectionChangeRegex.exec(endResponse.result)) !== null) {
                             const characterName = match[1].trim();
                             const changeValue = parseInt(match[2]);
-                            const matchedActor = findBestNameMatch(characterName, Object.values(save.actors));
+                            const matchedActor = findBestNameMatch(characterName, Object.values(save.actors), ['name', 'nicknames']);
                             if (matchedActor && !isNaN(changeValue) && changeValue !== 0) {
                                 console.log(`Affection change flagged for ${matchedActor.name}: ${changeValue > 0 ? '+' : ''}${changeValue}`);
                                 outcomes.push(new Outcome({
@@ -669,7 +669,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         const loreUpdateRegex = /\[LORE UPDATE:\s*([^\]]+)\]/gi;
                         while ((match = loreUpdateRegex.exec(endResponse.result)) !== null) {
                             const loreName = match[1].trim();
-                            const matchedLore = findBestNameMatch(loreName, save.lorebook || [], 'title');
+                            const matchedLore = findBestNameMatch(loreName, save.lorebook || [], ['title']);
                             if (matchedLore) {
                                 console.log(`Lore update flagged for "${matchedLore.title}".`);
                                 outcomes.push(new Outcome({

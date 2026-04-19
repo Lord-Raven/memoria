@@ -123,6 +123,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 [this.primaryUser.anonymizedId]: {
                     id: this.primaryUser.anonymizedId,
                     name: playerData.name,
+                    nicknames: ['player'],
                     type: ActorType.PLAYER,
                     state: ActorState.AVAILABLE,
                     description: '',
@@ -201,6 +202,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     content: `Clementine Naenia is a misguidedly trusting and optimistic young woman with a nasty habit of befriending even the shadiest of characters.\n\n` +
                         `Despite her naivety, Clementine has a good heart and is more than capable of helping others around Ardeia.`
                 });            
+            }
+            if (!newSave.lorebook?.find(entry => entry.id === 'red hood')) {
+                newSave.lorebook?.push({
+                    id: 'red hood',
+                    title: 'Red Hood',
+                    type: 'character',
+                    triggers: ['red hood', 'wolfsbane', 'nikke'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `Red Hood is a resurrected Grimms‑series Nikke who once fought as a Goddess of Victory, died, dissolved, lived inside another Nikke, and somehow still woke up again in Ardeia with nothing but a bracer, a massive rifle, and a name she hasn’t shared. Outwardly she’s warm, mischievous, and magnetic — the kind of person who becomes the center of a room without trying — but beneath that shine sits unspoken grief, stubborn pride, and a loyalty that no longer has a home. She gives everyone a nickname before learning their real one, hates anything that feels like a cage, and talks about desire with bold confidence she doesn’t quite inhabit.\n\nIn Ardeia she drifts between factions, listens to old songs from a distance, and tries to understand what she is now that she’s no longer a goddess, a ghost, or a passenger. She’s looking for purpose, for something worth doing, and for a way to stop noticing the absence of the cassette player she gave away.`
+            
+                });
             }
             if (!newSave.lorebook?.find(entry => entry.id === 'nandemonankai')) {
                 newSave.lorebook?.push({
@@ -355,7 +367,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 const name = nameMatch[1].trim();
 
                 const location = findBestNameMatch(destName, discoveredOutsideLocations);
-                const actor = findBestNameMatch(partnerName, eligibleActors);
+                const actor = findBestNameMatch(partnerName, eligibleActors, ['name', 'nicknames']);
 
                 if (!location || !actor) continue;
 
@@ -487,7 +499,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             switch (outcome.type) {
                 case 'LORE_UPDATE':
                     // For lore updates, we expect details to include a loreEntry with id, title, and content.
-                    const loreEntry = findBestNameMatch(outcome.details?.loreTitle, save.lorebook || [], 'title');
+                    const loreEntry = findBestNameMatch(outcome.details?.loreTitle, save.lorebook || [], ['title']);
                     if (loreEntry) {
                         // Make a textGen call with context and the current lore entry, asking for revisions based on context.
                         this.generator.textGen({
@@ -515,7 +527,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     break;
                 case 'RELATIONSHIP_CHANGE': {
                     // For relationship changes, we expect details to include actorId and change (e.g. +10 or -5).
-                    const actor = findBestNameMatch(outcome.details?.actorName, Object.values(save.actors));
+                    const actor = findBestNameMatch(outcome.details?.actorName, Object.values(save.actors), ['name', 'nicknames']);
                     if (actor) {
                         const previousAffinity = actor.affinity;
                         actor.affinity = Math.min(10, Math.max(0, actor.affinity + (outcome.details?.changeValue || 0)));
