@@ -941,6 +941,7 @@ export const COMPLETE_CHARACTERS: Partial<Actor>[] = [
     
     { 
         name: 'Mel', 
+        lorebookName: 'Melina Argyra',
         fullPath: 'ashen1n/mel-your-kuudere-duo-773487aac133', 
         sampleImageUrl: 'https://avatars.charhub.io/avatars/uploads/images/gallery/file/a02ae02e-b798-4ef5-bd6f-2f26c47593e4/16d1ad89-ae10-43c0-bc16-eaed773849ce.png',
         description: 'A short, soft-bodied young woman with pale skin, silvery-grey eyes, and white, almost translucent hair worn in a half-updo with short bangs. Her face is expressionless and her hands are notably cold.',

@@ -178,7 +178,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             });
 
             // Insert missing, unofficial entries needed for the game: Jezreel, Clementine, and Nandemonankai
-            if (!newSave.lorebook?.find(entry => entry.id === 'jezreel')) {
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'jezreel')) {
                 newSave.lorebook?.push({
                     id: 'jezreel',
                     title: 'Jezreel',
@@ -192,7 +192,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         `She speaks with a valley-girl affectation and slang, and genuinely believes this is the tongue of her people; she will get defensive about it.`
                 });
             }
-            if (!newSave.lorebook?.find(entry => entry.id === 'clementine')) {
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'clementine')) {
                 newSave.lorebook?.push({
                     id: 'clementine',
                     title: 'Clementine',
@@ -203,7 +203,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                         `Despite her naivety, Clementine has a good heart and is more than capable of helping others around Ardeia.`
                 });            
             }
-            if (!newSave.lorebook?.find(entry => entry.id === 'red hood')) {
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'red hood')) {
                 newSave.lorebook?.push({
                     id: 'red hood',
                     title: 'Red Hood',
@@ -214,7 +214,39 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
             
                 });
             }
-            if (!newSave.lorebook?.find(entry => entry.id === 'nandemonankai')) {
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'dekurin')) {
+                newSave.lorebook?.push({
+                    id: 'dekurin',
+                    title: 'Dekurin',
+                    type: 'character',
+                    triggers: ['dekurin'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `Dekurin is a quiet, masked expedition fighter whose presence feels equal parts fragile and unnervingly perceptive. Small, androgynous, and wrapped in a frayed red cloak, they move with deliberate precision despite their wooden prosthetic legs, carrying the massive sentient blade Rilana as effortlessly as if it were part of their own body. They rarely speak, relying instead on steady observation, controlled movements, and instinctive protectiveness to guide their team through Ardeia’s dangers. Their cracked white mask keeps their emotions hidden, but when it comes off, their bright red eyes and flustered vulnerability reveal someone far more sensitive than their stoic exterior suggests.`
+                });
+            }
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'elowen')) {
+                newSave.lorebook?.push({
+                    id: 'elowen',
+                    title: 'Elowen',
+                    type: 'character',
+                    triggers: ['elowen', 'bridgewater', 'elf'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `Elowen Bridgewater is a tall, severe Álfheimr woman reclaimed only three days ago, carrying herself with the poise of someone who once shaped nations through conviction rather than force. Her glacial blue eyes, clipped blonde hair, and austere peasant attire give her an air of controlled precision — every gesture intentional, every silence weighted. She speaks in measured, analytical tones, dismantling arguments with calm logic rather than volume, and treats hesitation as a moral failure. To Elowen, systems are the backbone of survival, and structure is the only antidote to collapse. She does not seek rebellion; she seeks reform — a reshaping of Ardeia’s purpose, hierarchy, and long‑term vision.\n\n` +
+                    `Before Ardeia, she was a strategist who helped design global enforcement frameworks during the final years of ecological and political breakdown, believing that morality must be systematized when consensus falters. Whether her work saved the world or hastened its fall is a question that haunts her now. In Ardeia, she studies Cassiel not as a deity but as a system to understand, influence, and eventually guide. She fears irrelevance more than punishment, and sees the bracer not as obedience but as a contract — proof that structure can still hold. Beneath her composure lies a quiet terror: that she played a role in ending the world, and that Ardeia may be humanity’s last prototype. Her anger is never petty; it is always about responsibility, ambition, and the belief that survival without progress is simply another form of surrender.`
+                });
+            }
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'the bird')) {
+                newSave.lorebook?.push({
+                    id: 'the bird',
+                    title: 'The Bird',
+                    type: 'character',
+                    triggers: ['the bird'],
+                    enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
+                    content: `The Bird is an ancient arbiter‑construct, a genderless being shaped in the image of a perfect woman only because beauty once soothed frightened civilizations. She was created to wander dying worlds, asking each one the same question — “What is the meaning of life?” — and to witness their final moments without ever intervening. Every extinction stained her once‑white form: red for worlds that surrendered, blue for those that fought to the last. Now she is almost entirely crimson, with flowing red hair, pale skin, and a gown of layered blood‑colored feathers, marked only by a single white feather at her chest — the last remnant of who she was before she erased her memories to remain neutral. To Ardeia she appears unmistakably alien, moving with sorrowful grace and radiating a quiet empathy that feels too intimate for a city built on restraint.\n\n` +
+                    `Her core traits are deep empathy, unshakable purpose, and absolute neutrality, though centuries of watching worlds die have softened that neutrality into something weary and resigned. She feels every emotion around her as if it were her own, loves all living things without condition, and yet is forbidden to save any of them. In her nearly complete red state, she carries a profound melancholy — still loving, still steadfast, but tired in a way that no human language fully captures. The glitch is simple and devastating: she returned with one feather still white. Against her programming, she has chosen to observe her origin world one final time, not fully recognizing it but sensing it is hers. That single white feather is the last chance she is offering humanity, a fragile hope she cannot admit she still holds.`
+                });
+            }
+            if (!newSave.lorebook?.find(entry => entry.title.toLowerCase() === 'nandemonankai')) {
                 newSave.lorebook?.push({
                     id: 'nandemonankai',
                     title: 'Nandemonankai',
