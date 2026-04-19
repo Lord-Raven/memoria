@@ -203,10 +203,27 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
             return `  ${actor.name}\n    Current Outfit (${currentOutfit.name}): ${currentOutfit.description}\n` +
                 (otherOutfits.length > 0 ? `    Other Outfits: ${otherOutfits.map(o => o.name).join(', ')}\n` : '') +
                 `    Profile: ${actor.profile}\n` +
-                `    Lore: ${getActorLore(actor.id, stage)}`}).join('\n')}` : '');
+                `    Lore: ${getActorLore(actor.id, stage)}` +
+                `    Affinity: ${getAffinityPrompt(actor.affinity, playerName)}`
+            }).join('\n')}` : '');
 
 
     return coreContext;
+}
+
+// Affinity is a score between 0 and 10.
+function getAffinityPrompt(affinity: number, playerName: string): string {
+    if (affinity >= 9) {
+        return `They are extremely close to ${playerName}, expressing deep care, affection, and absolute faith in them.`;
+    } else if (affinity >=7) {
+        return `They are very fond of ${playerName}, showing strong care, affection, and trust for them.`;
+    } else if (affinity >= 5) {
+        return `They are fond of ${playerName}, demonstrating care, affection, and trust, with occasional reservations.`;
+    } else if (affinity >= 2) {
+        return `They have a neutral relationship with ${playerName}, demonstrating some tentative care and trust, despite concerns.`;
+    } else {
+        return `They barely know ${playerName}, uncertain of their intentions.`;
+    }
 }
 
 export async function generateSkitScript(skit: Skit, stage: Stage): Promise<ScriptEntry[]> {
