@@ -143,17 +143,25 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
     const lorebook = save.lorebook || [];
 
     // For lorebook context, we go through lorebook entries and add them 
-    let triggeredLore = lorebook.filter(lore => lore.enabled && (lore.constant || lore.triggers.some(trigger => {
-        // If lore is of a non character/location/other type, it is owned by a parciular character; if that character isn't active right now, discard this lore entry:
-        if (!['character', 'location', 'other'].includes(lore.type) && !currentActors.some(actor => actor.name.toLowerCase() === lore.type.toLowerCase())) {
-            return false;
-        }
-        // Scan lore.scanDepth entries of the current skit for details that match this trigger
-        for (let i = skit ? skit.script.length - 1 : 0; i >= Math.max(0, (skit ? skit.script.length - lore.scanDepth : 0)); i--) {
-            return (skit?.script[i]?.message || '').toLowerCase().includes(trigger.toLowerCase());
-        }
-        return false
-    }))).sort((a, b) => a.insertionOrder - b.insertionOrder);
+    let triggeredLore = lorebook.filter(lore => {
+            if (!lore.enabled || (!['character', 'location', 'other'].includes(lore.type) && !currentActors.some(actor => actor.name.toLowerCase() === lore.type.toLowerCase()))) {
+                return false;
+            }
+
+            if (lore.constant) {
+                return true;
+            }
+
+            return lore.triggers.some(trigger => {
+                    // Scan lore.scanDepth entries of the current skit for details that match this trigger
+                    for (let i = skit ? skit.script.length - 1 : 0; i >= Math.max(0, (skit ? skit.script.length - lore.scanDepth : 0)); i--) {
+                        if((skit?.script[i]?.message || '').toLowerCase().includes(trigger.toLowerCase())) {
+                            return true;
+                        }
+                    }
+                    return false;
+            });
+    }).sort((a, b) => a.insertionOrder - b.insertionOrder);
 
     // Run probabilities on triggeredLore, and remove entries that don't pass. For each record, look at the entry's prorobability (100 by default) and run a calculation to determine whether to keep it in the context or not. This adds an element of variability and surprise to the lore that can be included in the context, while still prioritizing important lore with higher probability and insertion order.
     triggeredLore = triggeredLore.filter(lore => Math.random() * 100 <= lore.probability);
@@ -178,7 +186,7 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
     triggeredLore = triggeredLore.sort((a, b) => a.insertionOrder - b.insertionOrder);
 
     const coreContext = `{{messages}}\nPremise: ${buildPremise(playerName)}\n` +
-        (triggeredLore.length > 0 ?  `\n\nRelevant Information About the World:\n` + triggeredLore.map(lore => `  ${lore.title}: ${lore.content}`).join('\n') : '') +
+        (triggeredLore.length > 0 ?  `\n\nRelevant Information About the World:\n` + triggeredLore.map(lore => `[(${lore.type}) ${lore.title}: ${lore.content}]`).join('\n') : '') +
         ((historyLength > 0 && pastEvents.length) ? 
                 // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
                 '\n\nRecent Events for additional context:' + pastEvents.map((v, index) =>  {
