@@ -311,7 +311,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `\n\n  Outfit tags ("[CHARACTER NAME wears OUTFIT NAME]") should be used when a character changes outfit. ` +
                     `When establishing a character at the beginning of a scene or when moving to this location with a movement tag, give special consideration to the inclusion of a 'wears' tag to explicitly call out an appropriate look. ` +
                     `OUTFIT NAME must be found under the specified character—either their current outfit or one of their listed alternatives. ` +
-                `\n\n  A Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character enters the scene. ` +
+                `\n\n  A Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character enters the scene (even if they are already narratively present). ` +
                 `\n\n  Character movement tags ("[CHARACTER NAME moves AWAY]") must also be included when a character leaves the scene or moves to another location. ` +
                 `\n\n  A Scene movement tag ("[SCENE moves LOCATION]") may be used when the scene itself transitions to another location. ` +
                 `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
