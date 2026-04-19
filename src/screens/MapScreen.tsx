@@ -4,7 +4,7 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, Home, TravelExplore } from "@mui/icons-material";
+import { Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, Home, Settings, TravelExplore } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { ContentManagementScreen } from "./ContentManagementScreen";
@@ -14,7 +14,6 @@ import * as d3WeightedVoronoiModule from "d3-weighted-voronoi";
 import { determineEmotion, generateSkitScript, getCurrentLocation, Skit } from "../content/Skit";
 import { Actor, clampActorAffinity, getEmotionImage } from "../content/Actor";
 import { usePreloadLocationMap } from "../utils/useImagePreloading";
-import gearSvg from "../assets/gear.svg";
 
 export type MapScreenMode = 'management' | 'skit';
 
@@ -1330,32 +1329,19 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 									width: 44,
 									height: 44,
 									borderRadius: "50%",
-									background: "radial-gradient(circle at 30% 30%, rgba(214, 234, 248, 0.22), rgba(17, 26, 42, 0.84))",
-									border: "1px solid rgba(157, 201, 226, 0.55)",
-									boxShadow: "0 6px 20px rgba(5, 11, 20, 0.42), 0 0 18px rgba(138, 176, 204, 0.18)",
-									backdropFilter: "blur(8px)",
+									color: "rgba(244, 250, 255, 0.94)",
+									backgroundColor: "rgba(22, 28, 44, 0.76)",
+									border: "1px solid rgba(138, 176, 204, 0.48)",
+									boxShadow: "0 4px 18px rgba(10, 16, 29, 0.55), 0 0 16px rgba(138, 176, 204, 0.2)",
+									backdropFilter: "blur(6px)",
 								}}
 							>
 								<motion.div
 									animate={{ rotate: 360 }}
 									transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-									style={{ width: 22, height: 22 }}
+									style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
 								>
-									<Box
-										sx={{
-											width: "100%",
-											height: "100%",
-											backgroundColor: "#d6eaf8",
-											maskImage: `url(${gearSvg})`,
-											maskRepeat: "no-repeat",
-											maskPosition: "center",
-											maskSize: "contain",
-											WebkitMaskImage: `url(${gearSvg})`,
-											WebkitMaskRepeat: "no-repeat",
-											WebkitMaskPosition: "center",
-											WebkitMaskSize: "contain",
-										}}
-									/>
+									<Settings sx={{ fontSize: 28 }} />
 								</motion.div>
 							</Box>
 						</motion.div>
