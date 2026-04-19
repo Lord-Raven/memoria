@@ -535,7 +535,6 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     const speakerName = l.slice(0, idx).trim();
                     // Find matching actor using findBestNameMatch
                     const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : [], ['name', 'nicknames']);
-                    console.log(`Processing speaker: "${speakerName}" - Matched Actor: ${matched ? matched.name : 'None'}`);
                     speakerId = matched ? matched.id : ''; // Use actor ID if found, otherwise empty for narrator.
                     message = l.slice(idx + 1).trim();
                 }

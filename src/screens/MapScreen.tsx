@@ -4,7 +4,7 @@ import { ScreenType } from "./BaseScreen";
 import { Location } from "../content/Location";
 import { BlurredBackground, NovelVisualizer } from "@lord-raven/novel-visualizer";
 import { Box, IconButton, Typography } from "@mui/material";
-import { Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, Home, Settings, TravelExplore } from "@mui/icons-material";
+import { Close, EditNote, Favorite, FavoriteBorder, LastPage, MenuRounded, PlayArrow, Send, Home, Settings, TravelExplore, HourglassEmpty } from "@mui/icons-material";
 import { AnimatePresence, motion } from "framer-motion";
 import { ConfirmDialog, NamePlate } from "./UiComponents";
 import { ContentManagementScreen } from "./ContentManagementScreen";
@@ -1303,7 +1303,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 				}}
 			>
 
-								<AnimatePresence>
+				<AnimatePresence>
 					{isMapScreenLoading && (
 						<motion.div
 							key="map-loading-indicator"
@@ -1318,6 +1318,8 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								zIndex: 12,
 								pointerEvents: "none",
 							}}
+							onMouseEnter={() => setTooltip("Loading Expeditions...", HourglassEmpty)}
+							onMouseLeave={clearTooltip}
 						>
 							<Box
 								role="status"
