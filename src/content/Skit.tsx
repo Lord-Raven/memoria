@@ -214,24 +214,27 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
     const save = stage.getSave();
 
     if (!skit.guidance) {
-        // Generate guidance for this skit based on its type and the current context, to help direct the script generation.
+        // Generate guidance and initial actors for this skit based on its type and the current context
         console.log('Generating skit guidance...');
         let attempts = 3;
+        const availableActors = Object.values(stage.getSave().actors)
+            .filter(actor => actor.type !== ActorType.PLAYER && !(stage.getSave().expeditionChoices || []).some(choice => choice.partnerActorIds.includes(actor.id)));
         while (attempts > 0) {
             const response = await stage.generator.textGen({
                 prompt: generateContext(undefined, stage, 5) +
                     // List actors in the skit
                     `\n\nLocation:\n  ${skit.initialLocationId ? (save.atlas?.[skit.initialLocationId]?.name || 'Unknown Location') : 'Unknown Location'}\n` +
-                    `\n\nCurrent Characters in the Scene:\n${skit.initialActors.map(actorId => {
+                    `    ${getLocationDescription(skit.initialLocationId, stage) || 'No description available.'}\n` +
+                    `\n\nAvailable Characters:\n${skit.initialActors.map(actorId => {
                         const actor = stage.getSave().actors?.[actorId];
-                        return actor ? `  ${actor.name}\n    ${actor.profile}` : '';
+                        return actor ? `  ${actor.name}\n    ${getActorLore(actor.id, stage)}` : '';
                     }).join('\n')}\n` +
-                    `\n\nThis is a request for structured content for a game. Given the context, location, and current characters for a new upcoming scene, ` +
-                    `output a short summary/goal for the scene, bearing in mind whether any other characters might make sense to add to the mix; ` +
-                    `for instance, if the scene is set in a location they are known to frequent, or if a preceding scene set them up to be at this location. ` +
-                    `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
+                    `\n\nThis is a request for structured content for a game. Given the context and location, ` +
+                    `use the format below to output guidance for the upcoming scene: plot goals, challenges, slice-of-life vignettes, or intimate moments. ` +
+                    `Then, name the characters from the Available Characters list that will participate.` +
                     `\n\nExample Response:\n` +
-                    `${playerName} is relaxing at the Amber Drop when Cyanea walks in. Persephone hovers nearby, pretending not to listen to their exchange, but inevitably cutting in.\n` +
+                    `GUIDANCE: ${playerName} is relaxing at the Amber Drop when Cyanea walks in. Persephone hovers nearby, pretending not to listen to their exchange, but inevitably cutting in when things take an unexpected turn.\n` +
+                    `PARTICIPANTS: Cyanea, Persephone\n` +
                     `#END#`,
                 min_tokens: 10,
                 max_tokens: 150,
@@ -243,8 +246,14 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             attempts--;
             if (response && response.result && response.result.trim().length > 0) {
                 console.log('Generated skit guidance: ', response.result.trim());
-                skit.guidance = response.result.trim();
-                break;
+                // Need to read GUIDANCE: and PARTICIPANTS:
+                const guidanceMatch = /GUIDANCE:\s*(.+)/i.exec(response.result);
+                const participantsMatch = /PARTICIPANTS:\s*(.+)/i.exec(response.result);
+                if (guidanceMatch && participantsMatch) {
+                    skit.guidance = guidanceMatch[1].trim();
+                    skit.initialActors = participantsMatch[1].split(',').map(name => findBestNameMatch(name.trim(), availableActors)?.id).filter(id => id !== undefined) as string[];
+                    break;
+                }
             }
         }
     }

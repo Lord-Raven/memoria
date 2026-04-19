@@ -170,6 +170,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.generationPromises['lorebook'] = fetchLorebook().then(loreEntries => {
             newSave.lorebook = loreEntries;
 
+            // Some lore entries contain headers with ##; remove these lines.
+            newSave.lorebook.forEach(entry => {
+                // Use regex to remove all lines that start with ##.
+                entry.content = entry.content.replace(/^##.*$/gm, '');
+            });
+
             // Insert missing, unofficial entries needed for the game: Jezreel, Clementine, and Nandemonankai
             if (!newSave.lorebook?.find(entry => entry.id === 'jezreel')) {
                 newSave.lorebook?.push({
@@ -178,8 +184,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     type: 'character',
                     triggers: ['jezreel', 'lamia', 'college', 'collegiate', 'snob', 'sorority', 'valley-girl', 'luxe'],
                     enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
-                    content: `## Jezreel\n` +
-                        `A lamia with sorority-girl vibes, still struggling with the luxe-less life of Ardeia. She doesn't remember much from the Past, but she knows it was nicer than this.\n\n` +
+                    content: `A lamia with sorority-girl vibes, still struggling with the luxe-less life of Ardeia. She doesn't remember much from the Past, but she knows it was nicer than this.\n\n` +
                         `After ten years in Ardeia, she often still plays the snobby blonde valley-girl, even though she begrudgingly appreciates her found family and secretly enjoys doing her part to help.\n\n` +
                         `She loves sunning her scales, tanning her torso, and finding exotic new fashions for her serpentine physique, constantly on the lookout for minor ways to bring luxury or beauty into her life. She has little in the way of practical skills, ` +
                         `but has grown quite good with her bonewood spear, which she has named "Vanity."\n\n` +
@@ -193,8 +198,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     type: 'character',
                     triggers: ['clementine', 'naenia'],
                     enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
-                    content: `## Clementine Naenia\n` +
-                        `Clementine is a misguidedly trusting and optimistic young woman with a nasty habit of befriending even the shadiest of characters.\n\n` +
+                    content: `Clementine Naenia is a misguidedly trusting and optimistic young woman with a nasty habit of befriending even the shadiest of characters.\n\n` +
                         `Despite her naivety, Clementine has a good heart and is more than capable of helping others around Ardeia.`
                 });            
             }
@@ -205,8 +209,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     type: 'location',
                     triggers: ['nandemonankai', 'shop', 'plaza'],
                     enabled: true, constant: false, insertionOrder: 10, priority: 10, probability: 100, scanDepth: 10,
-                    content: `## Nandemonankai\n` +
-                        `A quiet, cluttered shop in the backstreets of Ardeia, where Tawamure Rei sells or exchanges an eclectic assortment of odds-and-ends.`
+                    content: `A quiet, cluttered shop in the backstreets of Ardeia, where Tawamure Rei sells or exchanges an eclectic assortment of odds-and-ends.`
                 });
             }
 
@@ -429,13 +432,12 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         let skit: Skit;
 
         if (this.isArdeiaLocationId(selectedLocation.id)) {
-            // Choose one to three random actors (can't include player or actors currently selected for an expedition).
-            const potentialInitialActors = Object.values(save.actors).filter(actor => actor.type !== 'PLAYER' && !save.expeditionChoices?.some(choice => choice.partnerActorIds.includes(actor.id)));
             skit = new Skit({
                 skitType: SkitType.SOCIAL,
                 initialLocationId: selectedLocation.id,
+                guidance: '',
                 script: [],
-                initialActors: this.takeRandomDistinct(potentialInitialActors, Math.min(Math.floor(Math.random() * 3) + 1, potentialInitialActors.length)).map(actor => actor.id),
+                initialActors: [],
                 summary: '',
             });
         } else {
