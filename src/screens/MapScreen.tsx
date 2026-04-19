@@ -1212,7 +1212,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	};
 
 	const handleMapPointerMove = (event: PointerEvent<SVGSVGElement>) => {
-		if (isMapInteractionLocked) {
+		if (isMapInteractionLocked || mapMode === 'skit') {
 			setHoveredCellId((current) => (current ? null : current));
 			return;
 		}
