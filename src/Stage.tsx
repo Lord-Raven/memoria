@@ -381,6 +381,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     `\n\nThis is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output three potential expeditions, ` +
                     `each with a destination, partner, short summary/goal, and abbreviated name. ` +
                     `Ensure that at least one option is a natural continuation of ongoing events and at least one is a new and unexpected development with an underutilized character. ` +
+                    `If a character has just returned from an expedition, avoid sending them out again so soon. ` +
                     `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
                     `\n\nExample Response:\n` +
                     `DESTINATION: The Cradle\n` +
