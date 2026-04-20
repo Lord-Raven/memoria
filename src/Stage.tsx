@@ -33,6 +33,7 @@ export type SaveType = {
     turn: number;
     timestamp: number; // Time of last save
     textToSpeech?: boolean;
+    disableImpersonation?: boolean;
     language?: string;
     lorebook?: Lore[];
     expeditionChoices?: ExpeditionChoice[];
@@ -268,29 +269,27 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         this.saveData.lastSaveSlot = saveSlotIndex;
 
         // Generate all characters
-        if (newSave.betaMode) {
-            this.loadActors().finally(() => {
-                console.log('Finished loading initial actors for new game');
-                delete this.generationPromises['newGame']; // Clear the dummy promise to allow the loading screen to finish.
+        this.loadActors().finally(() => {
+            console.log('Finished loading initial actors for new game');
+            delete this.generationPromises['newGame']; // Clear the dummy promise to allow the loading screen to finish.
 
-                // Generate an intro skit:
-                const randomStartingLocation = this.pickRandom(Object.values(newSave.atlas).filter(loc => this.isArdeiaLocationId(loc.id)));
-                newSave.timeline.push({
-                    turn: 0,
-                    description: 'Waking up in Ardeia',
-                    skit: new Skit({
-                        skitType: SkitType.INTRO,
-                        initialLocationId: randomStartingLocation?.id || 'ardeia-temple',
-                        guidance: `This is the opening scene of the game, where the player, ${this.getPlayerActor().name} is just waking or has just woken up in Ardeia for the first time. The skit should introduce the player to the world: Ardeia, Cassiel, expeditions. The intent is to establish the distinctive setting and tone and the player's new place as a "prisoner" or Ardeia.`,
-                        script: [],
-                        initialActors: [this.getWardenActor().id],
-                        summary: ''
-                    })
-                });
-
-                this.saveGame();
+            // Generate an intro skit:
+            const randomStartingLocation = this.pickRandom(Object.values(newSave.atlas).filter(loc => this.isArdeiaLocationId(loc.id)));
+            newSave.timeline.push({
+                turn: 0,
+                description: 'Waking up in Ardeia',
+                skit: new Skit({
+                    skitType: SkitType.INTRO,
+                    initialLocationId: randomStartingLocation?.id || 'ardeia-temple',
+                    guidance: `This is the opening scene of the game, where the player, ${this.getPlayerActor().name} is just waking or has just woken up in Ardeia for the first time. The skit should introduce the player to the world: Ardeia, Cassiel, expeditions. The intent is to establish the distinctive setting and tone and the player's new place as a "prisoner" or Ardeia.`,
+                    script: [],
+                    initialActors: [this.getWardenActor().id],
+                    summary: ''
+                })
             });
-        }
+
+            this.saveGame();
+        });
     }
 
     // Called when map screen displays.
@@ -741,7 +740,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 console.log(this.getSave().actors);
                 let actors = this.getSave().actors || {};
-                const minLoopDurationMs = 500;
+                const minLoopDurationMs = 750;
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');

@@ -292,7 +292,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `"Other character expressions can update in each other's entries—say, if they're reacting to something the speaker says—, but only the named character can speak in each entry."\n` +
             `  CHARACTER NAME: They nod in agreement, "If there's any dialogue at all, the entry must be attributed to the character speaking."\n` +
             `  NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the player, can be attributed to NARRATOR. Dialogue cannot be included in NARRATOR entries.\n` +
-            `  ${stage.getPlayerActor().name.toUpperCase()}: "Hey, Character Name," I greet them warmly. I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n` +
+            (stage.getSave()?.disableImpersonation ? '' : `  ${stage.getPlayerActor().name.toUpperCase()}: "Hey, Character Name," I greet them warmly. I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n`) +
             `\n\n` +
             (skit.script.length > 0 ? `\n\nCurrent Scene Script to Continue:\n${buildScriptLog(skit, [], stage)}` : '') +
             (skit.guidance ? `\n\nScene Prompt:\n  ${skit.guidance}` : '') +
@@ -303,9 +303,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `\n\n  Follow the structure of the strict Example Script formatting above: ` +
                 `actions are depicted in prose and character dialogue in quotation marks. Characters present their own actions and dialogue, while other events within the scene are attributed to NARRATOR. ` +
                 `Although a loose script format is employed, the actual content should be professionally edited narrative prose. ` +
-                //(stage.getSave().disableImpersonation ? 
-                //    `New entries refer to the player, ${stage.getSave().player.name}, in second-person; all other characters are referred to in third-person, even in their own entries.` :
-                (    `Entries from the player, ${playerName}, are written in first-person, while other entries consistently refer to ${playerName} in second-person; all other characters are referred to in third-person, even in their own entries.`) +
+                (stage.getSave().disableImpersonation ? 
+                    `New entries refer to the player, ${playerName}, in second-person; all other characters are referred to in third-person, even in their own entries.` :
+                    (`Entries from the player, ${playerName}, are written in first-person, while other entries consistently refer to ${playerName} in second-person; all other characters are referred to in third-person, even in their own entries.`) +
                 `\n\nTag Instruction:\n` +
                 `  Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
                 `\n\n  Emotion tags ("[CHARACTER NAME expresses JOY]") should be used to indicate visible emotional shifts in a character's appearance using a single-word emotion name. ` +
@@ -577,6 +577,16 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     }
                     scriptEntries.splice(scriptEntries.indexOf(entry), 1);
                     continue;
+                }
+            }
+
+            // If impersonation is disabled, find any player entries and remove it and everything that follows:
+            if (save.disableImpersonation) {
+                // If impersonation is undesired, find any entry where the speaker matches the player's name and drop all messages beyond that point.
+                const playerEntryIndex = scriptEntries.findIndex(entry => entry.speakerId === stage.getPlayerActor().id);
+                if (playerEntryIndex !== -1) {
+                    console.log(`Player entry found at index ${playerEntryIndex}. Removing all subsequent entries to disable impersonation.`);
+                    scriptEntries.splice(playerEntryIndex);
                 }
             }
         

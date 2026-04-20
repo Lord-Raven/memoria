@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stage } from '../Stage';
 import { GlassPanel, Title, Button, TextInput } from './UiComponents';
-import { Close, VoiceChat } from '@mui/icons-material';
+import { Close, Forum, VoiceChat } from '@mui/icons-material';
 import { useTooltip } from './TooltipContext';
 import { ScreenType } from './BaseScreen';
 
@@ -27,6 +27,7 @@ interface SettingsData {
     playerDescription: string;
     playerColor: string;
     textToSpeech: boolean;
+    disableImpersonation: boolean;
     betaMode: boolean;
     language: string;
 }
@@ -50,6 +51,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
         playerDescription: stage().getPlayerActor()?.profile || stage().primaryUser?.chatProfile || 'An enigmatic prisoner.',
         playerColor: resolvePlayerThemeColor(stage().getPlayerActor()?.themeColor || ''),
         textToSpeech: (stage().getSave()?.textToSpeech ?? true),
+        disableImpersonation: (stage().getSave()?.disableImpersonation ?? false),
         betaMode: (stage().getSave()?.betaMode ?? false),
         language: stage().getSave()?.language || 'English',
     });
@@ -69,6 +71,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                 themeColor: playerThemeColor,
                 data: {
                     textToSpeech: settings.textToSpeech,
+                    disableImpersonation: settings.disableImpersonation,
                     betaMode: settings.betaMode,
                     language: settings.language,
                 },
@@ -80,6 +83,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
             const saveData = stage().getSave() || {};
 
             saveData.textToSpeech = settings.textToSpeech;
+            saveData.disableImpersonation = settings.disableImpersonation;
             saveData.betaMode = settings.betaMode;
             saveData.language = settings.language;
             const player = stage().getPlayerActor();
@@ -380,6 +384,69 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ stage, onCancel, onCon
                                         </span>
                                     </motion.div>
 
+                                    {/* Impersonation Toggle */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => setSettings(prev => ({ ...prev, disableImpersonation: !prev.disableImpersonation }))}
+                                        onMouseEnter={() => setTooltip('Prevent the game from incorporating your actions; this will reduce response sizes.', Forum)}
+                                        onMouseLeave={clearTooltip}
+                                        style={{
+                                            padding: '12px',
+                                            background: settings.disableImpersonation
+                                                ? 'rgba(137, 205, 135, 0.18)'
+                                                : 'rgba(28, 34, 52, 0.8)',
+                                            border: settings.disableImpersonation
+                                                ? '2px solid rgba(137, 205, 135, 0.5)'
+                                                : '2px solid rgba(138, 176, 204, 0.34)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '4px',
+                                                background: settings.disableImpersonation ? '#89cd87' : 'rgba(255, 255, 255, 0.1)',
+                                                border: '2px solid ' + (settings.disableImpersonation ? '#89cd87' : 'rgba(138, 176, 204, 0.35)'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            {settings.disableImpersonation && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    style={{
+                                                        color: '#FFFFFF',
+                                                        fontSize: '14px',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    ✓
+                                                </motion.span>
+                                            )}
+                                        </div>
+                                        <span
+                                            style={{
+                                                color: settings.disableImpersonation ? '#89cd87' : 'rgba(237, 242, 242, 0.72)',
+                                                fontSize: '13px',
+                                                fontWeight: settings.disableImpersonation ? 'bold' : 'normal',
+                                            }}
+                                        >
+                                            Disable Impersonation
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Beta Mode Toggle */}
                                     <motion.div
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.99 }}
