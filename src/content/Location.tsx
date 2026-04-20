@@ -151,7 +151,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         description: "",
         weight: 20,
 		imageUrl: getLocationImage('outside/slumbering_orchard.png'),
-        center: { x: 0.26, y: 0.62 }, // southwest
+        center: { x: 0.23, y: 0.62 }, // southwest
         focalPoint: { x: 0.7, y: 0.8 },
 		lightColor: "#74919f",
         themeColor: "#7ecfbe",
@@ -163,7 +163,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
 		description: "",
 		weight: 25,
 		imageUrl: getLocationImage('outside/pilgrimage.png'),
-		center: { x: 0.5, y: 0.5 }, // center
+		center: { x: 0.54, y: 0.5 }, // center
 		focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#eeeedd",
 		themeColor: "#d86f5a",
@@ -175,7 +175,7 @@ export const DEFAULT_ATLAS_LOCATIONS: Location[] = [
         description: '',
         weight: 20,
 		imageUrl: getLocationImage('outside/loom.png'),
-        center: { x: 0.48, y: 0.2 }, // northeast
+        center: { x: 0.51, y: 0.2 }, // northeast
         focalPoint: { x: 0.5, y: 0.5 },
 		lightColor: "#d7c091",
         themeColor: '#d17ed8',
