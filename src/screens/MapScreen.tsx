@@ -828,7 +828,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 	}, [clearTooltip]);
 
 	useEffect(() => {
-		if (!hoveredCellId) {
+		if (!hoveredCellId || mapMode === 'skit') {
 			if (
 				lastMapTooltipRef.current &&
 				activeTooltipMessageRef.current === lastMapTooltipRef.current
