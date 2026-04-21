@@ -740,7 +740,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                 console.log(`Loading reserve actors...${Object.keys(this.getSave().actors || {}).length}`);
                 console.log(this.getSave().actors);
                 let actors = this.getSave().actors || {};
-                const minLoopDurationMs = 750;
+                const minLoopDurationMs = 1000;
                 while (Object.keys(actors).length < this.INITIAL_ACTORS) {
                     // Load one random actor from a hardcoded whitelist of fullPaths (COMPLETE_CHARACTERS); filter out characters that are already in actors
                     console.log('Loading reserve actor from supported characters...');
