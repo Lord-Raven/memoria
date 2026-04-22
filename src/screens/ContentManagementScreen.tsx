@@ -24,6 +24,16 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
     const sortByName = <T extends { name?: string }>(a: T, b: T) =>
         (a.name ?? '').trim().localeCompare((b.name ?? '').trim(), undefined, { sensitivity: 'base' });
 
+    const getActorAuthor = (actor: Actor): string => {
+        const fullPath = (actor.fullPath || '').trim();
+        if (!fullPath) {
+            return '';
+        }
+
+        const firstSlashIndex = fullPath.indexOf('/');
+        return firstSlashIndex >= 0 ? fullPath.slice(0, firstSlashIndex) : fullPath;
+    };
+
     // Get all actors from the save
     const actors = Object.values(stage().getSave().actors).filter(actor => actor.type != 'PLAYER').sort(sortByName);
 
@@ -263,17 +273,31 @@ export const ContentManagementScreen: FC<ContentManagementScreenProps> = ({ stag
                                                         )}
                                                     </div>
                                                     
-                                                    {/* Actor Name */}
-                                                    <div
-                                                        style={{
-                                                            color: '#00ff88',
-                                                            fontSize: '16px',
-                                                            fontWeight: 'bold',
-                                                            textAlign: 'center',
-                                                            fontFamily: actor.themeFontFamily,
-                                                        }}
-                                                    >
-                                                        {actor.name}
+                                                    {/* Actor Name + Author */}
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <div
+                                                            style={{
+                                                                color: '#00ff88',
+                                                                fontSize: '16px',
+                                                                fontWeight: 'bold',
+                                                                fontFamily: actor.themeFontFamily,
+                                                            }}
+                                                        >
+                                                            {actor.name}
+                                                        </div>
+                                                        {getActorAuthor(actor) && (
+                                                            <div
+                                                                style={{
+                                                                    marginTop: '4px',
+                                                                    color: 'rgba(224, 240, 255, 0.5)',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: 400,
+                                                                    fontFamily: 'system-ui, sans-serif',
+                                                                }}
+                                                            >
+                                                                {getActorAuthor(actor)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             ))

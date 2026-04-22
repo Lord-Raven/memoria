@@ -263,7 +263,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 overflowWrap: 'break-word',
                                             }}
                                         >
-                                            This is a shared setting. Read the setting document at{' '}
+                                            {'This is a shared setting. Read the lore at '}
                                             <a
                                                 href="https://mechabunny.com/jam/memoria/"
                                                 target="_blank"
@@ -275,8 +275,8 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 }}
                                             >
                                                 mechabunny.com/jam/memoria
-                                            </a>{' '}
-                                            and visit Miyo&apos;s Chub profile at{' '}
+                                            </a>
+                                            {` and visit Miyo's Chub profile at `}
                                             <a
                                                 href="https://chub.ai/users/miyo_rin"
                                                 target="_blank"
@@ -290,6 +290,9 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 chub.ai/users/miyo_rin
                                             </a>
                                             .
+                                            <br/>
+                                            {`Thanks to the many participants who contributed characters, lore, and images to the jam and this project; consider browsing their other works!`}
+
                                         </div>
                                     </motion.div>
                                 )}
@@ -433,7 +436,7 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                                 boxSizing: 'border-box',
                                             }}
                                         >
-                                            {'v2026.04.19 - Beta build. Loading changes ongoing.'}
+                                            {'v2026.04.22 - Initial Release.'}
                                         </div>
                                     </motion.div>
                                 )}
