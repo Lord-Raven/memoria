@@ -263,7 +263,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     `PARTICIPANTS: Cyanea, Persephone\n` +
                     `#END#`,
                 min_tokens: 10,
-                max_tokens: 150,
+                max_tokens: 400,
                 include_history: true,
                 stop: ['#END']
             }).catch(err => {
