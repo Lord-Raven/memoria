@@ -318,7 +318,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
                 `\n\n  For movement tags, LOCATION should be the name of an existing location, or simply "HERE" to move to the scene's location, or "AWAY" to leave this area. ` +
                 `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates. ` +
-                `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are always capitalized.` +
+                `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are ALL CAPS.` +
                 `\n\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments or concrete details which would fundamentally alter or subvert the mechanics of the game. ` +
                 (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. ' : '') +
                 `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world. ` +
@@ -535,8 +535,10 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 let speakerId = '';
                 let message = l;
                 
-                const speakerLineMatch = speakerLineRegex.exec(l);
+                const speakerLineMatch = speakerLineRegex.exec(message);
+                console.log(`Processing combined line: ${message}`);
                 if (speakerLineMatch) {
+                    console.log(`Found speaker line match: ${speakerLineMatch[1].trim()}`);
                     const speakerName = speakerLineMatch[1].trim();
                     // Find matching actor using findBestNameMatch
                     const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : [], ['name', 'nicknames']);
