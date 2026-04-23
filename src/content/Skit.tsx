@@ -118,7 +118,7 @@ function buildScriptLog(skit: Skit, additionalEntries: ScriptEntry[] = [], stage
                 const outfit = actor?.outfits.find(o => o.id === outfitId);
                 return actor && outfit ? ` [${actor.name} wears ${outfit.name}]` : '';
             }).join('');
-            return `${stage?.getSave().actors?.[e.speakerId]?.name || e.speakerId}:${e.message}${emotionText}${wearsText}`;
+            return `${stage?.getSave().actors?.[e.speakerId]?.name.toUpperCase() || e.speakerId}:${e.message}${emotionText}${wearsText}`;
         }).join('\n')
         : '(None so far)';
 }
@@ -318,7 +318,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
                 `\n\n  For movement tags, LOCATION should be the name of an existing location, or simply "HERE" to move to the scene's location, or "AWAY" to leave this area. ` +
                 `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates. ` +
-                `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. ` +
+                `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are always capitalized.` +
                 `\n\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments or concrete details which would fundamentally alter or subvert the mechanics of the game. ` +
                 (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. ' : '') +
                 `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world. ` +
@@ -349,7 +349,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 text = text.slice(7).trim();
             }
 
-            // Parse response based on format "NAME: content"; content could be multi-line. We want to ensure that lines that don't start with a name are appended to the previous line.
+            // Parse response based on format "ALL CAPS NAME: content"; content could be multi-line.
+            // This avoids treating narrative colons as speaker delimiters.
+            const speakerLineRegex = /^([A-Z][A-Z0-9 '&.-]*):\s*(.*)$/;
             const lines = text.split('\n');
             const combinedLines: string[] = [];
             const combinedTagData: {emotions: {[key: string]: Emotion}, outfitChanges: {[actorId: string]: string}, updatedActors?: string[], updatedLocationId?: string}[] = [];
@@ -358,6 +360,10 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             let currentOutfitChanges: {[actorId: string]: string} = {};
             let currentUpdatedActors: string[] | undefined;
             let currentUpdatedLocationId: string | undefined;
+
+            // Prepare list of all actors (not just present)
+            const allActors: Actor[] = Object.values(stage.getSave().actors);
+            const allLocations = Object.values(stage.getSave().atlas || {});
 
             for (const line of lines) {
                 // Skip empty lines
@@ -372,10 +378,6 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 const newOutfitChanges: {[actorId: string]: string} = {};
                 let newUpdatedActors: string[] | undefined;
                 let newUpdatedLocationId: string | undefined;
-
-                // Prepare list of all actors (not just present)
-                const allActors: Actor[] = Object.values(stage.getSave().actors);
-                const allLocations = Object.values(stage.getSave().atlas || {});
 
                 const resolveLocationId = (locationNameOrId: string): string | undefined => {
                     const locationText = locationNameOrId.trim();
@@ -490,8 +492,10 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 // Remove all tags before processing for display:
                 trimmed = trimmed.replace(/\[([^\]]+)\]/g, '').trim();
 
-                // If the line includes a colon, and that colon has three or fewer words before it, then treat it as a new line.
-                if (line.includes(':') && line.slice(0, line.indexOf(':')).trim().split(/\s+/).length <= 3) {
+                const speakerLineMatch = speakerLineRegex.exec(trimmed);
+
+                // Only treat lines with an ALL CAPS speaker prefix as new script entries.
+                if (speakerLineMatch) {
                     // New line
                     if (currentLine) {
                         combinedLines.push(currentLine.trim());
@@ -526,18 +530,18 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 });
             }
 
-            // Convert combined lines into ScriptEntry objects by splitting at first ':'
+            // Convert combined lines into ScriptEntry objects when an ALL CAPS speaker prefix is present.
             const scriptEntries: ScriptEntry[] = combinedLines.map((l, index) => {
-                const idx = l.indexOf(':');
                 let speakerId = '';
                 let message = l;
                 
-                if (idx !== -1) {
-                    const speakerName = l.slice(0, idx).trim();
+                const speakerLineMatch = speakerLineRegex.exec(l);
+                if (speakerLineMatch) {
+                    const speakerName = speakerLineMatch[1].trim();
                     // Find matching actor using findBestNameMatch
                     const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : [], ['name', 'nicknames']);
                     speakerId = matched ? matched.id : ''; // Use actor ID if found, otherwise empty for narrator.
-                    message = l.slice(idx + 1).trim();
+                    message = speakerLineMatch[2].trim();
                 }
                 
                 // Remove any remaining tags
