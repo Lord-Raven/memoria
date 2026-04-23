@@ -312,7 +312,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `\n\n  Outfit tags ("[CHARACTER NAME wears OUTFIT NAME]") should be used when a character changes outfit. ` +
                     `When establishing a character at the beginning of a scene or when moving to this location with a movement tag, give special consideration to the inclusion of a 'wears' tag to explicitly call out an appropriate look. ` +
                     `OUTFIT NAME must be found under the specified character—either their current outfit or one of their listed alternatives. ` +
-                `\n\n  A Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character enters the scene (even if they are already narratively present). ` +
+                `\n\n  A Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character engages in the scene (even if they are already narratively present). ` +
                 `\n\n  Character movement tags ("[CHARACTER NAME moves AWAY]") must also be included when a character leaves the scene or moves to another location. ` +
                 `\n\n  A Scene movement tag ("[SCENE moves LOCATION]") may be used when the scene itself transitions to another location. ` +
                 `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
@@ -490,7 +490,8 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 // Remove all tags before processing for display:
                 trimmed = trimmed.replace(/\[([^\]]+)\]/g, '').trim();
 
-                if (line.includes(':')) {
+                // If the line includes a colon, and that colon has three or fewer words before it, then treat it as a new line.
+                if (line.includes(':') && line.slice(0, line.indexOf(':')).trim().split(/\s+/).length <= 3) {
                     // New line
                     if (currentLine) {
                         combinedLines.push(currentLine.trim());
@@ -624,9 +625,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
             ttsPromises.push((async () => {
                 const endPrompt = generateContext(skit, stage, 0) +
                     `\n\nScene Script for Analysis:\n${buildScriptLog(skit, scriptEntries, stage)}` +
-                    `\n\nInstruction:\nAnalyze the preceding script and determine whether the scene has run its course. ` +
+                    `\n\nInstruction:\nAnalyze the preceding script and determine whether the current scene has run its course. ` +
                     `If the scene feels complete or has reached a suitable moment to end on, output "[END SCENE]" followed by a "[SUMMARY: ...]" tag with a brief summary of the entire scene's key events and outcomes. ` +
-                    `If the scene does not feel complete, output "[CONTINUE SCENE]" and "[SUMMARY: ...]" tag with a brief explanation of what is missing or what could be developed further to reach a satisfying conclusion. ` +
+                    `If the scene feels incomplete or unresolved, output "[CONTINUE SCENE]" and "[SUMMARY: ...]" tag with a brief explanation of what is missing or what could be developed further to reach a satisfying conclusion. ` +
                     `\n\nIf the scene is complete, utilize additional tags to highlight any significant developments, such as character relationship changes or lore entries above that require updates as a result of this scene. ` +
                     `\n\n#Relationship Changes:#\n` +
                     `Indicate affection changes between the player and any characters involved in the scene; affection is represented as a number between 1 and 10, so adjustments should be generally incremental.\n` +
