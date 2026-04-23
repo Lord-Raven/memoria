@@ -493,6 +493,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 trimmed = trimmed.replace(/\[([^\]]+)\]/g, '').trim();
 
                 const speakerLineMatch = speakerLineRegex.exec(trimmed);
+                console.log(`Testing ${trimmed}\nSpeaker line match: ${speakerLineMatch ? speakerLineMatch[1].trim() : 'No match'}`);
 
                 // Only treat lines with an ALL CAPS speaker prefix as new script entries.
                 if (speakerLineMatch) {
