@@ -351,7 +351,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
 
             // Parse response based on format "ALL CAPS NAME: content"; content could be multi-line.
             // This avoids treating narrative colons as speaker delimiters.
-            const speakerLineRegex = /^([A-Z][A-Z0-9 '&.-]*):\s*(.*)$/;
+            const speakerLineRegex = /^([A-Z][A-Z0-9 '&.-]*):\s*(.*)$/s;
             const lines = text.split('\n');
             const combinedLines: string[] = [];
             const combinedTagData: {emotions: {[key: string]: Emotion}, outfitChanges: {[actorId: string]: string}, updatedActors?: string[], updatedLocationId?: string}[] = [];
