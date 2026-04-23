@@ -539,6 +539,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 console.log(`Processing combined line: ${message}`);
                 if (speakerLineMatch) {
                     console.log(`Found speaker line match: ${speakerLineMatch[1].trim()}`);
+                    console.log(speakerLineMatch);
                     const speakerName = speakerLineMatch[1].trim();
                     // Find matching actor using findBestNameMatch
                     const matched = findBestNameMatch(speakerName, save.actors ? Object.values(save.actors) : [], ['name', 'nicknames']);
