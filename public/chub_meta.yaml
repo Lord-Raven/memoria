@@ -2,13 +2,13 @@
 #   in which case these values can be managed in the UI.
 
 # The name of the stage.
-project_name: "Memoria"
+project_name: "Memoria: Prisoners of Ardeia"
 
 # A short tagline to show in search.
-tagline: "Prisoners of Ardeia."
+tagline: "An unofficial VN stage."
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
-visibility: 'UNLISTED'
+visibility: 'PUBLIC'
 
 # 'ADJACENT' | 'NONE' | 'COVER' | 'FULLSCREEN'
 # 'ADJACENT' is default. The frame will display on the side of the
@@ -27,10 +27,12 @@ tags:
  - 'Game'
  - 'Sci-fi'
  - 'Post-apocalyptic'
+ - 'Science Fantasy'
+ - 'Memoria'
 
 creator_notes: "
 <div>
-  This is a companion stage to the March botjam over on the Workshop.
+  Please see the <a href='https://chub.ai/characters/JakeH/memoria-6acf215e9e2f'>Memoria VN Character Card</a> to play or learn more about this stage.
 </div>
 "
 

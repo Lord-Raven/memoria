@@ -676,7 +676,7 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         }
     }
 
-        async makeImage(imageRequest: Object, defaultUrl: string): Promise<string> {
+    async makeImage(imageRequest: Object, defaultUrl: string): Promise<string> {
         return (await this.generator.makeImage(imageRequest))?.url ?? defaultUrl;
     }
 
