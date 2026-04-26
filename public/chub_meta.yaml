@@ -8,7 +8,7 @@ project_name: "Memoria: Prisoners of Ardeia"
 tagline: "An unofficial VN stage."
 
 # 'PUBLIC', 'PRIVATE', or 'UNLISTED'.
-visibility: 'PUBLIC'
+visibility: 'UNLISTED'
 
 # 'ADJACENT' | 'NONE' | 'COVER' | 'FULLSCREEN'
 # 'ADJACENT' is default. The frame will display on the side of the
