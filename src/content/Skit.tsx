@@ -320,9 +320,10 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates. ` +
                 `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are ALL CAPS.` +
                 `\n\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments or concrete details which would fundamentally alter or subvert the mechanics of the game. ` +
-                (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. ' : '') +
-                `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world. ` +
-                ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, outfit, and movement tags continue to use English (these are invisible to the user).` : '');
+                (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. Begin the scene with appropriate tags at the "System:" prompt.' : 'Continue the scene at the "System:" prompt.') +
+                `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world.` +
+                ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, outfit, and movement tags continue to use English (these are invisible to the user).` : '') +
+                `\n\nSystem:`;
 
     let retry = 0;
     while (retry < 3) {
