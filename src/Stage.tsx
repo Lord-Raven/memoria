@@ -10,7 +10,6 @@ import { generateContext, Skit, SkitType } from "./content/Skit";
 import { createDefaultAtlas, getLinkedLocationLore, Location } from "./content/Location";
 import { BaseScreen } from "./screens/BaseScreen";
 import { fetchLorebook, Lore } from "./content/Lore";
-import { Client } from "@gradio/client";
 import { DEFAULT_PLAYER_THEME_COLOR } from "./screens/SettingsScreen";
 
 type MessageStateType = any;
