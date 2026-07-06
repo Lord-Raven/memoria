@@ -11,6 +11,7 @@ import { createDefaultAtlas, getLinkedLocationLore, Location } from "./content/L
 import { BaseScreen } from "./screens/BaseScreen";
 import { fetchLorebook, Lore } from "./content/Lore";
 import { DEFAULT_PLAYER_THEME_COLOR } from "./screens/SettingsScreen";
+import {buildPrompt} from "./utils/PromptBuilder.js";
 
 type MessageStateType = any;
 
@@ -399,6 +400,17 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         );
     }
 
+    public async generateText(prompt: string, minTokens: number = 50, maxTokens: number = 200): Promise<string> {
+        const response = await this.generator.textGen({
+            prompt: `{{messages}}${prompt}`,
+            min_tokens: minTokens,
+            max_tokens: maxTokens,
+            include_history: true,
+            stop: ['#END']
+        });
+        return response?.result || '';
+    }
+
     private async rebuildExpeditionChoices(save: SaveType = this.getSave()): Promise<ExpeditionChoice[]> {
         save.expeditionChoices = [];
         this.saveGame();
@@ -443,36 +455,35 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
         let attempts = 0;
         while (choices.length === 0 && attempts < 3) {
             attempts++;
-            const response = await this.generator.textGen({
-                prompt: generateContext(undefined, this, 5) +
-                    `\n\nEligible Partners:\n${eligibleActors.map(actor => `  ${actor.name}\n    Profile: ${actor.profile}\n    Lore: ${getActorLore(actor.id, this)}`).join('\n')}` +
-                    `\n\nPossible Destinations:\n${discoveredOutsideLocations.map(location => `  ${location.name}\n    ${getLinkedLocationLore(location.name, this)}`).join('\n')}` +
-                    `\n\nThis is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output three potential expeditions, ` +
-                    `each with a destination, partner, short summary/goal, and abbreviated name. ` +
-                    `Ensure that at least one option is a natural continuation of ongoing events and at least one is a new and unexpected development with an underutilized character. ` +
-                    `If a character has just returned from an expedition, avoid sending them out again so soon. ` +
-                    `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.` +
-                    `\n\nExample Response:\n` +
-                    `DESTINATION: The Cradle\n` +
-                    `PARTNER: Mel\n` +
-                    `SUMMARY: The last expedition the Cradle found something strange. A key, perhaps. Cassiel is sending the Prisoners back with it; whether to use it or destroy it remains unclear.\n` +
-                    `NAME: Return the Key with Mel\n\n` +
-                    `DESTINATION: Pilgrimage\n` +
-                    `PARTNER: Lyra\n` +
-                    `SUMMARY: Lyra has been quiet lately. Maybe a change of scenery will help her open up? Maybe it will drive her further into herself?\n` +
-                    `NAME: Take Lyra on a Pilgrimage\n\n` +
-                    `DESTINATION: The Core\n` +
-                    `PARTNER: Milliette\n` +
-                    `SUMMARY: Everyone's looking for Reitia. Milliette believes she's the only one who can do it. She doesn't realize that success might cost her.\n` +
-                    `NAME: Join Milliette at the Core\n\n` +
-                    `#END#`,
-                min_tokens: 100,
-                max_tokens: 500,
-                include_history: true,
-                stop: ['#END']
-            });
-            if (response?.result) {
-                choices = parseChoices(response.result);
+            const response = await this.generateText(
+                    buildPrompt()
+                        .addBlock('Instructions',
+                            `This is a request for structured content for a game. Given the context, eligible partners, and possible destinations above, generate and output three potential expeditions, ` +
+                            `each with a destination, partner, short summary/goal, and abbreviated name. ` +
+                            `Ensure that at least one option is a natural continuation of ongoing events and at least one is a new and unexpected development with an underutilized character. ` +
+                            `If a character has just returned from an expedition, avoid sending them out again so soon. ` +
+                            `The summary/goal will be used as guidance for the skit that ensues and can include motives, challenges, or objectives to consider; it is not user-facing content.`)
+                        .addBlock('Example Response',
+                            `DESTINATION: The Cradle\n` +
+                            `PARTNER: Mel\n` +
+                            `SUMMARY: The last expedition the Cradle found something strange. A key, perhaps. Cassiel is sending the Prisoners back with it; whether to use it or destroy it remains unclear.\n` +
+                            `NAME: Return the Key with Mel\n\n` +
+                            `DESTINATION: Pilgrimage\n` +
+                            `PARTNER: Lyra\n` +
+                            `SUMMARY: Lyra has been quiet lately. Maybe a change of scenery will help her open up? Maybe it will drive her further into herself?\n` +
+                            `NAME: Take Lyra on a Pilgrimage\n\n` +
+                            `DESTINATION: The Core\n` +
+                            `PARTNER: Milliette\n` +
+                            `SUMMARY: Everyone's looking for Reitia. Milliette believes she's the only one who can do it. She doesn't realize that success might cost her.\n` +
+                            `NAME: Join Milliette at the Core\n\n` +
+                            `#END#`)
+                        .addBlock('Eligible Partners', eligibleActors.map(actor => `  ${actor.name}\n    Profile: ${actor.profile}\n    Lore: ${getActorLore(actor.id, this)}`).join('\n'))
+                        .addBlock('Possible Destinations', discoveredOutsideLocations.map(location => `  ${location.name}\n    ${getLinkedLocationLore(location.name, this)}`).join('\n'))
+                        .addBlock('Additional Context', generateContext(undefined, this, 5))
+                    .format(),
+                    100, 500);
+            if (response) {
+                choices = parseChoices(response);
             }
         }
 
@@ -558,25 +569,19 @@ export class Stage extends StageBase<InitStateType, ChatStateType, MessageStateT
                     // For lore updates, we expect details to include a loreEntry with id, title, and content.
                     const loreEntry = findBestNameMatch(outcome.details?.loreTitle, save.lorebook || [], ['title']);
                     if (loreEntry) {
-                        // Make a textGen call with context and the current lore entry, asking for revisions based on context.
-                        const loreUpdatePromise = this.generator.textGen({
-                            prompt: generateContext(undefined, this, 3) + 
-                                `\n\nTarget Lore Title:\n${loreEntry.title}\nContent for Revision:\n${loreEntry.content}` +
-                                `\n\nBased on the current context and recent events, output an updated or revised version of the content above using the below format, ` +
-                                `taking care to maintain all information from the original that remains true. ` +
-                                `\n\nExample Response:` +
-                                `\nPLANNING: <explanation of changes to made and existing content to retain.>` +
-                                `\nCONTENT: <revised content, including relevant updates and persisting other accurate details from the original.>` +
-                                `\n#END#` +
-                                `\n\nIf there are no significant changes, simply return the original content verbatim, followed by #END#.`,
-                            min_tokens: 10,
-                            max_tokens: 1000,
-                            include_history: true,
-                            stop: ['#END']
-                        }).then(response => {
-                            if (response?.result) {
+                        // Make a call with context and the current lore entry, asking for revisions based on context.
+                        const loreUpdatePromise = this.generateText(buildPrompt()
+                            .addBlock('Instructions', `Based on the current context and recent events, output an updated or revised version of the content below, taking care to maintain all information from the original that remains true. If there are no significant changes, simply return the original content verbatim.`)
+                            .addBlock('Target Lore Title', loreEntry.title)
+                            .addBlock('Content for Revision', loreEntry.content)
+                            .addBlock('Example Response', `PLANNING: <explanation of changes to made and existing content to retain.>\nCONTENT: <revised content, including relevant updates and persisting other accurate details from the original.>`)
+                            .addBlock('Additional Context', generateContext(undefined, this, 3))
+                            .format(),
+                            10, 1000
+                        ).then(response => {
+                            if (response) {
                                 // If "CONTENT:" occurs in the response, eliminate everything before it; use split.
-                                loreEntry.content = response.result.split('CONTENT:').pop()?.trim() || loreEntry.content;
+                                loreEntry.content = response.split('CONTENT:').pop()?.trim() || loreEntry.content;
                                 this.saveGame();
                             }
                         }).catch(error => {

@@ -5,6 +5,7 @@ import { Stage } from "../Stage";
 import { Actor, ActorType, findBestNameMatch, getActorLore } from "./Actor";
 import { getLocationDescription } from "./Location";
 import { MAX_ENTRIES } from "./Lore";
+import {buildPrompt} from "../utils/PromptBuilder.js";
 
 export enum SkitType {
     INTRO = 'INTRO',
@@ -246,35 +247,37 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
         const availableActors = Object.values(stage.getSave().actors)
             .filter(actor => actor.type !== ActorType.PLAYER && !(stage.getSave().expeditionChoices || []).some(choice => choice.partnerActorIds.includes(actor.id)));
         while (attempts > 0) {
-            const response = await stage.generator.textGen({
-                prompt: generateContext(undefined, stage, 5) +
-                    // List actors in the skit
-                    `\n\nLocation:\n  ${skit.initialLocationId ? (save.atlas?.[skit.initialLocationId]?.name || 'Unknown Location') : 'Unknown Location'}\n` +
-                    `    ${getLocationDescription(skit.initialLocationId, stage) || 'No description available.'}\n` +
-                    `\n\nAvailable Characters:\n${skit.initialActors.map(actorId => {
-                        const actor = stage.getSave().actors?.[actorId];
-                        return actor ? `  ${actor.name}\n    ${getActorLore(actor.id, stage)}` : '';
-                    }).join('\n')}\n` +
-                    `\n\nThis is a request for structured content for a game. Given the context and location, ` +
-                    `use the format below to output guidance for the upcoming scene: plot goals, challenges, slice-of-life vignettes, or intimate moments. ` +
-                    `Then, name the characters from the Available Characters list that will participate.` +
-                    `\n\nExample Response:\n` +
-                    `GUIDANCE: ${playerName} is relaxing at the Amber Drop when Cyanea walks in. Persephone hovers nearby, pretending not to listen to their exchange, but inevitably cutting in when things take an unexpected turn.\n` +
-                    `PARTICIPANTS: Cyanea, Persephone\n` +
-                    `#END#`,
-                min_tokens: 10,
-                max_tokens: 400,
-                include_history: true,
-                stop: ['#END']
-            }).catch(err => {
+            const response = await stage.generateText(
+                buildPrompt()
+                    .addBlock(`Instructions`,
+                        `This is a request for structured content for a game. Given the context and location, ` +
+                        `use the format below to output guidance for the upcoming scene: plot goals, challenges, slice-of-life vignettes, or intimate moments. ` +
+                        `Then, name the characters from the Available Characters list that will participate.`)
+                    .addBlock('Location',
+                        `  ${skit.initialLocationId ? (save.atlas?.[skit.initialLocationId]?.name || 'Unknown Location') : 'Unknown Location'}\n` +
+                        `    ${getLocationDescription(skit.initialLocationId, stage) || 'No description available.'}`)
+                    .addBlock('Available Characters',
+                        skit.initialActors.map(actorId => {
+                            const actor = stage.getSave().actors?.[actorId];
+                            return actor ? `  ${actor.name}\n    ${getActorLore(actor.id, stage)}` : '';
+                        }))
+                    .addBlock('Example Response',
+                        `GUIDANCE: ${playerName} is relaxing at the Amber Drop when Cyanea walks in. Persephone hovers nearby, pretending not to listen to their exchange, but inevitably cutting in when things take an unexpected turn.\n` +
+                        `PARTICIPANTS: Cyanea, Persephone\n` +
+                        `#END#`)
+                    .addBlock('Additional Context',
+                        generateContext(skit, stage, 5))
+                    .format(),
+                10, 400
+            ).catch(err => {
                 console.error('Error generating skit guidance: ', err);
             });
             attempts--;
-            if (response && response.result && response.result.trim().length > 0) {
-                console.log('Generated skit guidance: ', response.result.trim());
+            if (response && response.trim().length > 0) {
+                console.log('Generated skit guidance: ', response.trim());
                 // Need to read GUIDANCE: and PARTICIPANTS:
-                const guidanceMatch = /GUIDANCE:\s*(.+)/i.exec(response.result);
-                const participantsMatch = /PARTICIPANTS:\s*(.+)/i.exec(response.result);
+                const guidanceMatch = /GUIDANCE:\s*(.+)/i.exec(response);
+                const participantsMatch = /PARTICIPANTS:\s*(.+)/i.exec(response);
                 if (guidanceMatch && participantsMatch) {
                     skit.guidance = guidanceMatch[1].trim();
                     skit.initialActors = participantsMatch[1].split(',').map(name => findBestNameMatch(name.trim(), availableActors, ['name', 'nicknames'])?.id).filter(id => id !== undefined) as string[];
@@ -284,59 +287,47 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
         }
     }
 
-    const mainPrompt = 
-            `Example Script Format:\n` +
-            `  CHARACTER NAME: Character Name does some actions in prose; for example, they may be waving to you, the player. They say, "My dialogue is in quotation marks."\n` +
-            `  CHARACTER NAME: [CHARACTER NAME EXPRESSES PRIDE] "A character can have two entries in a row, if they have more to say or do or it makes sense to break up a lot of activity."\n` +
-            `  ANOTHER CHARACTER NAME: [ANOTHER CHARACTER NAME EXPRESSES JOY][CHARACTER NAME EXPRESSES SURPRISE] ` +
-                `"Other character expressions can update in each other's entries—say, if they're reacting to something the speaker says—, but only the named character can speak in each entry."\n` +
-            `  CHARACTER NAME: They nod in agreement, "If there's any dialogue at all, the entry must be attributed to the character speaking."\n` +
-            `  NARRATOR: [CHARACTER NAME EXPRESSES RELIEF] Descriptive content or other scene events occurring around you, the player, can be attributed to NARRATOR. Dialogue cannot be included in NARRATOR entries.\n` +
-            (save.disableImpersonation ? '' : `  ${playerName.toUpperCase()}: "Hey, Character Name," I greet them warmly. I'm the player, and my entries use first-person narrative voice, while all other skit entries use second-person to refer to me.\n`) +
-            `\n\n` +
-            (skit.script.length > 0 ? `\n\nCurrent Scene Script to Continue:\n${buildScriptLog(skit, [], stage)}` : '') +
-            (skit.guidance ? `\n\nScene Prompt:\n  ${skit.guidance}` : '') +
-            `\n\nPrimary Instruction:\n` +
-                `  ${skit.script.length == 0 ? 'Produce the initial moments of a scene (perhaps joined in medias res)' : 'Extend or conclude the current scene script'} with three to five entries, ` +
-                `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags, if warranted. ` +
-                `The script should tacitly consider characters motives, relationships, and past events. ` +
-                `\n\n  Follow the structure of the strict Example Script formatting above: ` +
-                `actions are depicted in prose and character dialogue in quotation marks. Characters present their own actions and dialogue, while other events within the scene are attributed to NARRATOR. ` +
-                `Although a loose script format is employed, the actual content should be professionally edited narrative prose. ` +
-                (save.disableImpersonation ? 
-                    `New entries refer to the player, ${playerName}, in second-person; all other characters are referred to in third-person, even in their own entries.` :
-                    (`Entries from the player, ${playerName}, are written in first-person, while other entries consistently refer to ${playerName} in second-person; all other characters are referred to in third-person, even in their own entries.`)) +
-                `\n\nTag Instruction:\n` +
-                `  Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
-                `\n\n  Emotion tags ("[CHARACTER NAME expresses JOY]") should be used to indicate visible emotional shifts in a character's appearance using a single-word emotion name. ` +
-                `\n\n  Outfit tags ("[CHARACTER NAME wears OUTFIT NAME]") should be used when a character changes outfit. ` +
-                    `When establishing a character at the beginning of a scene or when moving to this location with a movement tag, give special consideration to the inclusion of a 'wears' tag to explicitly call out an appropriate look. ` +
-                    `OUTFIT NAME must be found under the specified character—either their current outfit or one of their listed alternatives. ` +
-                `\n\n  A Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character engages in the scene (even if they are already narratively present). ` +
-                `\n\n  Character movement tags ("[CHARACTER NAME moves AWAY]") must also be included when a character leaves the scene or moves to another location. ` +
-                `\n\n  A Scene movement tag ("[SCENE moves LOCATION]") may be used when the scene itself transitions to another location. ` +
-                `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
-                `\n\n  For movement tags, LOCATION should be the name of an existing location, or simply "HERE" to move to the scene's location, or "AWAY" to leave this area. ` +
-                `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates. ` +
-                `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are ALL CAPS.` +
-                `\n\nThis scene is a brief visual novel skit within a video game; as such, the scene avoids major developments or concrete details which would fundamentally alter or subvert the mechanics of the game. ` +
-                (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. Begin the scene with appropriate tags at the "System:" prompt.' : 'Continue the scene at the "System:" prompt.') +
-                `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world.` +
-                ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, outfit, and movement tags continue to use English (these are invisible to the user).` : '');
-
     let retry = 0;
     while (retry < 3) {
-        const response = await stage.generator.textGen({
-                // Reduce history size with successive retries.
-                prompt: `${generateContext(skit, stage, 7 - retry * 2)}\n\n${mainPrompt}`,
-                min_tokens: 10,
-                max_tokens: 600,
-                include_history: true,
-                stop: []
-        });
-        if (response && response.result && response.result.trim().length > 0) {
+        const response = await stage.generateText(
+            buildPrompt()
+                .addBlock(`Instructions`,
+                    `${skit.script.length == 0 ? 'Produce the initial moments of a scene (perhaps joined in medias res)' : 'Extend or conclude the current scene script'} with three to five entries, ` +
+                    `based upon the Premise and the specified Scene Prompt. Primarily involve the Present Characters, although Absent Characters may be moved to this location using appropriate tags, if warranted. ` +
+                    `The script should tacitly consider characters motives, relationships, and past events. ` +
+                    `\n\nFollow the structure of the strict Example Script formatting above: ` +
+                    `actions are depicted in prose and character dialogue in quotation marks. Characters present their own actions and dialogue, while other events within the scene are attributed to NARRATOR. ` +
+                    `Although a loose script format is employed, the actual content should be professionally edited narrative prose. ` +
+                    (save.disableImpersonation ?
+                        `New entries refer to the player, ${playerName}, in second-person; all other characters are referred to in third-person, even in their own entries.` :
+                        (`Entries from the player, ${playerName}, are written in first-person, while other entries consistently refer to ${playerName} in second-person; all other characters are referred to in third-person, even in their own entries.`)) +
+                    `This scene is a brief visual novel skit within a video game; as such, the scene avoids major developments or concrete details which would fundamentally alter or subvert the mechanics of the game. ` +
+                    (skit.script.length == 0 ? 'As this is the initial, establishing moment of a new scene, evaluate the current outfit and alternative outfits of each character and use Outfit ("wears") tags to update the characters to the most appropriate outfit for the moment. Begin the scene with appropriate tags at the "System:" prompt.' : 'Continue the scene at the "System:" prompt.') +
+                    `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world.` +
+                    ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, outfit, and movement tags continue to use English (these are invisible to the user).` : '')
+                )
+                .addBlock('Tag Instruction',
+                    `Embedded within this script, you may employ special tags to trigger various game mechanics. ` +
+                    `\n\nEmotion tags ("[CHARACTER NAME expresses JOY]") should be used to indicate visible emotional shifts in a character's appearance using a single-word emotion name. ` +
+                    `\n\nOutfit tags ("[CHARACTER NAME wears OUTFIT NAME]") should be used when a character changes outfit. ` +
+                    `When establishing a character at the beginning of a scene or when moving to this location with a movement tag, give special consideration to the inclusion of a 'wears' tag to explicitly call out an appropriate look. ` +
+                    `OUTFIT NAME must be found under the specified character—either their current outfit or one of their listed alternatives. ` +
+                    `\n\nA Character movement tag ("[CHARACTER NAME moves HERE]") must be used when an Absent Character engages in the scene (even if they are already narratively present). ` +
+                    `\n\nCharacter movement tags ("[CHARACTER NAME moves AWAY]") must also be included when a character leaves the scene or moves to another location. ` +
+                    `\n\nA Scene movement tag ("[SCENE moves LOCATION]") may be used when the scene itself transitions to another location. ` +
+                    `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
+                    `\n\nFor movement tags, LOCATION should be the name of an existing location, or simply "HERE" to move to the scene's location, or "AWAY" to leave this area. ` +
+                    `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates. ` +
+                    `These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are ALL CAPS.`)
+                .addBlock('Additional Context',
+                    generateContext(skit, stage, 7 - retry * 2))
+                .format(),
+            10, 600
+        )
+
+        if (response && response.trim().length > 0) {
             // Strip all double asterisks; this is a temporary measure due to current model behavior.
-            let text = response.result.replace(/\*\*/g, '').trim();
+            let text = response.replace(/\*\*/g, '').trim();
             let endScene = false;
             const outcomes: Outcome[] = [];
             let summary = '';
@@ -655,27 +646,57 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     `#END#` +
                     ``;
                 
-                const endResponse = await stage.generator.textGen({
-                    prompt: endPrompt,
-                    min_tokens: 1,
-                    max_tokens: 500,
-                    include_history: true,
-                    stop: ['#END']
-                });
+                const endResponse = await stage.generateText(
+                    buildPrompt()
+                        .addBlock(`Instructions`,
+                            `Analyze the provided script and determine whether the depicted scene has run its course. ` +
+                            `If the scene feels complete or has reached a suitable moment to end on, output "[END SCENE]" followed by a "[SUMMARY: ...]" tag with a brief summary of the entire scene's key events and outcomes. ` +
+                            `If the scene feels incomplete or unresolved, output "[CONTINUE SCENE]" and "[SUMMARY: ...]" tag with a brief explanation of what is missing or what could be developed further to reach a satisfying conclusion. ` +
+                            `\n\nIf the scene is complete, utilize additional tags to highlight any significant developments, such as character relationship changes or lore entries above that require updates as a result of this scene. `
+                        )
+                        .addBlock('Relationship Changes',
+                            `Indicate affection changes between the player and any characters involved in the scene; affection is represented as a number between 1 and 10, so adjustments should be generally incremental.\n` +
+                            `[AFFECTION CHANGE: Character Name +/-x]` +
+                            `\nExamples:\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Lyra -1]`
+                        )
+                        .addBlock('Lore Updates',
+                            `Indicate the names of lore entries that may need to be updated as a result of the skit. Actual updates will be made in separate requests; this tag merely flags an entry for update.\n` +
+                            `[LORE UPDATE: Lore Entry Name]` +
+                            `\nExample:\n[LORE UPDATE: Cassiel]\n[LORE UPDATE: The Gardens]`
+                        )
+                        .addBlock('Example Response',
+                            `[END SCENE]\n[SUMMARY: This expedition took ${playerName} and Cyanea to the Shells, where they encountered Red Hood and uncovered a new forma: the Coral Razor. Red Hood vehemently disagreed with ${playerName} and Cyanea on how to handle this new threat.]` +
+                            `\n[AFFECTION CHANGE: Cyanea +1]\n[AFFECTION CHANGE: Red Hood -2]\n[LORE UPDATE: The Shells]\n[LORE UPDATE: Cyanea]\n[LORE UPDATE: Red Hood]\n` +
+                            `#END#` +
+                            `\nExample Response:\n` +
+                            `[CONTINUE SCENE]\n[SUMMARY: The scene is developing well, but it would be more satisfying with a clearer moment of resolution at the end. Consider whether ${playerName} could discover a clue or have a significant interaction with another character to create a more compelling ending.]\n` +
+                            `#END#`
+                        )
+                        .addBlock('Example Response',
+                            `[CONTINUE SCENE]\n[SUMMARY: The scene is developing well, but it would be more satisfying with a clearer moment of resolution at the end. Consider whether ${playerName} could discover a clue or have a significant interaction with another character to create a more compelling ending.]\n` +
+                            `#END#`
+                        )
+                        .addBlock('Scene Script for Analysis',
+                            buildScriptLog(skit, scriptEntries, stage))
+                        .addBlock('Additional Context',
+                            generateContext(skit, stage, 0))
+                        .format(),
+                    1, 500
+                );
 
-                if (endResponse && endResponse.result) {
+                if (endResponse) {
                     // Strip double-asterisks. TODO: Remove this once other model issue is resolved.
                     text = text.replace(/\*\*/g, '');
 
-                    if (endResponse.result.includes('[END SCENE]')) {
+                    if (endResponse.includes('[END SCENE]')) {
                         endScene = true;
-                        const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(endResponse.result);
+                        const summaryMatch = /\[SUMMARY:\s*([^\]]+)\]/i.exec(endResponse);
                         summary = summaryMatch ? summaryMatch[1].trim() : '';
                         console.log('Model determined scene should end. Summary:', summary);
 
                         const affectionChangeRegex = /\[AFFECTION CHANGE:\s*([^\]]+?)\s*([+-]\d+)\]/gi;
                         let match;
-                        while ((match = affectionChangeRegex.exec(endResponse.result)) !== null) {
+                        while ((match = affectionChangeRegex.exec(endResponse)) !== null) {
                             const characterName = match[1].trim();
                             const changeValue = parseInt(match[2]);
                             const matchedActor = findBestNameMatch(characterName, Object.values(save.actors), ['name', 'nicknames']);
@@ -694,7 +715,7 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                         }
 
                         const loreUpdateRegex = /\[LORE UPDATE:\s*([^\]]+)\]/gi;
-                        while ((match = loreUpdateRegex.exec(endResponse.result)) !== null) {
+                        while ((match = loreUpdateRegex.exec(endResponse)) !== null) {
                             const loreName = match[1].trim();
                             const matchedLore = findBestNameMatch(loreName, save.lorebook || [], ['title']);
                             if (matchedLore) {

@@ -415,16 +415,29 @@ export const MenuScreen: FC<MenuScreenProps> = ({ stage, setScreenType }) => {
                                 {expandedSection === 'version' && (
                                     <motion.div
                                         key="version-content"
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        initial={{opacity: 0, height: 0}}
+                                        animate={{opacity: 1, height: 'auto'}}
+                                        exit={{opacity: 0, height: 0}}
+                                        transition={{duration: 0.3, ease: 'easeInOut'}}
                                         style={{
                                             overflow: 'hidden',
                                             width: '100%',
                                             boxSizing: 'border-box',
                                         }}
                                     >
+                                        <div
+                                            style={{
+                                                textAlign: 'center',
+                                                marginTop: 'clamp(8px, 1.5vh, 12px)',
+                                                color: 'rgba(185, 210, 227, 0.72)',
+                                                fontSize: 'clamp(10px, 1.5vw, 12px)',
+                                                letterSpacing: '0.04em',
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                            }}
+                                        >
+                                            {'v2026.07.06 - Attempting to repair prompting damaged by recent Soji changes.'}
+                                        </div>
                                         <div
                                             style={{
                                                 textAlign: 'center',

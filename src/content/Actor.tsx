@@ -3,6 +3,7 @@ import { Emotion, EMOTION_PROMPTS, EmotionPack, EmotionPromptMap } from './Emoti
 import { Stage } from '../Stage';
 import { AspectRatio } from '@chub-ai/stages-ts';
 import { createLoreEntry } from './Lore';
+import {buildPrompt} from "../utils/PromptBuilder.js";
 
 export enum ActorType {
     PLAYER = 'PLAYER', // Primary player, controlled by the user; player is also a prisoner, but treated distinctly
@@ -201,44 +202,41 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
     definition.personality = definition.personality.replace(/{/g, '(').replace(/}/g, ')');
 
     // Take this data and use text generation to get an updated distillation of this character, including a physical description.
-    const generationRequest = stage.generator.textGen({
-        prompt: `{{messages}}This is preparatory request for structured and formatted game content.` +
-            `\n\nPremise: This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
-            `The denizens of this world—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. Most have only vague memories of their past lives, ` +
-            `but all have rich and detailed personalities that persist and even new motives driving their existence in a new world. ` +
-            `All prisoners live in the sole populated city of Ardeia and serve its Warden, Cassiel, an eight-foot, angelic woman who oversees the city's operations with a mix of benevolence and authority. ` +
-            `The player of this game, ${stage.getPlayerActor()?.name || 'Player'}, is one of the many prisoners, bearing the signature bracer that binds them to Ardeia and the Warden. ` +
-            `The prisoners work to keep the city running while also exploring the Outside, beyond the cities walls and Barriers. Some are new arrivals, while others have been here for centuries. ` +
-            `They find all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. ` +
-            `\n\nThe Original Details below describe a character of this world (${actor.name}) to convert into a set of defined fields for this game. ` +
-            `\n\n` +
-            `Original Details about ${actor.name}:\n ${definition.personality}\n\n` +
-            `Available Voices:\n` +
-            Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => ' - ' + voiceId + ': ' + voiceDesc).join('\n') +
-            `Instructions: After carefully considering this description and the rules provided, generate a concise breakdown for a character based upon these details in the following strict format:\n` +
-            `System: NAME: Their simple name\n` +
-            `DESCRIPTION: A vivid description of the character's core physical appearance: elements like gender, build, skin tone, eye color, hair color, ears, tails, or other distinguishing features.\n` +
-            `OUTFIT DESCRIPTION: A detailed description of the character's current outfit, including style, colors, and any notable accessories or features.\n` +
-            `OUTFIT NAME: A one- to two-word name for the character's current outfit that matches the description.\n` +
-            `PROFILE: A summary of the character's personality traits, mannerisms, history, and motives.\n` +
-            `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
-            `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
-            `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
-            `#END#\n\n` +
-            `Example Response:\n` +
-            `NAME: Jane Doe\n` +
-            `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She rarely smiles, but when she does, it lights up her face.\n` +
-            `OUTFIT DESCRIPTION: She wears a simple, utilitarian outfit made from durable materials in dark colors. Lots of pockets and zippers.\n` +
-            `OUTFIT NAME: Adventurer's Gear\n` +
-            `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention. Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
-            `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
-            `COLOR: #666666\n` +
-            `FONT: Calibri, sans-serif\n` +
-            `#END#`,
-        stop: ['#END'],
-        include_history: true, // There won't be any history, but if this is true, the front-end doesn't automatically apply pre-/post-history prompts.
-        max_tokens: 400,
-    });
+    const generationRequest = stage.generateText(buildPrompt()
+            .addBlock('Instructions',
+                `This is preparatory request for structured and formatted game content. This game is a post-apocalyptic science-fantasy game in which the world is an unknowable relic of its past self. ` +
+                `The denizens of this world—referred to as 'prisoners'—have been pulled from across time, resulting in a diverse and eclectic mix of characters. Most have only vague memories of their past lives, ` +
+                `but all have rich and detailed personalities that persist and even new motives driving their existence in a new world. ` +
+                `All prisoners live in the sole populated city of Ardeia and serve its Warden, Cassiel, an eight-foot, angelic woman who oversees the city's operations with a mix of benevolence and authority. ` +
+                `The player of this game, ${stage.getPlayerActor()?.name || 'Player'}, is one of the many prisoners, bearing the signature bracer that binds them to Ardeia and the Warden. ` +
+                `The prisoners work to keep the city running while also exploring the Outside, beyond the cities walls and Barriers. Some are new arrivals, while others have been here for centuries. ` +
+                `They find all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. ` +
+                `\n\nThe Character Details below describe a character of this world (${actor.name}) to convert into a set of defined fields for this game.`)
+            .addBlock('Character Details', definition.personality)
+            .addBlock('Available Voices', Object.entries(VOICE_MAP).map(([voiceId, voiceDesc]) => ' - ' + voiceId + ': ' + voiceDesc).join('\n'))
+            .addBlock('Response Format',
+                `NAME: Their simple name\n` +
+                `DESCRIPTION: A vivid description of the character's core physical appearance: elements like gender, build, skin tone, eye color, hair color, ears, tails, or other distinguishing features.\n` +
+                `OUTFIT DESCRIPTION: A detailed description of the character's current outfit, including style, colors, and any notable accessories or features.\n` +
+                `OUTFIT NAME: A one- to two-word name for the character's current outfit that matches the description.\n` +
+                `PROFILE: A summary of the character's personality traits, mannerisms, history, and motives.\n` +
+                `VOICE: Output the specific voice ID from the Available Voices section that best matches the character's apparent gender (foremost) and personality.\n` +
+                `COLOR: A hex color that reflects the character's theme or mood—use darker or richer colors that will contrast with white text.\n` +
+                `FONT: A font stack, or font family that reflects the character's personality; this will be embedded in a CSS font-family property.\n` +
+                `#END#`)
+            .addBlock('Example Response',
+                `NAME: Jane Doe\n` +
+                `DESCRIPTION: A tall, athletic woman with short, dark hair and piercing blue eyes. She rarely smiles, but when she does, it lights up her face.\n` +
+                `OUTFIT DESCRIPTION: She wears a simple, utilitarian outfit made from durable materials in dark colors. Lots of pockets and zippers.\n` +
+                `OUTFIT NAME: Adventurer's Gear\n` +
+                `PROFILE: Jane is confident and determined, quick-witted, and fiercely independent. Known for her sharp wit and strong presence, she has a commanding aura that draws attention. Deep down, Jane is driven by a need to prove she's worthy of love despite her past betrayals. She's here looking for someone who will challenge her and see beyond her tough exterior.\n` +
+                `VOICE: 03a438b7-ebfa-4f72-9061-f086d8f1fca6\n` +
+                `COLOR: #666666\n` +
+                `FONT: Calibri, sans-serif\n` +
+                `#END#`)
+        .format(),
+        100,
+        400);
     stage.generationPromises[`distilling_actor/${actor.fullPath}`] = generationRequest.finally(() => {
             console.log('Finished generating distillation for actor:', actor.name);
             delete stage.generationPromises[`distilling_actor/${actor.fullPath}`];
@@ -247,7 +245,7 @@ export async function distillActor(actor: Actor, definition: any, stage: Stage):
     console.log('Generated character distillation:');
     console.log(generatedResponse);
     // Parse the generated response into components:
-    const lines = generatedResponse?.result.split('\n').map((line: string) => line.trim()) || [];
+    const lines = generatedResponse.split('\n').map((line: string) => line.trim()) || [];
     const parsedData: any = {};
     // data could be erroneously formatted (for instance, "1. Name:" or "-Description:"), so be resilient:
     for (let line of lines) {
@@ -339,24 +337,6 @@ function setOutfitPrompt(outfit: Outfit, emotion: Emotion, prompt: string) {
     };
 }
 
-function buildEmotionPromptGenerationInstruction(actor: Actor, outfit: Outfit, emotion: Emotion): string {
-
-    return `{{messages}}This is a preparatory request for a single image-edit instruction for character art generation.\n\n` +
-        `Character core appearance: ${actor.description}\n` +
-        `Current outfit: ${outfit.description}\n` +
-        `Personality and public persona: ${actor.profile}\n` +
-        `Target mood: ${emotion} (${EMOTION_PROMPTS[emotion]})\n\n` +
-        `Write exactly one concise prompt for an image editing model to revise a base image of this character already in this outfit. ` +
-        `The prompt is intended to guide the model in adjusting an image to suit the target mood by visually describing changes to this character's expression, posture, gesture, ` +
-        `and demeanor in a way that takes their style, personality, and outfit into account where appropriate. ` +
-        `Only describe elements that are relevant to the target image.\n\n` +
-        `Output only the final prompt text and then #END#\n\n` +
-        `Example response:\n` +
-        `This woman is now in a flirty, playful mood. She smiles and leans forward slightly, with a glint in her half-lidded eyes. She blushes and plays with her hair.\n#END#\n` +
-        `Example response:\n` +
-        `This man is now in a somber, reflective mood. He looks downcast, with slumped shoulders and a frown. His eyes look down and away, and he appears lost in thought.\n#END#\n`;
-}
-
 export async function generateOutfitEmotionPrompt(actor: Actor, emotion: Emotion, stage: Stage, outfitId: string = ''): Promise<string> {
     const outfit = getOutfitById(actor, outfitId);
     const generationKey = `actor-prompt/${actor.id}/${outfit.id}/${emotion}`;
@@ -365,13 +345,27 @@ export async function generateOutfitEmotionPrompt(actor: Actor, emotion: Emotion
         return existingGeneration as Promise<string>;
     }
 
-    const promptRequest = stage.generator.textGen({
-        prompt: buildEmotionPromptGenerationInstruction(actor, outfit, emotion),
-        stop: ['#END'],
-        include_history: true,
-        max_tokens: 150,
-    }).then((response: any) => {
-        const generatedPrompt = response?.result?.trim() || '';
+    const promptRequest = stage.generateText(buildPrompt()
+        .addBlock('Instructions',
+            `This is a preparatory request for a single image-edit instruction for character art generation. ` +
+            `Write exactly one concise prompt for an image editing model to revise a base image of this character already in this outfit. ` +
+            `The prompt is intended to guide the model in adjusting an image to suit the target mood by visually describing changes to this character's expression, posture, gesture, ` +
+            `and demeanor in a way that takes their style, personality, and outfit into account where appropriate. ` +
+            `Only describe elements that are relevant to the target image.\n\n` +
+            `Output only the final prompt text and then #END#`)
+        .addBlock('Character Core Appearance', actor.description)
+        .addBlock('Current Outfit', outfit.description)
+        .addBlock('Personality and Public Persona', actor.profile)
+        .addBlock('Target Mood', `${emotion} (${EMOTION_PROMPTS[emotion]})`)
+        .addBlock('Example Response',
+            `This woman is now in a flirty, playful mood. She smiles and leans forward slightly, with a glint in her half-lidded eyes. She blushes and plays with her hair.\n#END#`)
+        .addBlock('Example Response',
+            `This man is now in a somber, reflective mood. He looks downcast, with slumped shoulders and a frown. His eyes look down and away, and he appears lost in thought.\n#END#`)
+        .format(),
+        10, 100
+    )
+    .then((response: any) => {
+        const generatedPrompt = response.trim() || '';
         if (generatedPrompt) {
             setOutfitPrompt(outfit, emotion, generatedPrompt);
             stage.saveGame();
