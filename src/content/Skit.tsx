@@ -150,6 +150,10 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
                 return false;
             }
 
+            if (lore.type === 'character' && currentActors.some(actor => actor.name.toLowerCase() === lore.title.toLowerCase())) {
+                return false; // Skip inclusion of lore entries for characters currently present in the scene, as they are included in that character's content.
+            }
+
             if (lore.constant) {
                 return true;
             }
@@ -187,7 +191,7 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
     // Finally, order the triggeredLore list by insertion order, so that earlier lore entries appear first in the context.
     triggeredLore = triggeredLore.sort((a, b) => a.insertionOrder - b.insertionOrder);
 
-    return (builder: PromptBuilder) => builder.addBlock(`Premise: ${buildPremise(playerName)}`)
+    return (builder: PromptBuilder) => builder.addBlock(`Premise`, buildPremise(playerName))
         .addBlock(`Lore Entries`, (builder) => {
             // Add each lore entry as a separate block, with the title and content.
             triggeredLore.forEach(lore => {
@@ -324,12 +328,17 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                             `When this tag is used, all characters currently present in the scene are treated as relocating together; if anyone splits up, they will require a separate movement tag. ` +
                             `\n\nFor movement tags, LOCATION should be the name of an existing location, or simply "HERE" to move to the scene's location, or "AWAY" to leave this area. ` +
                             `The game engine relies upon movement tags to update character locations and visually display character presence in scenes, so it is essential to use these tags when Absent Characters enter the scene, Present Characters leave, or the scene itself relocates.`)
-                    )
+                ).addBlock('Example Script',
+                    `NARRATOR: The sun sets over the horizon, casting a warm glow across the abandoned city. The air is thick with anticipation as the group gathers in the central plaza.\n` +
+                    `CYANEA: "I can't believe we're finally here. It's been a long journey."\n` +
+                    `PERSEPHONE: "Yes, but the real challenge is just beginning. We must stay vigilant."\n` +
+                    `CYANEA: [CYANEA expresses DETERMINATION]Cyanea frowns uncharacteristically with determination, "Of course." She nods with almost comical sobriety.\n` +
+                    (!save.disableImpersonation ? `${playerName.toUpperCase()}: "I agree. We need to be careful and work together."\n` : '') +
+                    `RED HOOD: [RED HOOD moves to HERE]A crimson-clad figure approaches with supplies."\n`
+                )
                 .addBlock('Scene Prompt',
                     `Scene Prompt: ${skit.guidance}`)
-                .addBlock('Premise',
-                    buildPremise(playerName))
-                .addBlock('Additional Context',
+                .addBlock('Context',
                     generateContext(skit, stage, 7 - retry * 2))
                 .format();
         console.log(prompt);
