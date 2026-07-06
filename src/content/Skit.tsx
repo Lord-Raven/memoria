@@ -5,7 +5,7 @@ import { Stage } from "../Stage";
 import { Actor, ActorType, findBestNameMatch, getActorLore } from "./Actor";
 import { getLocationDescription } from "./Location";
 import { MAX_ENTRIES } from "./Lore";
-import {buildPrompt} from "../utils/PromptBuilder.js";
+import {buildPrompt, PromptBuilder} from "../utils/PromptBuilder.js";
 
 export enum SkitType {
     INTRO = 'INTRO',
@@ -136,7 +136,7 @@ export function buildPremise(playerName: string): string {
             `These expeditions discover all manner of otherworldly artifacts and remnants among the mysterious, war-torn, or overgrown ruins of the old world, including relics, constructs, forma, and errata. `;
 }
 
-export function generateContext(skit: Skit|undefined, stage: Stage, historyLength: number): string {
+export function generateContext(skit: Skit|undefined, stage: Stage, historyLength: number): ((b: PromptBuilder) => any) {
     const playerName = stage.getPlayerActor()?.name || 'The Prisoner';
     const save = stage.getSave();
     const location = skit ? save.atlas[skit.initialLocationId] : undefined;
@@ -187,38 +187,38 @@ export function generateContext(skit: Skit|undefined, stage: Stage, historyLengt
     // Finally, order the triggeredLore list by insertion order, so that earlier lore entries appear first in the context.
     triggeredLore = triggeredLore.sort((a, b) => a.insertionOrder - b.insertionOrder);
 
-    const coreContext = `{{messages}}\nPremise: ${buildPremise(playerName)}\n` +
-        (triggeredLore.length > 0 ?  `\n\nRelevant Information About the World:\n` + triggeredLore.map(lore => `[(${lore.type}) ${lore.title}: ${lore.content}]`).join('\n') : '') +
-        ((historyLength > 0 && pastEvents.length) ? 
-                // Include last few skit scripts for context and style reference; use summary except for most recent skit or if no summary.
-                '\n\nRecent Events for additional context:' + pastEvents.map((v, index) =>  {
-                if (v.skit) {
-                    const locationName = (v.skit.initialLocationId ? save.atlas[v.skit.initialLocationId]?.name : '') ?? 'Unknown Location';
-                    return ((!v.skit.summary || index == pastEvents.length - 1) ?
-                        (`\n\n  Script of Scene in ${locationName} (${stage.getSave().turn - v.turn}) days ago:\n` +
-                        `${buildScriptLog(v.skit, [], stage)}`) :
-                        (`\n\n  Summary of scene in ${locationName} (${stage.getSave().turn - v.turn}) days ago:\n` + v.skit.summary)
-                        )
-                } else {
-                    return `\n\n  Action ${stage.getSave().turn - v.turn} days ago: ${v.description || ''}`;
+    return (builder: PromptBuilder) => builder.addBlock(`Premise: ${buildPremise(playerName)}`)
+        .addBlock(`Lore Entries`, (builder) => {
+            // Add each lore entry as a separate block, with the title and content.
+            triggeredLore.forEach(lore => {
+                builder.addBlock(`${lore.type}_${lore.title}`, lore.content);
+            });
+        }).addBlock(`Recent Events`, (builder) => {
+            pastEvents.forEach((event, index) => {
+                if (event.skit) {
+                    const locationName = (event.skit.initialLocationId ? save.atlas[event.skit.initialLocationId]?.name : '') ?? 'Unknown Location';
+                    builder.addBlock(`Event_${index + 1}`, `Scene in ${locationName} (${stage.getSave().turn - event.turn}) days ago:\n` +
+                        (event.skit.summary ? `Summary: ${event.skit.summary}` : `Script:\n${buildScriptLog(event.skit, [], stage)}`));
                 }
-            }).join('') : '') +
-        (location ? (`\n\nCurrent Location:\n  The following scene is set in ` +
-            `${location.name || 'Unknown Location'}. ${getLocationDescription(location.id, stage) || 'No description available.'}\n`) : '') +
-
-        `\n\nPlayer Profile for ${playerName}:\n  ${stage.getPlayerActor().profile}\n` +
-        (skit && currentActors.length > 0 ? `\n\nCharacters in this Scene:\n${currentActors.map(actor => {
-            const currentOutfit = actor.outfits.find(a => a.id === determineOutfit(actor.id, skit, skit.script.length - 1)) ?? actor.outfits[0];
-            const otherOutfits = actor.outfits.filter(o => o.id !== currentOutfit?.id && o.emotionPack['neutral']);
-            return `  ${actor.name}\n    Current Outfit (${currentOutfit.name}): ${currentOutfit.description}\n` +
-                (otherOutfits.length > 0 ? `    Other Outfits: ${otherOutfits.map(o => o.name).join(', ')}\n` : '') +
-                `    Profile: ${actor.profile}\n` +
-                `    Lore: ${getActorLore(actor.id, stage)}` +
-                `    Affinity: ${getAffinityPrompt(actor.affinity, playerName)}`
-            }).join('\n')}` : '');
-
-
-    return coreContext;
+            });
+        }).addBlock(`Current Location`, `The following scene is set in ` +
+            `${location?.name || 'Unknown Location'}. ${getLocationDescription(location?.id || '', stage) || 'No description available.'}`
+        ).addBlock(`Player Profile`,
+            `${playerName}:\n  ${stage.getPlayerActor().profile}`
+        ).addBlock(`Characters Present`, (builder) => {
+            if (skit) {
+                currentActors.forEach(actor => {
+                    const currentOutfit = actor.outfits.find(a => a.id === determineOutfit(actor.id, skit, skit.script.length - 1)) ?? actor.outfits[0];
+                    const otherOutfits = actor.outfits.filter(o => o.id !== currentOutfit?.id && o.emotionPack['neutral']);
+                    builder.addBlock(`${actor.name}`, `  Current Outfit (${currentOutfit.name}): ${currentOutfit.description}\n` +
+                        (otherOutfits.length > 0 ? `  Other Outfits: ${otherOutfits.map(o => o.name).join(', ')}\n` : '') +
+                        `  Profile: ${actor.profile}\n` +
+                        `  Lore: ${getActorLore(actor.id, stage)}` +
+                        `  Affinity: ${getAffinityPrompt(actor.affinity, playerName)}`
+                    );
+                })
+            }
+        });
 }
 
 // Affinity is a score between 0 and 10.
