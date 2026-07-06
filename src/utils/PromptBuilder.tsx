@@ -1,22 +1,8 @@
-/* Need an exported function for building prompts. I want this function to build a structure and then format it:
-<Task>
-<PromptBlockTitle>
-Some content here
-</PromptBlockTitle>
-<AnotherPromptBlockTitle>
-Some more content here
-</AnotherPromptBlockTitle>
-</Task>
-The precise format is subject to change, so the key is creating a function that builds more agnostic structure first,
-which can be recycled throughout my application. The functions could use chaining:
-buildPrompt().addBlock('PromptBlockTitle', 'Some content here')
-.addBlock('AnotherPromptBlockTitle', 'Some more content here')
-.format() // Returns the formatted string
- */
 // typescript
 export type PromptBlock = {
   title: string;
-  content: string;
+  content?: string;
+  children?: PromptBlock[];
 };
 
 export type PromptStructure = {
@@ -31,11 +17,12 @@ export type FormatOptions = {
 
 /**
  * PromptBuilder builds an agnostic structure of prompt blocks and formats it.
- * Usage:
- *   import { buildPrompt } from './src/utils/PromptBuilder';
- *   const s = buildPrompt('Task')
- *     .addBlock('PromptBlockTitle', 'Some content here')
- *     .addBlock('AnotherPromptBlockTitle', 'Some more content here')
+ * Supports nested blocks via:
+ *   buildPrompt('Root')
+ *     .addBlock('Parent', parent => parent
+ *       .addBlock('Child1', 'content1')
+ *       .addBlock('Child2', 'content2')
+ *     )
  *     .format();
  */
 export class PromptBuilder {
@@ -46,10 +33,59 @@ export class PromptBuilder {
     this.rootTag = this.sanitizeTag(rootTag) || 'Task';
   }
 
-  // addBlock accepts strings, objects, arrays, or functions returning string
-  addBlock(title: string, content: string | object | Array<any> | (() => string)): this {
-    const c = this.stringifyContent(content);
+  // addBlock accepts:
+  // - title, content string/object/array
+  // - title, func returning string/object
+  // - title, func(builder) { builder.addBlock(...) }  // nested children
+  addBlock(
+      title: string,
+      content?: string | object | Array<any> | (() => string) | ((b: PromptBuilder) => any)
+  ): this {
     const t = this.sanitizeTag(title) || 'Block';
+
+    // handle function specially: may be a zero-arg string-returning function
+    // or a builder callback that mutates the provided nested builder.
+    if (typeof content === 'function') {
+      const nested = new PromptBuilder(''); // temporary builder to collect children
+      let res: any;
+      try {
+        // try calling with nested builder first
+        res = (content as (b: PromptBuilder) => any)(nested);
+      } catch {
+        // if that fails, try calling without args (legacy)
+        try {
+          res = (content as () => any)();
+        } catch {
+          res = undefined;
+        }
+      }
+
+      if (res === undefined) {
+        // user likely used the nested builder to add children
+        const children = nested.build().blocks;
+        this.blocks.push({ title: t, children });
+        return this;
+      }
+
+      // if function returned a PromptBuilder
+      if (res instanceof PromptBuilder) {
+        this.blocks.push({ title: t, children: res.build().blocks });
+        return this;
+      }
+
+      // if function returned an object/array/string/etc -> stringify as content
+      const c = this.stringifyContent(res);
+      this.blocks.push({ title: t, content: c });
+      return this;
+    }
+
+    // non-function content: convert to string (objects -> JSON)
+    if (content === undefined || content === null) {
+      this.blocks.push({ title: t });
+      return this;
+    }
+
+    const c = this.stringifyContent(content);
     this.blocks.push({ title: t, content: c });
     return this;
   }
@@ -60,7 +96,8 @@ export class PromptBuilder {
         this.blocks.splice(indexOrTitle, 1);
       }
     } else {
-      this.blocks = this.blocks.filter(b => b.title !== this.sanitizeTag(indexOrTitle));
+      const sanitized = this.sanitizeTag(indexOrTitle);
+      this.blocks = this.blocks.filter(b => b.title !== sanitized);
     }
     return this;
   }
@@ -76,7 +113,6 @@ export class PromptBuilder {
   }
 
   build(): PromptStructure {
-    // returns the neutral structure for reuse
     return {
       rootTag: this.rootTag,
       blocks: this.blocks.slice(),
@@ -89,19 +125,28 @@ export class PromptBuilder {
     const ind = pretty ? indent : '';
 
     const parts: string[] = [];
+    const formatBlock = (block: PromptBlock, level: number) => {
+      const pad = pretty ? ind.repeat(level) : '';
+      parts.push(`${pad}<${block.title}>${nl}`);
+
+      // content first (if any)
+      if (block.content !== undefined) {
+        const content = pretty ? this.indentContent(block.content, ind.repeat(level + 1)) : block.content;
+        parts.push(pretty ? ind.repeat(level + 1) : '');
+        parts.push(content + nl);
+      }
+
+      // then children (if any)
+      if (block.children && block.children.length) {
+        block.children.forEach(child => formatBlock(child, level + 1));
+      }
+
+      parts.push(`${pad}</${block.title}>${nl}`);
+    };
+
+    // root wrapper
     parts.push(`<${this.rootTag}>${nl}`);
-
-    this.blocks.forEach((b, i) => {
-      if (pretty) parts.push(ind);
-      parts.push(`<${b.title}>${nl}`);
-      if (pretty) parts.push(pretty ? ind.repeat(2) : '');
-      // content may already contain newlines; preserve them but indent if pretty
-      const content = pretty ? this.indentContent(b.content, ind.repeat(2)) : b.content;
-      parts.push(content + nl);
-      if (pretty) parts.push(ind);
-      parts.push(`</${b.title}>${nl}`);
-    });
-
+    this.blocks.forEach(b => formatBlock(b, 1));
     parts.push(`</${this.rootTag}>`);
     return parts.join('');
   }
@@ -112,17 +157,9 @@ export class PromptBuilder {
   }
 
   // helper: stringify content into a stable string
-  private stringifyContent(content: string | object | Array<any> | (() => string)): string {
-    if (typeof content === 'function') {
-      try {
-        return String((content as () => string)());
-      } catch {
-        return '';
-      }
-    }
+  private stringifyContent(content: any): string {
     if (typeof content === 'string') return content;
     try {
-      // objects/arrays -> JSON with compact formatting
       return JSON.stringify(content);
     } catch {
       return String(content);
@@ -133,9 +170,9 @@ export class PromptBuilder {
   private indentContent(content: string, indent: string): string {
     if (!content) return '';
     return content
-      .split('\n')
-      .map((line, idx) => (idx === 0 ? line : indent + line))
-      .join('\n');
+        .split('\n')
+        .map((line, idx) => (idx === 0 ? line : indent + line))
+        .join('\n');
   }
 }
 
