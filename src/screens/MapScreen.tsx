@@ -1639,7 +1639,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 								</Box>
 								{skit.script && (
 									<NovelVisualizer
-										script={skit}
+										skit={skit}
 										loading={isGeneratingNextSkit}
 										renderNameplate={(actor: any) => {
 											if (!actor || !actor.name) return null;
@@ -1660,7 +1660,7 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 												''
 											);
 										}}
-										getActorImageColorMultiplier={(actor: Actor, script: Skit, index: number) => {
+										getActorImageColorMultiplier={(actor, script, index: number) => {
 											// Actually based on location highlight and not on actor at all.
 											return stage().getSave().atlas?.[getCurrentLocation(skit, index) || '']?.lightColor || '#eeeeee';
 										}}
@@ -1675,9 +1675,9 @@ export const MapScreen: FC<MapScreenProps> = ({ stage, setScreenType, isVertical
 											};
 										}}
 										enableAudio={stage().getSave().textToSpeech}
-										enableGhostSpeakers={true}
+										enablePopInSpeakers={true}
 										enableTalkingAnimation={true}
-										renderActorHoverInfo={(actor) => {
+										responsiveOverlay={(skit, actor) => {
 											if (!actor || actor.id === stage().getPlayerActor().id) return null;
 											const typedActor = actor as Actor;
 											const authorName = typedActor.fullPath?.split('/').filter(Boolean)[0] || '';
