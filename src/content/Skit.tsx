@@ -333,9 +333,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                 ).addBlock('Example Script',
                     `NARRATOR: The sun sets over the horizon, casting a warm glow across the abandoned city. The air is thick with anticipation as the group gathers in the central plaza.\n` +
                     `CYANEA: "I can't believe we're finally here. It's been a long journey."\n` +
-                    `PERSEPHONE: "Yes, but the real challenge is just beginning. We must stay vigilant."\n` +
+                    `PERSEPHONE: "Yes, but the real challenge is just beginning. We must stay vigilant." Persephone gently chides Cyanea.\n` +
                     `CYANEA: [CYANEA expresses DETERMINATION] Cyanea frowns uncharacteristically with determination, "Of course." She nods with almost comical sobriety.\n` +
-                    (!save.disableImpersonation ? `${playerName.toUpperCase()}: "I agree. We need to be careful and work together."\n` : '') +
+                    (!save.disableImpersonation ? `${playerName.toUpperCase()}: I smile warmly at the two women, "I agree. We need to be careful and work together."\n` : '') +
                     `RED HOOD: [RED HOOD moves to HERE] A crimson-clad figure approaches with supplies."\n`
                 )
                 .addBlock('Scene Prompt',
