@@ -312,6 +312,8 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     `Generally, focus upon interpersonal dynamics, character growth, and discovery or trials within this strange world.` +
                     ((save.language || 'English').toLowerCase() !== 'english' ? `\n\nNote: The game is now being played in ${save.language}. Regardless of historic language use, generate this skit content in ${save.language} accordingly. Special emotion, outfit, and movement tags continue to use English (these are invisible to the user).` : '')
                 )
+                .addBlock('Script Format',
+                    `SPEAKER NAME: [Appropriate Tags] Prose with "embedded dialogue" and actions.`)
                 .addBlock('Tags', (builder) =>
                     builder.addBlock('Tag Instruction',
                         `Embedded within this script, you may employ special tags to trigger various game mechanics. These tags are not presented to users, so the narrative content of the script should also organically mention characters entering, exiting, or relocating. Character names in tags or in the script are ALL CAPS.`)
@@ -332,9 +334,9 @@ export async function generateSkitScript(skit: Skit, stage: Stage): Promise<Scri
                     `NARRATOR: The sun sets over the horizon, casting a warm glow across the abandoned city. The air is thick with anticipation as the group gathers in the central plaza.\n` +
                     `CYANEA: "I can't believe we're finally here. It's been a long journey."\n` +
                     `PERSEPHONE: "Yes, but the real challenge is just beginning. We must stay vigilant."\n` +
-                    `CYANEA: [CYANEA expresses DETERMINATION]Cyanea frowns uncharacteristically with determination, "Of course." She nods with almost comical sobriety.\n` +
+                    `CYANEA: [CYANEA expresses DETERMINATION] Cyanea frowns uncharacteristically with determination, "Of course." She nods with almost comical sobriety.\n` +
                     (!save.disableImpersonation ? `${playerName.toUpperCase()}: "I agree. We need to be careful and work together."\n` : '') +
-                    `RED HOOD: [RED HOOD moves to HERE]A crimson-clad figure approaches with supplies."\n`
+                    `RED HOOD: [RED HOOD moves to HERE] A crimson-clad figure approaches with supplies."\n`
                 )
                 .addBlock('Scene Prompt',
                     `Scene Prompt: ${skit.guidance}`)
